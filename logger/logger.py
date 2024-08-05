@@ -2,14 +2,14 @@ import logging
 
 
 class CustomFormatter(logging.Formatter):
+    
     def format(self, record):
         record.levelname = f"{record.levelname}:"
+        
         return super().format(record)
 
 
-def get_logger(
-    logger_name: str,
-):
+def get_logger(logger_name: str):
     logger = logging.getLogger(logger_name)
 
     if not logger.handlers:

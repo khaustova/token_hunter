@@ -7,19 +7,17 @@ from typing import Optional
 from solders.signature import Signature
 from solders.pubkey import Pubkey
 
-SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com/"  # Example RPC URL, adjust as necessary
-MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com/"
+
 async def get_oldest_transaction_signature(address: str) -> Optional[str]:
     async with AsyncClient(SOLANA_RPC_URL, timeout=50) as client:
         i = 0
-        # Start with None to get the most recent signatures first
         before = None
         oldest_signature = None
 
         address = Pubkey.from_string(address)
 
         while True:
-            # Fetch a batch of signatures
             signatures_response = await client.get_signatures_for_address(
                 address, before=before, limit=1000
             )
@@ -52,11 +50,12 @@ async def get_oldest_transaction_signature(address: str) -> Optional[str]:
             before = oldest_signature
         return str(oldest_signature)
 
-# Usage example
+
 async def main():
     address = "5Mbqo6CWrXSXuaJnd1s699oqB4upGP7oenVDQjzeLGvv"
     oldest_signature = await get_oldest_transaction_signature(address)
     print(f"Oldest Transaction Signature: {oldest_signature}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

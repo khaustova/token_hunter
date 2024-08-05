@@ -7,9 +7,12 @@ from solders.signature import Signature
 from solders.pubkey import Pubkey
 from solders.rpc.responses import GetTransactionResp
 from configuration import configuration
+from logger.logger import get_logger
 
 SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com/" 
 SOLANA_TOKEN_ADDRESS = "So11111111111111111111111111111111111111112"
+
+logger = get_logger(__name__)
 
 class SolanaParser():
     """
@@ -33,17 +36,19 @@ class SolanaParser():
             token_address = Pubkey.from_string(address)
             last_transaction = None
             
+        logger.info(f"Начата загрузка истории транзакций для токена {address}.")  
+          
         transaction_history, prev_transaction_history = [], []
-
         while True:
-            # Получает данные о транзакциях до тех пор, пока не будет найдена
-            # последняя транзакция.
+            # Загрузка истории транзакций длится до тех пор, пока не будет 
+            # найдена последняя транзакция.
             if self.mode == "Helius":
+                
                 transactions = self.helius_client.get_parsed_transaction_history(
                     address=address, 
                     before=last_transaction
                 )
-            else:
+            else:  
                 signatures_response = self.open_client.get_signatures_for_address(
                     token_address, 
                     before=last_transaction, 
@@ -57,7 +62,7 @@ class SolanaParser():
                     prev_transaction_history.extend(transaction_history)
                     transaction_history = prev_transaction_history
                 transaction_history.reverse()
-                
+                logger.info(f"История транзакций токена {address} успешно загружена. Адрес последней транзакции: {last_transaction}.")
                 break
             
             last_transaction = transactions[-1]["signature"] if self.mode == "Helius" else transactions[-1]
@@ -70,8 +75,10 @@ class SolanaParser():
                 
         first_buy_transactions = [] 
         
+        logger.info(f"Начато получение информации о первых {number} покупках токена {address}.")  
         current_number = 0 
         for transaction in transaction_history:
+            # Транзакции фильтруются и учитываются лишь относящиеся к покупке.
             if current_number < number:
                 if self.mode == "Helius":
                     transaction_info = self.__get_helius_transaction_info(transaction, address)
@@ -80,13 +87,16 @@ class SolanaParser():
                     
                 if transaction_info:
                     first_buy_transactions.append(transaction_info)
-                    current_number += 1   
+                    current_number += 1  
+        
+        logger.info(f"Получена информация о первых {current_number} покупках токена {address}.") 
                     
         return first_buy_transactions
     
     def __get_helius_transaction_info(self, transaction, address):
         """
-        Вовзращает информацию о транзакции (покупке), запрашиваемую через Helius API.
+        Вовзращает информацию о транзакции, если она относится к покупке, 
+        запрашиваемой через Helius API.
         """
         
         transaction_info = {}
@@ -104,7 +114,8 @@ class SolanaParser():
             
     def __get_open_transaction_info(self, signature: Signature):
         """
-        Вовзращает информацию о транзакции (покупке), запрашиваемую через Mainnet Beta.
+        Вовзращает информацию о транзакции, если она относится к покупке, 
+        запрашиваемой через Mainnet Beta.
         """   
         
         transaction = self.open_client.get_transaction(signature, encoding="jsonParsed", max_supported_transaction_version=0)

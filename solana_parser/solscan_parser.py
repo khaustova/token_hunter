@@ -10,13 +10,17 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from .models import SolscanResult
 
-from dex_parser.logger import get_logger
+from logger.logger import get_logger
 
 
 logger = get_logger(__name__)
 
 
 class SolscanParser:
+    """
+    Парсит данные с https://solscan.io/.
+    """
+    
     def __init__(self, address):
         self.url = "https://solscan.io/account/"
         self.address = address
@@ -76,10 +80,6 @@ class SolscanParser:
 
 
     def get_parse_result(self, address: str) -> SolscanResult:
-        if not self.driver:
-            msg = "Please use context for the `SolscanParser`"
-            logger.critical(msg)
-            raise ValueError(msg)
         address = self.address
         result = SolscanResult(date=datetime.now(), address=address)
         url = urljoin(self.url, address)
