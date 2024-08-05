@@ -4,3 +4,4 @@ downloaded_files
 transactions
 page_sources
 .venv
+.env
