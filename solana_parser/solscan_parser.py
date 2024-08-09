@@ -1,4 +1,5 @@
 import time
+import logging
 from datetime import datetime
 from urllib.parse import urljoin
 
@@ -8,9 +9,8 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException
-from .models import SolscanResult
 
-from logger.logger import get_logger
+from logger import get_logger
 
 
 logger = get_logger(__name__)
@@ -21,14 +21,11 @@ class SolscanParser:
     Парсит данные с https://solscan.io/.
     """
     
-    def __init__(self, address):
+    def __init__(self):
         self.url = "https://solscan.io/account/"
-        self.address = address
         self.driver = None
 
     def __enter__(self):
-        logger.info("Entering to the browser...")
-
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-popup-blocking")
         chrome_options.add_argument("--headless")
@@ -38,69 +35,67 @@ class SolscanParser:
         return self
 
     def __exit__(self, exc_type, exc_value, _):
-        logger.info("Exiting from the browser...")
         if exc_type:
-            logger.error(f"An exception occurred: {exc_value}")
+            logger.error(f"При закрытии браузера произошла ошибка: {exc_value}")
 
         if self.driver:
             self.driver.close()
 
         return False
-
-    def proccess_result(self, result: SolscanResult, elem: WebElement) -> SolscanResult:
-        logger.debug(f"Trying process SOL for {result.address}: {elem.text}")
-        if elem:
-            result.temp_text = elem.text
-
-        return result
-
-    def parse_values(self, result: SolscanResult, driver) -> SolscanResult:
-        logger.debug(f"Trying parse SOL for {result.address}")
-        element = WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located(
-                (
-                    By.XPATH,
-                    (
-                        "//div[text()='SOL Balance']/following::div"
-                    ),
-                )
-            )
-        )
-        result = self.proccess_result(result, element)
-
-        return result
     
-
-    def fix_cf_just_moment(self, url: str, driver):
-        # Fix CF `Just moment...` loading
-        driver.execute_script(f"window.open('{url}', '_blank')")
-        driver.switch_to.window(driver.window_handles[1])
-        time.sleep(3)
-        driver.close()
-
-
-    def get_parse_result(self, address: str) -> SolscanResult:
-        address = self.address
-        result = SolscanResult(date=datetime.now(), address=address)
+    def prepare_parsing(self, address: str):
         url = urljoin(self.url, address)
-
-        logger.info(f"Try parse: {result.address}")
 
         driver = self.driver
         driver.get(url)
 
-        #self.fix_cf_just_moment(url, driver)
-        
         driver.execute_script(f"window.open('{url}', '_blank')")
         driver.switch_to.window(driver.window_handles[1])
         time.sleep(3)
-        driver.close() 
+        driver.close()
+        
         driver.switch_to.window(driver.window_handles[0])
+        
+        return driver
+        
+    def get_balance(self, address: str):       
+        driver = self.prepare_parsing(address)
 
         try:
-            result = self.parse_values(result, driver)
+            print(driver.title)
+            logger.info(f"Начата загрузка баланса токенов на аккаунте {address}")
+            
+            balance_button = driver.find_element(By.XPATH, '//button[text()="Portfolio"]')
+            balance_button.click()
+            print(balance_button.text)
+        
+            element = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        (
+                            "//table/tbody/tr[2]/td[1]/span/span[1]/a"
+                        ),
+                    )
+                )
+            )
+            return element.text
+            
         except TimeoutException:
-            logger.info(f"Can't found SQL Balance or Token values: {result.address}")
+            logger.info(f"На странице не найдена информация по балансу на аккаунте {address}")
             pass
 
-        return result
+        return None
+
+log_level: str = "INFO"
+logging.basicConfig(level=log_level)
+
+def main():
+    address = "45ruCyfdRkWpRNGEqWzjCiXRHkZs8WXCLQ67Pnpye7Hp"
+    with SolscanParser() as parser:
+        result = parser.get_balance(address)
+        print(result)
+
+
+if __name__ == "__main__":
+    main()
