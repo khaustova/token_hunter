@@ -1,4 +1,6 @@
+aiogram==3.10.0
 beautifulsoup4==4.12.3
+Django==5.1
 pydantic==2.6.4
 pydantic-settings==2.2.1
 pydantic_core==2.16.3
