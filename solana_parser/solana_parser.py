@@ -22,8 +22,8 @@ class SolanaParser():
     """
     
     def __init__(self, mode="Helius"):
-        self.open_client = Client(SOLANA_RPC_URL, timeout=50)
-        self.helius_client = TransactionsAPI(configuration.solana.api_key)
+        self._open_client = Client(SOLANA_RPC_URL, timeout=50)
+        self._transactions_api = TransactionsAPI(configuration.solana.api_key)
         self.mode = mode
         
     def get_first_buy_transactions(self, number: int, address: str):
@@ -44,12 +44,12 @@ class SolanaParser():
             # найдена последняя транзакция.
             if self.mode == "Helius":
                 
-                transactions = self.helius_client.get_parsed_transaction_history(
+                transactions = self._transactions_api.get_parsed_transaction_history(
                     address=address, 
                     before=last_transaction
                 )
             else:  
-                signatures_response = self.open_client.get_signatures_for_address(
+                signatures_response = self._open_client.get_signatures_for_address(
                     token_address, 
                     before=last_transaction, 
                     limit=1000
@@ -76,24 +76,26 @@ class SolanaParser():
         first_buy_transactions = [] 
         
         logger.info(f"Начато получение информации о первых {number} покупках токена {address}.")  
-        current_number = 0 
+        current_number = 1 
         for transaction in transaction_history:
             # Транзакции фильтруются и учитываются лишь относящиеся к покупке.
-            if current_number < number:
+            if current_number <= number:
                 if self.mode == "Helius":
-                    transaction_info = self.__get_helius_transaction_info(transaction, address)
+                    transaction_info = self.get_helius_transaction_info(transaction, address)
                 else:
-                    transaction_info = self.__get_open_transaction_info(transaction)
+                    transaction_info = self.get_open_transaction_info(transaction)
                     
                 if transaction_info:
+                    logger.debug(f"Транзакция {current_number}: {transaction_info}")
                     first_buy_transactions.append(transaction_info)
-                    current_number += 1  
+                    current_number += 1
+                
         
         logger.info(f"Получена информация о первых {current_number} покупках токена {address}.") 
                     
         return first_buy_transactions
     
-    def __get_helius_transaction_info(self, transaction, address):
+    def get_helius_transaction_info(self, transaction, address):
         """
         Вовзращает информацию о транзакции, если она относится к покупке, 
         запрашиваемой через Helius API.
@@ -101,31 +103,44 @@ class SolanaParser():
         
         transaction_info = {}
         try:
-            if transaction["tokenTransfers"][0]["mint"] == SOLANA_TOKEN_ADDRESS and transaction["tokenTransfers"][1]["mint"] == address:
-                transaction_info["who"] = transaction["feePayer"]
-                transaction_info["signature"] = transaction["signature"]
+            transaction_info["who"] = transaction["feePayer"]
+            transaction_info["signature"] = transaction["signature"]
+
+            if ( # Если просходит покупка:
+                transaction["tokenTransfers"][0]["mint"] == SOLANA_TOKEN_ADDRESS 
+                and transaction["tokenTransfers"][1]["mint"] == address
+            ):
+                transaction_info["type"] = "buy"
                 transaction_info["sol"] = transaction["tokenTransfers"][0]["tokenAmount"]
                 transaction_info["coin"] = transaction["tokenTransfers"][1]["tokenAmount"] 
+                
+            elif ( # Если происходит продажа:
+                transaction["tokenTransfers"][1]["mint"] == SOLANA_TOKEN_ADDRESS 
+                and transaction["tokenTransfers"][0]["mint"] == address
+            ):
+                transaction_info["type"] = "sell"
+                transaction_info["sol"] = transaction["tokenTransfers"][1]["tokenAmount"]
+                transaction_info["coin"] = transaction["tokenTransfers"][0]["tokenAmount"] 
         except:
             return None
         
         return transaction_info
                 
             
-    def __get_open_transaction_info(self, signature: Signature):
+    def get_open_transaction_info(self, signature: Signature):
         """
         Вовзращает информацию о транзакции, если она относится к покупке, 
         запрашиваемой через Mainnet Beta.
         """   
         
-        transaction = self.open_client.get_transaction(signature, encoding="jsonParsed", max_supported_transaction_version=0)
+        transaction = self._open_client.get_transaction(signature, encoding="jsonParsed", max_supported_transaction_version=0)
         
-        time.sleep(5) # задержка для избежания ошибки 429
+        time.sleep(5) # Задержка для избежания ошибки 429.
         
         transaction_info = {}
         transaction_info["who"] = str(transaction.value.transaction.transaction.message.account_keys[0].pubkey)
         transaction_info["signature"] = str(signature)
-        transaction_info["type"] = self.__filter_open_transaction_type(transaction)
+        transaction_info["type"] = self.get_open_transaction_type(transaction)
         
         if not transaction_info["type"]:
             return None
@@ -140,19 +155,27 @@ class SolanaParser():
                         amount = instruction.parsed.get("info").get("amount")
                         if amount:
                             authority = instruction.parsed.get("info").get("authority")
-                            if authority == transaction_info["who"]: 
-                                transaction_info["sol"] = amount
-                            else:
-                                transaction_info["coin"] = amount
+                            if transaction_info["type"] == "buy":
+                                if authority == transaction_info["who"]: 
+                                    transaction_info["sol"] = amount
+                                else:
+                                    transaction_info["coin"] = amount
+                            elif transaction_info["type"] == "sell":
+                                if authority == transaction_info["who"]: 
+                                    transaction_info["coin"] = amount
+                                else:
+                                    transaction_info["sol"] = amount                                
+                                
+                                
                 except:
                     continue 
         
         return transaction_info
 
     @staticmethod
-    def __filter_open_transaction_type(transaction: GetTransactionResp):
+    def get_open_transaction_type(transaction: GetTransactionResp):
         """
-        Определяет тип транзакции, запрашиваемой через Mainnet Beta.
+        Определяет является ли покупкой транзакция, запрашиваемая через Mainnet Beta.
         """
         
         pre_sol_balance, post_sol_balance = None, None
@@ -166,11 +189,10 @@ class SolanaParser():
                 post_sol_balance = token.ui_token_amount.amount
                 break
         
-        if (
-            pre_sol_balance 
-            and post_sol_balance 
-            and int(pre_sol_balance) - int(post_sol_balance) <= 0
-        ):
-            return "buy"
+        if pre_sol_balance and post_sol_balance: 
+            if int(pre_sol_balance) - int(post_sol_balance) < 0:
+                return "buy"
+            elif int(pre_sol_balance) - int(post_sol_balance) > 0:
+                return "sell"
             
-        return None
+        return False
