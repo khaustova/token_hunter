@@ -7,7 +7,7 @@ from solders.signature import Signature
 from solders.pubkey import Pubkey
 from solders.rpc.responses import GetTransactionResp
 from configuration import configuration
-from logger.logger import get_logger
+from logger import get_logger
 
 SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com/" 
 SOLANA_TOKEN_ADDRESS = "So11111111111111111111111111111111111111112"

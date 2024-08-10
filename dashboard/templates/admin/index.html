@@ -1,0 +1,139 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admingo_tags %}
+{% get_customization_settings as customization %}
+
+{% block title %}{{ customization.title }}{% endblock %}
+
+{% block content %}
+  {% get_apps as apps %}
+  {% if apps %}
+    {% widthratio apps|length 2 1 as middle %}
+  {% endif %}
+  <div class="content_wrapper">
+    <div class="content-apps">
+      {% block content-apps %}
+        {% for app in apps %}
+          <div class="content-card">
+            <table class="table">
+              <caption>
+                <h4 class="table__title">{{ app.name }}</h4>
+              </caption>
+              <tbody>
+                {% for model in app.models %}
+                  <tr>
+                    <td>
+                      {% if  model.admin_url %}
+                        <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                      {% else %}
+                        {{ model.name }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="model-change">
+                        {% if model.add_url %}
+                          <div>
+                            <a href="{{ model.add_url }}" class="addlink">
+                              <span class="material-symbols-outlined icon-create">
+                                add
+                              </span>
+                              {% trans 'Add' %}
+                            </a>
+                          </div>
+                        {% endif %}
+                        {% if  model.admin_url %}
+                          {% if model.view_only %}
+                            <a href="{{ model.admin_url }}" class="viewlink">{% trans 'View' %}</a>
+                          {% else %}
+                            <div>
+                              <a href="{{ model.admin_url }}" class="changelink">
+                                <span class="material-symbols-outlined icon-edit">
+                                  edit
+                                </span>
+                                {% if model.custom %}
+                                  {% trans 'Go' %}
+                                {% else %}
+                                  {% trans 'Change' %}
+                                {% endif %}
+                              </a>
+                            </div>
+                          {% endif %}
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      {% endblock %}
+    </div>
+    
+    <div class="content-history">
+      <div class="content-card" id="recent-actions-module">
+        <h4 class="content-card__title">{% trans 'Recent actions' %}</h4>
+        {% load log %}
+        {% get_admin_log 10 as admin_log for_user user %}
+        {% if not admin_log %}
+          <p>{% trans 'None available' %}</p>
+        {% else %}
+          <div class="timeline">
+            {% for entry in admin_log %}
+              <div>
+                {% if entry.is_change %}
+                  <span class="material-symbols-outlined icon-edit">
+                    edit
+                  </span>
+                {% elif entry.is_deletion %}
+                  <span class="material-symbols-outlined icon-delete">
+                    delete
+                  </span>
+                {% elif entry.is_addition %}
+                  <span class="material-symbols-outlined icon-create">
+                    add
+                  </span>
+                {% endif %}
+                <div class="timeline-item">
+                  <span class="time">
+                    <span class="material-symbols-outlined icon-datetime">
+                      schedule
+                    </span>
+                    {% blocktrans with timesince=entry.action_time|timesince %}{{ timesince }} ago{% endblocktrans %}
+                  </span>
+                  <h3 class="timeline-header">
+                    {% if entry.is_deletion or not entry.get_admin_url %}
+                      {{ entry.object_repr }}
+                    {% else %}
+                      <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                    {% endif %}
+                    {% if entry.model %}
+                      <span class="mini quiet">
+                        {% filter capfirst %}
+                          {{ entry.model }}
+                        {% endfilter %}
+                      </span>
+                    {% endif %}
+                  </h3>
+                  {% if not entry.is_deletion %}
+                    <div class="timeline-body">
+                      {% if entry.is_addition %}
+                        {{ entry }}
+                      {% else %}
+                        <ul style="list-style: none; padding: 0;">
+                          {% action_message_to_list entry as action_message_list %}
+                          {% for action_message in action_message_list %}
+                            <li>{{ action_message.message|bold_first_word }}</li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

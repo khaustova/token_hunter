@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% translate 'Server error' %}{% endblock %}
+
+{% block page %}
+<div class="content-error_wrapper">
+  <div class="content-error">
+    <h1 class="error__name">500</h1>
+    <h3 class="error__description">{% translate 'Server error' %}</h3>
+  </div>
+</div>
+{% endblock %}

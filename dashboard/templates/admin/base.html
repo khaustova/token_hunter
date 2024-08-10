@@ -1,0 +1,279 @@
+{% load i18n static admin_urls admingo_tags %}
+{% get_customization_settings as customization %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:"ru-ru" }}" dir="ltr">
+<head>
+  <title>{% block title %}{% endblock %}</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"/>
+
+  <link rel="stylesheet" href="{% static "admingo/css/base.css" %}">
+  <link rel="stylesheet" href="{% static "admingo/css/forms.css" %}">
+  <link rel="stylesheet" href="{% static "admingo/css/navigation.css" %}">
+  <link rel="stylesheet" href="{% static "admingo/css/widgets.css" %}">
+  <link rel="stylesheet" href="{% static "admingo/css/responsive.css" %}">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'admingo/img/icons/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'admingo/img/icons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'admingo/img/icons/favicon-16x16.png' %}">
+  <link rel="manifest" href="{% static 'admingo/img/icons/site.webmanifest' %}">
+
+  {% block extrastyle %}{% endblock %}
+  {% block extrahead %}{% endblock %}
+
+  <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+</head>
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %} {% sidebar_status request %}" data-admin-utc-offset="{% now "Z" %}">
+  <script>
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.dataset.theme = theme;
+  </script>
+  {% block page %}
+    <div class="{% if not is_popup %}wrapper{% else %} popup_wrapper{% endif %}">
+      {% if not is_popup %}
+        <header>
+          <nav class="top-navigation">
+            <span class="material-symbols-outlined top-menu navigation-icon" id="open-menu">
+              menu
+            </span>
+            <span class="material-symbols-outlined top-search navigation-icon" id="top-search">
+              search
+            </span>
+            {% get_search_model as search_model %}
+            {% if search_model %}
+              <div class="search-top__form">
+                <form action="{{ search_model.search_url }}" method="GET">
+                  <div class="search-top__field">
+                    <input class="search-top__input" name="q" type="search" 
+                      placeholder="{% trans 'Search' %} {{ customization.search_model.search_name }}..." 
+                      aria-label="{% trans 'Search' %} {{ customization.search_model.search_name }}...">
+                    <button class="search-top__button" type="submit">
+                      <span class="material-symbols-outlined icon-middle">
+                        search
+                      </span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            {% endif %}
+          </nav>
+          <div class="user_wrapper">
+            <div class="toggle-theme">
+              <button id="theme-toggle" type="button">
+                <span class="icon-dark material-symbols-outlined">
+                  dark_mode
+                </span>
+                <span class="icon-light material-symbols-outlined">
+                  light_mode
+                </span>
+              </button>
+            </div>
+            <div>
+              {% if site_url %}
+                <a href="{{ site_url }}" target="_blank">
+                  {% translate 'View site' %}
+                </a>&nbsp;/&nbsp;
+              {% endif %}
+            </div>
+            <div class="user">
+              <span class="user__welcome">{% trans 'Welcome,' %}</span>
+              <a href="javascript:void(0);" class="user__name">
+                &nbsp;{% firstof user.get_short_name user.get_username %}  
+                <span id="expand-user-menu" class="material-symbols-outlined icon-top">
+                  expand_more
+                </span>
+              </a>
+              <ul id="user-menu" class="user__menu">
+                {% if user.is_active and user.is_staff and docsroot%}
+                  <li class="user__item">
+                    <a href="{% url 'django-admindocs-docroot' %}" class="user__link">
+                      <span class="material-symbols-outlined user__icon">
+                        description
+                      </span>
+                      {% trans 'Documentation' %}
+                    </a>
+                  </li>
+                {% endif %}
+                {% if user.is_active and user.is_staff %}
+                  <li class="user__item">
+                    <a href="{% url "admin:auth_user_change" user.id %}" class="user__link">
+                      <span class="material-symbols-outlined user__icon">
+                        person
+                      </span>
+                      Аккаунт
+                    </a>
+                  </li>
+                {% endif %}
+                {% if user.has_usable_password %}
+                  <li class="user__item">
+                    <a href="{% url 'admin:password_change' %}" class="user__link">
+                      <span class="material-symbols-outlined user__icon">
+                        key
+                      </span>
+                      {% trans 'Change password' %}
+                    </a>
+                  </li>
+                {% endif %}
+                <li class="user__item">
+                  <a href="{% url 'admin:logout' %}" class="user__link">
+                    <span class="material-symbols-outlined user__icon">
+                      logout
+                    </span>
+                    {% trans 'Log out' %}
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </header>
+
+        {% if is_nav_sidebar_enabled %}
+          {% block sidebar %}
+            {% get_sidebar_menu as apps %}
+            <aside id="sidebar">
+              <a href="javascript:void(0)" class="sidebar__link">
+                <span class="material-symbols-outlined sidebar__icon toggle-sidebar" id="toggle-sidebar">
+                  menu_open
+                </span>
+              </a>
+              <a href="{% url 'admin:index' %}" class="sidebar__link">
+                <span class="sidebar__name">{{ customization.dashboard_name }}</span>
+              </a>
+              <span class="material-symbols-outlined sidebar__close-icon navigation-icon" id="close-menu">
+                close
+              </span>
+              <hr class="sidebar__line">
+              <nav>
+                <ul class="sidebar">
+                  {% for app in apps %}
+                    <li class="sidebar__app-name">{{ app.name|upper }}</li>
+                    {% for model in app.models %}
+                      <li class="sidebar__model-name">
+                        {% if model.admin_url %}
+                          <a href="{{ model.admin_url }}" class="sidebar__link">
+                            <span class="material-symbols-outlined sidebar__icon">
+                              {{ model.icon }}
+                            </span>
+                            <span class="sidebar__link-name">
+                              {{ model.name }}
+                            </span>
+                          </a>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  {% endfor %}
+                </ul>
+              </nav>
+            </aside>
+          {% endblock %}
+        {% endif %}
+      {% endif %}
+    
+      <main>
+        {% block page_content %}
+          {% if not is_popup %}
+            <div class="content__info">
+              {% block nav-breadcrumbs %}
+                <nav aria-label="{% translate 'Breadcrumbs' %}">
+                  {% block breadcrumbs %}
+                    <div class="breadcrumbs">
+                      <a href="{% url 'admin:index' %}">
+                        <span class="material-symbols-outlined breadcrumbs-icon">
+                          home
+                        </span>
+                      </a>
+                      {% if title %}
+                        &nbsp;&#47; {{ title }}
+                      {% endif %}
+                    </div>
+                  {% endblock %}
+                </nav>
+              {% endblock %}
+              {% block page_actions %}{% endblock %}
+            </div>
+          {% endif %}
+          <section id="content" class="content">
+            {% block messages %}
+              {% for message in messages %}
+                {% if message.tags == 'success' %}
+                  <div class="message message-success">
+                    <span class="material-symbols-outlined message-icon">
+                      done
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% elif message.tags == 'error' %}
+                  <div class="message message-danger">
+                    <span class="material-symbols-outlined message-icon">
+                      error
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% elif message.tags == 'warning' %}
+                  <div class="message message-warning">
+                    <span class="material-symbols-outlined message-icon">
+                      warning
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% elif message.tags == 'info' %}
+                  <div class="message message-info">
+                    <span class="material-symbols-outlined message-icon">
+                      info
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% endblock %}
+            {% block content %}{% endblock %}
+          </section>
+        {% endblock %}
+      </main>
+
+      {% block footer %}
+        {% if not is_popup %}
+          <footer>
+            {% autoescape off %}
+              {% trans 'Copyright' %} &copy; <a href="https://github.com/khaustiv/admingo/">Admingo</a>, 2023.
+            {% endautoescape %}
+          </footer>
+        {% endif %}
+      {% endblock %}
+    </div>
+    {% if not is_popup %}
+      <script src="{% static 'admingo/js/navigation.js' %}" defer></script>
+      <script src="{% static 'admingo/js/sidebar.js' %}" defer></script>
+      <script src="{% static 'admingo/js/theme.js' %}" defer></script>
+    {% endif %}
+  {% endblock %}
+</body>
+</html>

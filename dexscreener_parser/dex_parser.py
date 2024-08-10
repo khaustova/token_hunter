@@ -4,7 +4,7 @@ from datetime import datetime
 from seleniumbase import SB
 from bs4 import BeautifulSoup
 import pandas as pd
-from handlers import save_coins, save_top_traders
+from dexscreener_parser.handlers import save_coins, save_top_traders
 
 
 async def parse_coins(pages: int, filter: str=""):
@@ -20,7 +20,7 @@ async def parse_coins(pages: int, filter: str=""):
             # file_name = f"{date} coins_page-{str(page)}.html"
             # sb.save_data_as(sourse, file_name, "./dex_parser/page_sources/coins")
             
-def parse_top_traders(pairs: list[str]=None):
+async def parse_top_traders(pairs: list[str]=None):
     with SB(uc=True, test=True) as sb:
         for pair in pairs:
             url = "https://dexscreener.com/solana/" + pair
@@ -38,7 +38,7 @@ def parse_top_traders(pairs: list[str]=None):
             # file_name = title.split()[0] + ".html"
             # sb.save_data_as(source, file_name, "./dex_parser/page_sources/top_traders")
             
-def parse_top_traders_from_the_page(pages: int, filter: str=""):
+async def parse_top_traders_from_the_page(pages: int, filter: str=""):
     with SB(uc=True, test=True) as sb:
         for page in range(1, pages + 1):
             sb.uc_open_with_reconnect("https://dexscreener.com/solana/page-" + str(page) + filter, reconnect_time=4)
@@ -52,7 +52,6 @@ def parse_top_traders_from_the_page(pages: int, filter: str=""):
             # sb.save_data_as(sourse, file_name, "./dex_parser/page_sources/coins")
             
             
-
 async def main():
     address = "5Mbqo6CWrXSXuaJnd1s699oqB4upGP7oenVDQjzeLGvv"
     oldest_signature = await parse_coins(1, filter="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=10")  
