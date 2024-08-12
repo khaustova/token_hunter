@@ -1,4 +1,4 @@
-{% load i18n static admin_urls admingo_tags %}
+{% load i18n static admin_urls dashboard_tags %}
 {% get_customization_settings as customization %}
 
 <!DOCTYPE html>
@@ -14,16 +14,16 @@
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"/>
 
-  <link rel="stylesheet" href="{% static "admingo/css/base.css" %}">
-  <link rel="stylesheet" href="{% static "admingo/css/forms.css" %}">
-  <link rel="stylesheet" href="{% static "admingo/css/navigation.css" %}">
-  <link rel="stylesheet" href="{% static "admingo/css/widgets.css" %}">
-  <link rel="stylesheet" href="{% static "admingo/css/responsive.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/base.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/forms.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/navigation.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/widgets.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/responsive.css" %}">
 
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'admingo/img/icons/apple-touch-icon.png' %}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'admingo/img/icons/favicon-32x32.png' %}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'admingo/img/icons/favicon-16x16.png' %}">
-  <link rel="manifest" href="{% static 'admingo/img/icons/site.webmanifest' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'dashboard/img/icons/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'dashboard/img/icons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'dashboard/img/icons/favicon-16x16.png' %}">
+  <link rel="manifest" href="{% static 'dashboard/img/icons/site.webmanifest' %}">
 
   {% block extrastyle %}{% endblock %}
   {% block extrahead %}{% endblock %}
@@ -258,21 +258,11 @@
           </section>
         {% endblock %}
       </main>
-
-      {% block footer %}
-        {% if not is_popup %}
-          <footer>
-            {% autoescape off %}
-              {% trans 'Copyright' %} &copy; <a href="https://github.com/khaustiv/admingo/">Admingo</a>, 2023.
-            {% endautoescape %}
-          </footer>
-        {% endif %}
-      {% endblock %}
     </div>
     {% if not is_popup %}
-      <script src="{% static 'admingo/js/navigation.js' %}" defer></script>
-      <script src="{% static 'admingo/js/sidebar.js' %}" defer></script>
-      <script src="{% static 'admingo/js/theme.js' %}" defer></script>
+      <script src="{% static 'dashboard/js/navigation.js' %}" defer></script>
+      <script src="{% static 'dashboard/js/sidebar.js' %}" defer></script>
+      <script src="{% static 'dashboard/js/theme.js' %}" defer></script>
     {% endif %}
   {% endblock %}
 </body>

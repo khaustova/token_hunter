@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from solana_parser.solana_parser import SolanaParser
+from parser.solana_parser.solana_parser import SolanaParser
 from logger import get_logger
 import time
 import asyncio
@@ -10,7 +10,7 @@ from helius import TransactionsAPI
 from solders.signature import Signature
 from solders.pubkey import Pubkey
 from solders.rpc.responses import GetTransactionResp
-from configuration import configuration
+from bot.configuration import configuration
 from logger import get_logger
 from bot.loader import bot, dp
 from bot.keyboards.commands_menu import set_commands_menu
@@ -18,7 +18,7 @@ from bot.handlers import menu_handlers, parser_handlers
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, Redis
-from configuration import configuration
+from bot.configuration import configuration
 
 SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com/" 
 SOLANA_TOKEN_ADDRESS = "So11111111111111111111111111111111111111112"

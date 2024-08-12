@@ -5,7 +5,7 @@ from django.conf import settings
 logger = getLogger(__name__)
 
 
-ADMINGO_CUSTOMIZATION = {
+DASHBOARD_CUSTOMIZATION = {
     'dashboard_name': 'Админпанель',
     'dashboard_title': 'Панель администратора',
     'search_model': '',
@@ -22,12 +22,12 @@ ADMINGO_CUSTOMIZATION = {
 
 def get_settings() -> dict:
     """
-    Возврвщает словарь с настройками кастомизации, обновленный в соответствии
+    Возвращает словарь с настройками кастомизации, обновленный в соответствии
     с настройками, указанными в файле настроек проекта.
     """
-    customization_settings = deepcopy(ADMINGO_CUSTOMIZATION)
+    customization_settings = deepcopy(DASHBOARD_CUSTOMIZATION)
     project_settings = {key: value for key, value in getattr(
-        settings, 'ADMINGO_CUSTOMIZATION', {}).items() if value is not None}
+        settings, 'DASHBOARD_CUSTOMIZATION', {}).items() if value is not None}
     customization_settings.update(project_settings)
 
     return customization_settings

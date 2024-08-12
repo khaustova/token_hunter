@@ -1,4 +1,4 @@
-{% load i18n static admin_urls admingo_tags %}
+{% load i18n static admin_urls dashboard_tags %}
 {% get_customization_settings as customization %}
 
 <!DOCTYPE html>
@@ -15,7 +15,7 @@
   {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"/>
-  <link rel="stylesheet" href="{% static "admingo/css/login.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/login.css" %}">
 </head>
 
 <body>

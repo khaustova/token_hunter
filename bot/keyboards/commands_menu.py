@@ -3,7 +3,6 @@ from aiogram.types import BotCommand
 
 
 COMMANDS: dict[str, str] = {
-    '/menu': 'Меню выбора заданий',
     '/dex': 'Dex',
 }
 
