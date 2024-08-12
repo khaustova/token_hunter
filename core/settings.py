@@ -135,3 +135,38 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Dashboard
+
+DASHBOARD_CUSTOMIZATION = {
+    'search_model': 'auth.user',
+    'sidebar_icons': {
+        'auth.user': 'person',
+        'django_celery_results.taskresult': 'task',
+    },
+    'hidden_apps': [
+        'dashboard',
+        'sites',
+    ],
+    'hidden_models': [
+        'auth.group',
+        'django_celery_results.groupresult',
+    ],
+    'apps_order': [
+        'django_celery_results',
+        'auth',
+    ],
+    'extra_links': [
+        {
+            'manager': [
+                {
+                    'name': 'Документация',
+                    'admin_url': '/admin/doc/',
+                    'icon': 'description'
+                },
+            ]
+        }
+    ],
+}
+
