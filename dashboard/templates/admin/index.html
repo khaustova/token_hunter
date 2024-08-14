@@ -11,6 +11,12 @@
   {% endif %}
   <div class="content_wrapper">
     <div class="content-apps">
+      <form action="{% url 'parser:parse_top_traders' %}" method="post">
+        {% csrf_token %}
+        <input type="text" name="filter">
+        <button type="submit" name='mybtn2'>Скачать топ кошельков</button>
+      </form>
+      
       {% block content-apps %}
         {% for app in apps %}
           <div class="content-card">
