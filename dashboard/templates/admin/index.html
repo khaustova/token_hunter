@@ -11,67 +11,84 @@
   {% endif %}
   <div class="content_wrapper">
     <div class="content-apps">
-      <form action="{% url 'parser:parse_top_traders' %}" method="post">
-        {% csrf_token %}
-        <input type="text" name="filter">
-        <button type="submit" name='mybtn2'>Скачать топ кошельков</button>
-      </form>
-      
       {% block content-apps %}
-        {% for app in apps %}
-          <div class="content-card">
-            <table class="table">
-              <caption>
-                <h4 class="table__title">{{ app.name }}</h4>
-              </caption>
-              <tbody>
-                {% for model in app.models %}
-                  <tr>
-                    <td>
-                      {% if  model.admin_url %}
-                        <a href="{{ model.admin_url }}">{{ model.name }}</a>
-                      {% else %}
-                        {{ model.name }}
-                      {% endif %}
-                    </td>
-                    <td>
-                      <div class="model-change">
-                        {% if model.add_url %}
-                          <div>
-                            <a href="{{ model.add_url }}" class="addlink">
-                              <span class="material-symbols-outlined icon-create">
-                                add
-                              </span>
-                              {% trans 'Add' %}
-                            </a>
-                          </div>
-                        {% endif %}
-                        {% if  model.admin_url %}
-                          {% if model.view_only %}
-                            <a href="{{ model.admin_url }}" class="viewlink">{% trans 'View' %}</a>
-                          {% else %}
-                            <div>
-                              <a href="{{ model.admin_url }}" class="changelink">
-                                <span class="material-symbols-outlined icon-edit">
-                                  edit
-                                </span>
-                                {% if model.custom %}
-                                  {% trans 'Go' %}
-                                {% else %}
-                                  {% trans 'Change' %}
-                                {% endif %}
-                              </a>
-                            </div>
-                          {% endif %}
-                        {% endif %}
-                      </div>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+      <div class="content-card">
+        <h4 class="content-card__title">{% get_parsing_top_traders_form %}</h4>
+        <form class="parsing__form" action="{% url 'parser:parse_top_traders' %}" method="post">
+          {% csrf_token %}
+          {% for field in parsing_form %}
+            {% if field.label == "Парсинг топа трейдеров" or field.label == "Парсинг топа снайперов" %}
+              <div class="parsing__checkboxes">
+                {{ field }}
+                {{ field.label_tag }}
+              </div>
+            {% else %}
+              {{field.label_tag}}
+              {{field}}
+            {% endif %}
+            {% if field.errors%}
+              <div class="error">{{field.errors}}</div>
+            {% endif %}
+          {% endfor %}
+          <button class="parsing__button" type="submit" name='mybtn2'>Скачать топ кошельков</button>
+        </form>
+      </div>
+      <div class="content-card">
+        <table class="table">
+          <caption>
+            <h4 class="table__title">{% get_top_traders %}</h4>
+          </caption>
+          <tbody>
+            <th>Кошелёк</th>
+            <th>Успешные сделки</th>
+            
+            {% for trader in top_traders %}
+              <tr>
+                <td>
+                  {% get_wallet_link trader.maker as solsniffer_link %}
+                  <a href="{{ solsniffer_link }}">{{ trader.maker }}</a>
+                </td>
+                <td>
+                  {{ trader.coin_count }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="paginator">
+          <div class="table__pagination-pages">
+            {% if top_traders.has_previous %}
+              <a href="?page={{ top_traders.previous_page_number }}">Назад</a>
+              {% if top_traders.number > 3 %}
+                <a href="?page=1">1</a>
+                {% if top_traders.number > 4 %}
+                  ...
+                {% endif %}
+              {% endif %}
+            {% endif %}
+            {% for num in top_traders.paginator.page_range %}
+              {% if top_traders.number == num %}
+                {{ num }}
+              {% elif num > top_traders.number|add:'-3' and num < top_traders.number|add:'3' %}
+                <a href="?page={{ num }}">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+            {% if top_traders.has_next %}
+              {% if top_traders.number < top_traders.paginator.num_pages|add:'-3' %}
+                <a >...</a>
+                <a href="?page={{ top_traders.paginator.num_pages }}">
+                  {{ top_traders.paginator.num_pages }}
+                </a>
+              {% elif top_traders.number < top_traders.paginator.num_pages|add:'-2' %}
+                <a href="?page={{ top_traders.paginator.num_pages }}">
+                  {{ top_traders.paginator.num_pages }}
+                </a>
+              {% endif %}
+              <a href="?page={{ top_traders.next_page_number }}">Далее</a>
+            {% endif %}
           </div>
-        {% endfor %}
+        </div>
+      </div>
       {% endblock %}
     </div>
     

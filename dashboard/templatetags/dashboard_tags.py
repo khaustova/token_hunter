@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from django import template
 from django.apps import apps
+from django.db.models import Count
 from django.urls import reverse
 from django.http import HttpRequest
 from django.utils.html import escape
@@ -11,9 +12,11 @@ from django.utils.safestring import SafeText, mark_safe
 from django.utils.text import get_text_list
 from django.utils.translation import gettext
 from django.contrib.admin.models import LogEntry
-
+from django.core.paginator import Paginator
 from ..settings import get_settings
 from ..utils import order_items
+from ..forms import ParsingTopTradersForm
+from parser.models import TopTrader
 
 register = template.Library()
 
@@ -213,3 +216,29 @@ def sort_header(header: dict, forloop: dict) -> str:
         classes.append('sorting')
 
     return ' '.join(classes)
+
+
+@register.simple_tag(takes_context=True)
+def get_top_traders(context: template.Context) -> str:
+    top_traders = TopTrader.objects.values('maker').annotate(coin_count=Count('coin')).order_by('-coin_count')
+    paginator = Paginator(top_traders, 10)
+    request = context['request']
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context['top_traders'] = page_obj
+    parsing_form = ParsingTopTradersForm()
+    context["parsing_form"] = parsing_form
+    
+    return "Топ кошельков"
+
+@register.simple_tag
+def get_wallet_link(address: str) -> str:
+    return "https://solsniffer.com/snifwallets/wallet/" + address
+
+
+@register.simple_tag(takes_context=True)
+def get_parsing_top_traders_form(context: template.Context) -> str:
+    parsing_form = ParsingTopTradersForm()
+    context["parsing_form"] = parsing_form
+    
+    return "Парсинг топа кошельков"
