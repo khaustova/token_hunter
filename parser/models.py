@@ -9,7 +9,7 @@ class TopTrader(models.Model):
         max_length=256, 
         verbose_name='Кошелёк'
     )
-    network = models.CharField(
+    chain = models.CharField(
         max_length=256, 
         verbose_name='Сеть'
     )
@@ -22,10 +22,11 @@ class TopTrader(models.Model):
     PNL = models.FloatField(
         verbose_name="PNL"
     )
+    created_date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name = 'Топ трейдеры'
         verbose_name_plural = 'Топ трейдер'
     
     def __str__(self):
-        return f'{self.trader}: {self.PNL}'
+        return f'{self.maker}: {self.PNL}'
