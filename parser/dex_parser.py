@@ -68,20 +68,19 @@ class DexScreenerParser():
     
         page_source = self.sb.get_page_source()
         self.save_top_traders(page_source)
-                
-                
-    def parse_top_traders_from_the_page(self, pages: int, filter: str=""):
+                        
+    def parse_top_traders_from_the_pages(self, pages: int, filter: str="", is_top_traders: bool=True, is_top_snipers: bool=False):
         for page in range(1, pages + 1):
             self.sb.uc_open_with_reconnect("https://dexscreener.com/solana/page-" + str(page) + filter, reconnect_time=4)
             if page == 1:
                 self.sb.uc_gui_handle_cf()
-            self.sb.sleep(10)
+            self.sb.sleep(6)
             
             links = self.sb.find_elements("//a[contains(@class, 'ds-dex-table-row')]", by="xpath")
             for link in links:
                 link.click()
                 
-                sb.sleep(2)
+                self.sb.sleep(2)
                 try:
                     self.sb.find_element("//span[text()='No issues']", by="xpath")
                 except:
@@ -89,14 +88,15 @@ class DexScreenerParser():
                     time.sleep(2)
                     continue
                 
-                self.sb.click('button:contains("Top Traders")')
-                time.sleep(3)
-                
-                page_sourse = self.sb.get_page_source()
-                self.save_top_traders(page_sourse)
-                
-                self.sb.go_back()
-                time.sleep(2)
+                if is_top_traders:
+                    self.sb.click('button:contains("Top Traders")')
+                    time.sleep(3)
+                    
+                    page_sourse = self.sb.get_page_source()
+                    self.save_top_traders(page_sourse)
+                    
+                    self.sb.go_back()
+                    time.sleep(2)
             
     def save_top_traders(self, page_source):
         soup = BeautifulSoup(page_source, "html.parser")
@@ -130,7 +130,7 @@ class DexScreenerParser():
 
         token_address_link = soup.find_all("a", class_="chakra-link chakra-button custom-isf5h9")[1]
         token_addres = token_address_link.get("href").split("/")[-1]
-        network = "SOL"
+        chain = "SOL"
         
         temp_df = pd.DataFrame(data)
         temp_df.dropna(inplace=True)
@@ -139,7 +139,7 @@ class DexScreenerParser():
             TopTrader.objects.create(
                 coin=token_addres,
                 maker=row["makers"],
-                network=network,
+                chain=chain,
                 bought=row["bought"],
                 sold=row["sold"],
                 PNL=((row["sold"] - row["bought"]) / row["bought"] * 100)      
