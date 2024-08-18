@@ -1,11 +1,13 @@
+import debug_toolbar
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/parser/', include('parser.urls')),
+    path('admin/', include('toss_a_coin.urls')),
     path('admin/', admin.site.urls),
+    path('__debug__/', include(debug_toolbar.urls)),
 ]
 
 if bool(settings.DEBUG):
