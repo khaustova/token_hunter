@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class ParserConfig(AppConfig):
+class TossACoinConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'parser'
+    name = 'toss_a_coin'

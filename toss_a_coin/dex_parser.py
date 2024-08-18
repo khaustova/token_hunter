@@ -4,7 +4,7 @@ from datetime import datetime
 from seleniumbase import SB
 from bs4 import BeautifulSoup
 from dexscreener import DexscreenerClient
-from parser.models import TopTrader
+from toss_a_coin.models import TopTrader
 
 class DexScreenerParser():
     

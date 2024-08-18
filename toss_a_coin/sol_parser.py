@@ -22,7 +22,6 @@ HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
 
 logger = get_logger(__name__)
 
-
 class SolanaParser():
     """
     Позволяет получать информацию о транзакциях в сети Solana.
