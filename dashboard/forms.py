@@ -4,9 +4,9 @@ from .widgets import MEditorWidget
    
 class MEditorFormField(forms.fields.CharField):
     
-    def __init__(self, config_name='default', *args, **kwargs):
+    def __init__(self, config_name="default", *args, **kwargs):
         kwargs.update({
-            'widget': MEditorWidget()
+            "widget": MEditorWidget()
         })
         super(MEditorFormField, self).__init__(*args, **kwargs)
         
@@ -15,7 +15,7 @@ class ParsingTopTradersForm(forms.Form):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.label_suffix = ""  # Removes : as label suffix
+        self.label_suffix = ""
         
     filter = forms.CharField(
         required=False,
@@ -29,11 +29,23 @@ class ParsingTopTradersForm(forms.Form):
     )
     is_top_traders = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': '2'}),
+        widget=forms.CheckboxInput(),
         label="Парсинг топа трейдеров"
     )
     is_top_snipers = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': '3'}),
+        widget=forms.CheckboxInput(),
         label="Парсинг топа снайперов"
+    )
+    
+class CheckCoinForm(forms.Form):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label_suffix = ""  # Removes : as label suffix
+        
+    coin = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Сейчас поддерживается только сеть SOLANA", "id": "check-coin-input", "name": "coin"}),
+        label="Введите название монеты:",
     )

@@ -828,3 +828,10 @@ label[for=id_pages] {
 .parsing__checkboxes {
     margin-top: 5px;
 }
+
+/* Coin checker form */
+
+.check-coin__form {
+    display: flex;
+    flex-direction: column;
+}

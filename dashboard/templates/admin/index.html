@@ -14,7 +14,7 @@
       {% block content-apps %}
       <div class="content-card">
         <h4 class="content-card__title">{% get_parsing_top_traders_form %}</h4>
-        <form class="parsing__form" action="{% url 'parser:parse_top_traders' %}" method="post">
+        <form class="parsing__form" action="{% url 'toss_a_coin:parse_top_traders' %}" method="post">
           {% csrf_token %}
           {% for field in parsing_form %}
             {% if field.label == "Парсинг топа трейдеров" or field.label == "Парсинг топа снайперов" %}
@@ -33,6 +33,23 @@
           <button class="parsing__button" type="submit" name='mybtn2'>Скачать топ кошельков</button>
         </form>
       </div>
+
+      <div class="content-card">
+        <h4 class="content-card__title">{% get_check_coin_form %}</h4>
+          {% csrf_token %}
+          {% for field in check_coin_form %}
+            {{field.label_tag}}
+            <div class="check-coin__form">
+            {{field}}
+            {% if field.errors%}
+              <div class="error">{{field.errors}}</div>
+            {% endif %}
+          {% endfor %}
+          <button class="parsing__button" id="check-coin-button" type="submit" name='mybtn2'>Проверить монету</button>
+          <div id="check-coin-result"></div>
+        </div>
+      </div>
+
       <div class="content-card">
         <table class="table">
           <caption>
@@ -41,7 +58,6 @@
           <tbody>
             <th>Кошелёк</th>
             <th>Успешные сделки</th>
-            
             {% for trader in top_traders %}
               <tr>
                 <td>
@@ -159,4 +175,24 @@
       </div>
     </div>
   </div>
+
+  <script>
+    document.getElementById("check-coin-button").addEventListener("click", function(event) {
+        event.preventDefault();
+        const coin = document.getElementById('check-coin-input').value;
+        const url = "{% url 'toss_a_coin:check_coin' %}"
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(coin)
+          })
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById("check-coin-result").innerText = `${data.result1} and ${data.check_coin_result}`;
+        })
+    });
+  </script>
 {% endblock %}

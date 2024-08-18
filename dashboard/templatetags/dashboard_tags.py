@@ -15,8 +15,8 @@ from django.contrib.admin.models import LogEntry
 from django.core.paginator import Paginator
 from ..settings import get_settings
 from ..utils import order_items
-from ..forms import ParsingTopTradersForm
-from parser.models import TopTrader
+from ..forms import ParsingTopTradersForm, CheckCoinForm
+from toss_a_coin.models import TopTrader
 
 register = template.Library()
 
@@ -242,3 +242,11 @@ def get_parsing_top_traders_form(context: template.Context) -> str:
     context["parsing_form"] = parsing_form
     
     return "Парсинг топа кошельков"
+
+
+@register.simple_tag(takes_context=True)
+def get_check_coin_form(context: template.Context) -> str:
+    check_coin_form = CheckCoinForm()
+    context["check_coin_form"] = check_coin_form
+
+    return "Проверка монеты"
