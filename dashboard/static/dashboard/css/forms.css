@@ -678,7 +678,6 @@ textarea:focus {
     margin-bottom: 4px;
     color: dodgerblue;
     vertical-align: middle;
-    -webkit-appearance: none;
     background: none;
     border: 0;
     outline: 0;
