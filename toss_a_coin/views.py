@@ -1,28 +1,54 @@
 import json
-from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_POST
+import logging
+from django.http import JsonResponse, HttpRequest
 from seleniumbase import SB
-from .dex_parser import DexScreenerParser
-from dashboard.forms import ParsingTopTradersForm
+from .check_coin import CoinChecker
+from .dexscreener_worker import DexScreeneWatcher
+from .parsers.dexscreener_parser import DexScreenerParser
 
-@require_POST
-def parse_top_traders(request: HttpRequest):
-    parsing_form = ParsingTopTradersForm(request.POST)
+logger = logging.getLogger(__name__)
+
+
+def parse_top_traders(request: HttpRequest) -> JsonResponse:
+    """
+    Парсит топ кошельки по заданным критериям:
+    filter - фильтр в виде параметров строки запроса;
+    pages - количество страниц.
+    """
     
-    if parsing_form.is_valid():
-        filter = parsing_form.cleaned_data["filter"] if parsing_form.cleaned_data.get("filter") else ""
-        pages = int(parsing_form.cleaned_data["pages"]) if parsing_form.cleaned_data.get("pages") else 1
-        is_top_traders = parsing_form.cleaned_data["is_top_traders"]
-        is_top_snipers = parsing_form.cleaned_data["is_top_snipers"]
-        with SB(uc=True, test=True) as sb:
-            dex_parser = DexScreenerParser(sb)
-            dex_parser.parse_top_traders_from_the_pages(pages, filter, is_top_traders, is_top_snipers)
+    data = json.loads(request.body)
+    filter = data["filter"] if data["filter"] else ""
+    pages =int(data["pages"]) if data["pages"] else 1
+    
+    with SB(uc=True, test=True, xvfb=True) as sb:
+        dex_parser = DexScreenerParser(sb)
+        dex_parser.parse_top_traders_from_the_pages(pages, filter)
             
-    return HttpResponseRedirect("/admin")
+    return JsonResponse({"status": "done"})
+ 
+ 
+def check_coin(request: HttpRequest) -> JsonResponse:
+    """
+    Базовая проверка введённой в форму монеты.
+    """
     
-
-def check_coin(request: HttpRequest):
     coin = json.loads(request.body)
+    coin_checker = CoinChecker()
 
-    return JsonResponse({"check_coin_result": coin, "result1": "yay"})
+    return JsonResponse({"status": "done"})
+
+
+def watch_dexscreener(request: HttpRequest) -> JsonResponse:
+    """ 
+    Запускает мониторинг и анализ на сайте https://dexscreener.com/
+    """
+    
+    data = json.loads(request.body)
+    filter = data["filter"] if data["filter"] else ""
+    pages =int(data["pages"]) if data["pages"] else "1"
+    
+    with SB(uc=True, test=True, xvfb=True) as sb:
+        dex_parser = DexScreeneWatcher(sb)
+        dex_parser.watch_coins(pages, filter)
+            
+    return JsonResponse({"status": "done"})
