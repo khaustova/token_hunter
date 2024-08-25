@@ -241,7 +241,7 @@ def get_parsing_top_traders_form(context: template.Context) -> str:
     parsing_form = ParsingTopTradersForm()
     context["parsing_form"] = parsing_form
     
-    return "Парсинг топа кошельков"
+    return "Парсинг Dexscreener"
 
 
 @register.simple_tag(takes_context=True)

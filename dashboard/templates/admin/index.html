@@ -12,26 +12,24 @@
   <div class="content_wrapper">
     <div class="content-apps">
       {% block content-apps %}
+
       <div class="content-card">
         <h4 class="content-card__title">{% get_parsing_top_traders_form %}</h4>
-        <form class="parsing__form" action="{% url 'toss_a_coin:parse_top_traders' %}" method="post">
+        <div class="parsing__form">
           {% csrf_token %}
           {% for field in parsing_form %}
-            {% if field.label == "Парсинг топа трейдеров" or field.label == "Парсинг топа снайперов" %}
-              <div class="parsing__checkboxes">
-                {{ field }}
-                {{ field.label_tag }}
-              </div>
-            {% else %}
-              {{field.label_tag}}
-              {{field}}
-            {% endif %}
+            {{field.label_tag}}
+            {{field}}
             {% if field.errors%}
               <div class="error">{{field.errors}}</div>
             {% endif %}
           {% endfor %}
-          <button class="parsing__button" type="submit" name='mybtn2'>Скачать топ кошельков</button>
-        </form>
+          <div class="parsing-buttons_wrapper">
+            <button class="parsing__button" id="parsing-top-button" type="submit" name='parsingTopButton'>Обновить топ кошельков 📈</button>
+            <button class="watcher__button" id="watch-dex-button" type="submit" name='watchDexButton'>Мониторинг Dexscreener 👀</button>
+          </div>
+          <div id="parsing-result"></div>
+        </div>
       </div>
 
       <div class="content-card">
@@ -45,7 +43,7 @@
               <div class="error">{{field.errors}}</div>
             {% endif %}
           {% endfor %}
-          <button class="parsing__button" id="check-coin-button" type="submit" name='mybtn2'>Проверить монету</button>
+          <button class="check-coin__button" id="check-coin-button" type="submit" name='checkCoinButton'>Проверить монету 🔎</button>
           <div id="check-coin-result"></div>
         </div>
       </div>
@@ -178,21 +176,60 @@
 
   <script>
     document.getElementById("check-coin-button").addEventListener("click", function(event) {
-        event.preventDefault();
-        const coin = document.getElementById('check-coin-input').value;
-        const url = "{% url 'toss_a_coin:check_coin' %}"
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify(coin)
-          })
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById("check-coin-result").innerText = `${data.result1} and ${data.check_coin_result}`;
+      event.preventDefault();
+      const coin = document.getElementById('check-coin-input').value;
+      const url = "{% url 'toss_a_coin:check_coin' %}"
+      fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify(coin)
         })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("check-coin-result").innerText = `hello`;
+      })
+    });
+
+    document.getElementById("parsing-top-button").addEventListener("click", function(event) {
+      event.preventDefault();
+      const filter = document.getElementById("id_filter").value; 
+      const pages = document.getElementById("id_pages").value;
+      const url = "{% url 'toss_a_coin:parse_top_traders' %}"
+      fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({"filter": filter, "pages": pages})
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Кошельки успешно скачаны");
+      })
+    });
+
+    document.getElementById("watch-dex-button").addEventListener("click", function(event) {
+      event.preventDefault();
+      const filter = document.getElementById("id_filter").value; 
+      const pages = document.getElementById("id_pages").value;
+      const url = "{% url 'toss_a_coin:watch_dexscreener' %}"
+      fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({"filter": filter, "pages": pages})
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Процесс успешен");
+      })
     });
   </script>
 {% endblock %}
+

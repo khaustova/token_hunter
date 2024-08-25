@@ -261,6 +261,7 @@
     .toggle-sidebar {
         display: none;
     }
+
     /* Forms */
 
     .search-top__field {
@@ -316,6 +317,11 @@
         width: 100%;
         height: 32px;
         margin-bottom: 7px;
+    }
+
+    .parsing-buttons_wrapper {
+        display: flex;
+        flex-direction: column;
     }
 
     /* Widgets */

@@ -27,23 +27,8 @@ class ParsingTopTradersForm(forms.Form):
         widget=forms.NumberInput(attrs={'placeholder': 'По умолчанию парсится первая страница'}),
         label="Введите количество страниц:",
     )
-    is_top_traders = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(),
-        label="Парсинг топа трейдеров"
-    )
-    is_top_snipers = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(),
-        label="Парсинг топа снайперов"
-    )
     
-class CheckCoinForm(forms.Form):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.label_suffix = ""  # Removes : as label suffix
-        
+class CheckCoinForm(forms.Form):  
     coin = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={"placeholder": "Сейчас поддерживается только сеть SOLANA", "id": "check-coin-input", "name": "coin"}),
