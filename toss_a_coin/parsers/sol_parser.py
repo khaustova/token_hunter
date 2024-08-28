@@ -113,9 +113,10 @@ class SolscanParser:
     Парсит данные с https://solscan.io/.
     """
     
-    def __init__(self):
+    def __init__(self, address: str):
         self.url = "https://solscan.io/account/"
         self.driver = None
+        self.address = address
 
     def __enter__(self):
         chrome_options = uc.ChromeOptions()
@@ -123,7 +124,8 @@ class SolscanParser:
         chrome_options.add_argument("--headless")
 
         self.driver = uc.Chrome(use_subprocess=True, options=chrome_options)
-
+        self.prepare_parsing()
+        
         return self
 
     def __exit__(self, exc_type, exc_value, _):
@@ -135,8 +137,8 @@ class SolscanParser:
 
         return False
     
-    def prepare_parsing(self, address: str):
-        url = urljoin(self.url, address)
+    def prepare_parsing(self):
+        url = urljoin(self.url, self.address)
 
         driver = self.driver
         driver.get(url)
@@ -150,31 +152,29 @@ class SolscanParser:
         
         return driver
         
-    def get_balance(self, address: str):       
-        driver = self.prepare_parsing(address)
-
+    def get_balance(self):       
         try:
-            print(driver.title)
-            logger.info(f"Начата загрузка баланса токенов на аккаунте {address}")
+            print(self.driver.title)
+            # logger.info(f"Начата загрузка баланса токенов на аккаунте {self.address}")
             
-            balance_button = driver.find_element(By.XPATH, '//button[text()="Portfolio"]')
-            balance_button.click()
-            print(balance_button.text)
+            # balance_button = driver.find_element(By.XPATH, '//button[text()="Portfolio"]')
+            # balance_button.click()
+            # print(balance_button.text)
         
-            element = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located(
-                    (
-                        By.XPATH,
-                        (
-                            "//table/tbody/tr[2]/td[1]/span/span[1]/a"
-                        ),
-                    )
-                )
-            )
-            return element.text
+            # element = WebDriverWait(driver, 5).until(
+            #     EC.presence_of_element_located(
+            #         (
+            #             By.XPATH,
+            #             (
+            #                 "//table/tbody/tr[2]/td[1]/span/span[1]/a"
+            #             ),
+            #         )
+            #     )
+            # )
+            # return element.text
             
         except TimeoutException:
-            logger.info(f"На странице не найдена информация по балансу на аккаунте {address}")
+            logger.info(f"На странице не найдена информация по балансу на аккаунте {self.address}")
             pass
 
         return None

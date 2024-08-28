@@ -55,9 +55,10 @@ class RugCheckParser:
         
         return driver
         
-    def get_risk_analysis(self) -> str:       
+    def get_risk_analysis(self) -> str:  
+        logger.debug(f"Начато определение риска монеты {self.address}")     
+        
         try:
-            logger.debug(f"Начато определение риска монеты {self.address}")
             risk_element = self.driver.find_element(
                 By.XPATH, 
                 "//*[@id='token-show']/div/div[3]/div[1]/div/div[2]/div/div[1]/h1"
@@ -73,45 +74,60 @@ class RugCheckParser:
         
     def get_top_holders(self):
         logger.debug(f"Начато определение топа держателей монеты {self.address}")
-        rows = len(self.driver.find_elements(
-            By.XPATH, 
-            "//*[@id='token-show']/div/div[4]/div[2]/div/div[2]/table/tbody/tr"
-            )
-        )
         
-        top_holders = {}
-        for i in range(1, rows + 1):
-            percentage_element = self.driver.find_element(
+        try:
+            rows = len(self.driver.find_elements(
                 By.XPATH, 
-                f"//*[@id='token-show']/div/div[4]/div[2]/div/div[2]/table/tbody/tr[{i}]/td[3]"
+                "//*[@id='token-show']/div/div[4]/div[2]/div/div[2]/table/tbody/tr"
+                )
             )
-            percentage = float(percentage_element.text.strip("%"))
             
-            account_element = self.driver.find_element(
-                By.XPATH, 
-                f"//*[@id='token-show']/div/div[4]/div[2]/div/div[2]/table/tbody/tr[{i}]/td[1]/a"
+            top_holders = {}
+            for i in range(1, rows + 1):
+                percentage_element = self.driver.find_element(
+                    By.XPATH, 
+                    f"//*[@id='token-show']/div/div[4]/div[2]/div/div[2]/table/tbody/tr[{i}]/td[3]"
+                )
+                percentage = float(percentage_element.text.strip("%"))
+                
+                account_element = self.driver.find_element(
+                    By.XPATH, 
+                    f"//*[@id='token-show']/div/div[4]/div[2]/div/div[2]/table/tbody/tr[{i}]/td[1]/a"
+                )
+                account = account_element.get_attribute("href").split("/")[-1]
+                
+                if percentage >= 20 and account != "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1":
+                    break
+                
+                top_holders[account] = percentage
+                logger.debug(f"Топ держателей монеты {self.address}: {top_holders}")
+            
+        except TimeoutException:
+            logger.error(f"На странице не найдена информация по тому держателей монеты {self.address}")
+            
+            return None
+           
+    def get_creator(self):
+        logger.debug(f"Начато определение риска монеты {self.address}")  
+           
+        try:
+            creator_element = self.driver.find_element(
+                By.XPATH,
+                "//*[@id='token-show']/div/div[3]/div[2]/div/div[2]/table/tbody/tr[1]/td[3]/a"
             )
-            account = account_element.get_attribute("href").split("/")[-1]
+            creator = creator_element.get_attribute("href").split("/")[-1]
+            logger.debug(f"Создатель монеты {self.address}: {creator}")
             
-            if percentage >= 20 and account != "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1":
-                break
+            return creator
             
-            top_holders[account] = percentage
-            logger.debug(f"Топ держателей монеты {self.address}: {top_holders}")
+        except TimeoutException:
+            logger.error(f"На странице не найдена информация по создателю монеты {self.address}")
             
-    def get_mint(self):
-        logger.debug(f"Начато определение создателя монеты {self.address}")
-        mint_element = self.driver.find_element(
-            By.XPATH,
-            "//*[@id='token-show']/div/div[3]/div[2]/div/div[2]/table/tbody/tr[1]/td[2]/a"
-        )
-        mint = mint_element.get_attribute("href").split("/")[-1]
-        logger.debug(f"Создатель монеты {self.address}: {mint}")
-        
-        return mint
-        
+            return None
+   
     def get_lp_locked(self):
         logger.debug(f"Начато определение заблокированной ликвидности монеты {self.address}")
+        
         try:
             lp_locked_element = self.driver.find_element(
                 By.XPATH,
@@ -119,7 +135,10 @@ class RugCheckParser:
             )
             lp_locked = float(lp_locked_element.text.strip("%"))
             logger.debug(f"Заблокированная ликвидности монеты {self.address}: {lp_locked}")
+            
             return lp_locked
+        
         except:
             logger.debug(f"У монеты {self.address} ликвидность не заблокирована")
+            
             return None

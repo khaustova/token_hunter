@@ -2,7 +2,7 @@ import json
 import logging
 from django.http import JsonResponse, HttpRequest
 from seleniumbase import SB
-from .check_coin import CoinChecker
+from .coin_checker import CoinChecker
 from .dexscreener_worker import DexScreeneWatcher
 from .parsers.dexscreener_parser import DexScreenerParser
 

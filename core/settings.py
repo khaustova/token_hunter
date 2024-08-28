@@ -4,19 +4,19 @@ from environ import Env
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = Env()
-Env.read_env(BASE_DIR / '.env')
+Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env('DJANGO_SECRET_KEY')
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS').split(' ')
+ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS").split(" ")
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
 
-CSRF_TRUSTED_ORIGINS = env('CSRF_TRUSTED_ORIGINS').split(' ')
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(" ")
 
-INTERNAL_IPS = env('INTERNAL_IPS').split(' ')
+INTERNAL_IPS = env("INTERNAL_IPS").split(" ")
 
 # Application definition
 
@@ -221,3 +221,8 @@ LOGGING = {
         }
     }
 }
+
+# API Keys
+
+MORALIS_API_KEY = env("MORALIS_API_KEY")
+HELIUS_API_KEY = env("HELIUS_API_KEY")
