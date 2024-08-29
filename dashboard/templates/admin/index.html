@@ -1,0 +1,235 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static dashboard_tags %}
+{% get_customization_settings as customization %}
+
+{% block title %}{{ customization.title }}{% endblock %}
+
+{% block content %}
+  {% get_apps as apps %}
+  {% if apps %}
+    {% widthratio apps|length 2 1 as middle %}
+  {% endif %}
+  <div class="content_wrapper">
+    <div class="content-apps">
+      {% block content-apps %}
+
+      <div class="content-card">
+        <h4 class="content-card__title">{% get_parsing_top_traders_form %}</h4>
+        <div class="parsing__form">
+          {% csrf_token %}
+          {% for field in parsing_form %}
+            {{field.label_tag}}
+            {{field}}
+            {% if field.errors%}
+              <div class="error">{{field.errors}}</div>
+            {% endif %}
+          {% endfor %}
+          <div class="parsing-buttons_wrapper">
+            <button class="parsing__button" id="parsing-top-button" type="submit" name='parsingTopButton'>Обновить топ кошельков 📈</button>
+            <button class="watcher__button" id="watch-dex-button" type="submit" name='watchDexButton'>Мониторинг Dexscreener 👀</button>
+          </div>
+          <div id="parsing-result"></div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <h4 class="content-card__title">{% get_check_coin_form %}</h4>
+          {% csrf_token %}
+          {% for field in check_coin_form %}
+            {{field.label_tag}}
+            <div class="check-coin__form">
+            {{field}}
+            {% if field.errors%}
+              <div class="error">{{field.errors}}</div>
+            {% endif %}
+          {% endfor %}
+          <button class="check-coin__button" id="check-coin-button" type="submit" name='checkCoinButton'>Проверить монету 🔎</button>
+          <div id="check-coin-result"></div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <table class="table">
+          <caption>
+            <h4 class="table__title">{% get_top_traders %}</h4>
+          </caption>
+          <tbody>
+            <th>Кошелёк</th>
+            <th>Успешные сделки</th>
+            {% for trader in top_traders %}
+              <tr>
+                <td>
+                  {% get_wallet_link trader.maker as solsniffer_link %}
+                  <a href="{{ solsniffer_link }}">{{ trader.maker }}</a>
+                </td>
+                <td>
+                  {{ trader.coin_count }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="paginator">
+          <div class="table__pagination-pages">
+            {% if top_traders.has_previous %}
+              <a href="?page={{ top_traders.previous_page_number }}">Назад</a>
+              {% if top_traders.number > 3 %}
+                <a href="?page=1">1</a>
+                {% if top_traders.number > 4 %}
+                  ...
+                {% endif %}
+              {% endif %}
+            {% endif %}
+            {% for num in top_traders.paginator.page_range %}
+              {% if top_traders.number == num %}
+                {{ num }}
+              {% elif num > top_traders.number|add:'-3' and num < top_traders.number|add:'3' %}
+                <a href="?page={{ num }}">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+            {% if top_traders.has_next %}
+              {% if top_traders.number < top_traders.paginator.num_pages|add:'-3' %}
+                <a >...</a>
+                <a href="?page={{ top_traders.paginator.num_pages }}">
+                  {{ top_traders.paginator.num_pages }}
+                </a>
+              {% elif top_traders.number < top_traders.paginator.num_pages|add:'-2' %}
+                <a href="?page={{ top_traders.paginator.num_pages }}">
+                  {{ top_traders.paginator.num_pages }}
+                </a>
+              {% endif %}
+              <a href="?page={{ top_traders.next_page_number }}">Далее</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endblock %}
+    </div>
+    
+    <div class="content-history">
+      <div class="content-card" id="recent-actions-module">
+        <h4 class="content-card__title">{% trans 'Recent actions' %}</h4>
+        {% load log %}
+        {% get_admin_log 10 as admin_log for_user user %}
+        {% if not admin_log %}
+          <p>{% trans 'None available' %}</p>
+        {% else %}
+          <div class="timeline">
+            {% for entry in admin_log %}
+              <div>
+                {% if entry.is_change %}
+                  <span class="material-symbols-outlined icon-edit">
+                    edit
+                  </span>
+                {% elif entry.is_deletion %}
+                  <span class="material-symbols-outlined icon-delete">
+                    delete
+                  </span>
+                {% elif entry.is_addition %}
+                  <span class="material-symbols-outlined icon-create">
+                    add
+                  </span>
+                {% endif %}
+                <div class="timeline-item">
+                  <span class="time">
+                    <span class="material-symbols-outlined icon-datetime">
+                      schedule
+                    </span>
+                    {% blocktrans with timesince=entry.action_time|timesince %}{{ timesince }} ago{% endblocktrans %}
+                  </span>
+                  <h3 class="timeline-header">
+                    {% if entry.is_deletion or not entry.get_admin_url %}
+                      {{ entry.object_repr }}
+                    {% else %}
+                      <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                    {% endif %}
+                    {% if entry.model %}
+                      <span class="mini quiet">
+                        {% filter capfirst %}
+                          {{ entry.model }}
+                        {% endfilter %}
+                      </span>
+                    {% endif %}
+                  </h3>
+                  {% if not entry.is_deletion %}
+                    <div class="timeline-body">
+                      {% if entry.is_addition %}
+                        {{ entry }}
+                      {% else %}
+                        <ul style="list-style: none; padding: 0;">
+                          {% action_message_to_list entry as action_message_list %}
+                          {% for action_message in action_message_list %}
+                            <li>{{ action_message.message|bold_first_word }}</li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("check-coin-button").addEventListener("click", function(event) {
+      event.preventDefault();
+      const coin = document.getElementById('check-coin-input').value;
+      const url = "{% url 'toss_a_coin:check_coin' %}"
+      fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify(coin)
+        })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("check-coin-result").innerText = `hello`;
+      })
+    });
+
+    document.getElementById("parsing-top-button").addEventListener("click", function(event) {
+      event.preventDefault();
+      const filter = document.getElementById("id_filter").value; 
+      const pages = document.getElementById("id_pages").value;
+      const url = "{% url 'toss_a_coin:parse_top_traders' %}"
+      fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({"filter": filter, "pages": pages})
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Кошельки успешно скачаны");
+      })
+    });
+
+    document.getElementById("watch-dex-button").addEventListener("click", function(event) {
+      event.preventDefault();
+      const filter = document.getElementById("id_filter").value; 
+      const pages = document.getElementById("id_pages").value;
+      const url = "{% url 'toss_a_coin:watch_dexscreener' %}"
+      fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({"filter": filter, "pages": pages})
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Процесс успешен");
+      })
+    });
+  </script>
+{% endblock %}
+

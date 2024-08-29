@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache
+latest_logs
+downloaded_files
+transactions
+page_sources
+.venv
+.env

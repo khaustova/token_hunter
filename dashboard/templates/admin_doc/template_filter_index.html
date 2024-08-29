@@ -1,0 +1,60 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block coltype %}colSM{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">
+      <span class="material-symbols-outlined breadcrumbs-icon">
+        home
+      </span>
+    </a>
+    &nbsp;&#47;&nbsp;<a href="{% url 'django-admindocs-docroot' %}">{% translate 'Documentation' %}</a>
+    &nbsp;&#47;&nbsp;{% translate 'Filters' %}
+  </div>
+{% endblock %}
+
+{% block title %}{% translate 'Template filters' %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="doc_wrapper">
+    {% regroup filters|dictsort:"library" by library as filter_libraries %}
+    <div id="content-related" class="doc-menu content-card">
+      {% regroup filters|dictsort:"library" by library as filter_libraries %}
+      {% for library in filter_libraries %}
+        <div class="module">
+          <h2 class="doc__title">{% firstof library.grouper _("Built-in filters") %}</h2>
+          <ul>
+            {% for filter in library.list|dictsort:"name" %}
+              <li>
+                <a href="#{{ library.grouper|default:"built_in" }}-{{ filter.name }}">
+                  {{ filter.name }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="doc content-card">
+      {% for library in filter_libraries %}
+        <div class="module">
+          <h2 class="doc__title">{% firstof library.grouper _("Built-in filters") %}</h2>
+          {% if library.grouper %}
+            <p class="small quiet">
+              {% blocktranslate with code="{"|add:"% load "|add:library.grouper|add:" %"|add:"}" %}To use these filters, put <code>{{ code }}</code> in your template before using the filter.{% endblocktranslate %}
+            </p>
+            <hr>
+          {% endif %}
+          {% for filter in library.list|dictsort:"name" %}
+            <h3 id="{{ library.grouper|default:"built_in" }}-{{ filter.name }}" class="doc__title">{{ filter.name }}</h3>
+            {{ filter.title }}
+            {{ filter.body }}
+            {% if not forloop.last %}<hr class="doc__line">{% endif %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

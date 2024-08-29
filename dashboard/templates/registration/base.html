@@ -1,0 +1,26 @@
+{% load i18n static admin_urls dashboard_tags %}
+{% get_customization_settings as customization %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<head>
+  <title>{% block title %}{% endblock %}</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+  {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"/>
+  <link rel="stylesheet" href="{% static "dashboard/css/login.css" %}">
+</head>
+
+<body>
+  <div class="content_wrapper">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

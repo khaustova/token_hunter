@@ -1,0 +1,77 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block bodyclass %}{{ block.super }} app-{{ app_label }}{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">
+      <span class="material-symbols-outlined breadcrumbs-icon">
+          home
+      </span>
+    </a>
+    &nbsp;&#47;
+    {% for app in app_list %}
+      {{ app.name }}
+    {% endfor %}
+  </div>
+{% endblock %}
+
+{% block content-apps %}
+{% for app in app_list %}
+  <div class="content-card">
+    <table class="table">
+      <caption>
+        <h4 class="table__title">{{ app.name }}</h4>
+      </caption>
+      <tbody>
+        {% for model in app.models %}
+          <tr>
+            <td>
+              {% if  model.admin_url %}
+                <a href="{{ model.admin_url }}">{{ model.name }}</a>
+              {% else %}
+                {{ model.name }}
+              {% endif %}
+            </td>
+            <td>
+              <div class="model-change">
+                {% if model.add_url %}
+                  <div>
+                    <a href="{{ model.add_url }}" class="addlink">
+                      <span class="material-symbols-outlined icon-create">
+                          add
+                      </span>
+                      {% trans 'Add' %}
+                    </a>
+                  </div>
+                {% endif %}
+                {% if  model.admin_url %}
+                  {% if model.view_only %}
+                    <a href="{{ model.admin_url }}" class="viewlink">{% trans 'View' %}</a>
+                  {% else %}
+                    <div>
+                      <a href="{{ model.admin_url }}" class="changelink">
+                        <span class="material-symbols-outlined icon-edit">
+                          edit
+                        </span>
+                        {% if model.custom %}
+                          {% trans 'Go' %}
+                        {% else %}
+                          {% trans 'Change' %}
+                        {% endif %}
+                      </a>
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endfor %}
+{% endblock %}
+{% endif %}

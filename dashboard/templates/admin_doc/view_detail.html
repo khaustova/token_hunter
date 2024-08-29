@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">
+      <span class="material-symbols-outlined breadcrumbs-icon">
+        home
+      </span>
+    </a>
+    &nbsp;&#47;&nbsp;<a href="{% url 'django-admindocs-docroot' %}">{% translate 'Documentation' %}</a>
+    &nbsp;&#47;&nbsp;<a href="{% url 'django-admindocs-views-index' %}">{% translate 'Views' %}</a>
+    &nbsp;&#47;&nbsp;{{ name }}
+  </div>
+{% endblock %}
+
+{% block title %}{% blocktranslate %}View: {{ name }}{% endblocktranslate %}{% endblock %}
+
+{% block content %}
+  <div class="content-card">
+    <h1 class="doc__title">{{ name }}</h1>
+    <h4 class="doc__title">{{ summary|striptags }}</h4>
+    {{ body }}
+    {% if meta.Context %}
+    <h3 class="doc__title">{% translate 'Context:' %}</h3>
+    <p>{{ meta.Context }}</p>
+    {% endif %}
+    {% if meta.Templates %}
+      <h3 class="doc__title">{% translate 'Templates:' %}</h3>
+      <p>{{ meta.Templates }}</p>
+    {% endif %}
+  </div>
+  <p class="doc__back">
+    <a href="{% url 'django-admindocs-views-index' %}">
+      <span class="material-symbols-outlined icon-back">
+        arrow_back
+      </span> 
+      {% translate 'Back to View documentation' %}
+    </a>
+  </p>
+{% endblock %}
