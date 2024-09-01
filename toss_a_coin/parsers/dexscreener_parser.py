@@ -115,14 +115,14 @@ class DexScreenerParser():
             )
         logger.debug(f"Успешно загружена информация по монете {token_addres}")
         
-        LogEntry.objects.log_action(
-            user_id=1, 
-            content_type_id=TopTrader.objects.get_for_model(tt).pk,
-            object_id=tt.pk,
-            object_repr=str(tt),
-            action_flag=ADDITION,
-            change_message="Описание изменений"
-        )
+        # LogEntry.objects.log_action(
+        #     user_id=1, 
+        #     content_type_id=TopTrader.objects.get_for_model(tt).pk,
+        #     object_id=tt.pk,
+        #     object_repr=str(tt),
+        #     action_flag=ADDITION,
+        #     change_message="Описание изменений"
+        # )
         
     def _covert_str_number_to_int(self, str_number: str) -> int:
         number = str_number.lstrip("0").lstrip("$")
