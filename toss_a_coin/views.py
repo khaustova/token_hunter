@@ -1,6 +1,7 @@
 import json
 import logging
 from django.http import JsonResponse, HttpRequest
+from django.conf import settings
 from seleniumbase import SB
 from .coin_checker import CoinChecker
 from .dexscreener_worker import DexScreeneWatcher
@@ -44,10 +45,15 @@ def watch_dexscreener(request: HttpRequest) -> JsonResponse:
     """
     
     data = json.loads(request.body)
-    filter = data["filter"] if data["filter"] else ""
+    filter = data["filter"] if data["filter"] else "?rankBy=trendingScoreH6&order=desc&minLiq=5000&maxAge=1"
     pages =int(data["pages"]) if data["pages"] else "1"
     
-    with SB(uc=True, test=True, xvfb=True) as sb:
+    with SB(
+        uc=True, 
+        test=True, 
+        headless=True,
+        extension_dir=settings.CAPTCHA_EXTENSION_DIR
+    ) as sb:
         dex_parser = DexScreeneWatcher(sb)
         dex_parser.watch_coins(pages, filter)
             
