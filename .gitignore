@@ -2,6 +2,7 @@ __pycache__/
 .pytest_cache
 latest_logs
 downloaded_files
+db.sqlite3
 transactions
 page_sources
 .venv
