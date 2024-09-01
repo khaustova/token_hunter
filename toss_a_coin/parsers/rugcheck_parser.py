@@ -19,13 +19,14 @@ class RugCheckParser:
         self.driver = None
 
     def __enter__(self):
-        logger.info(f"Открытие браузера для парсинга с https://rugcheck.xyz/...")
-        
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-popup-blocking")
         chrome_options.add_argument("--headless")
 
-        self.driver = uc.Chrome(use_subprocess=True, options=chrome_options)
+        self.driver = uc.Chrome(
+            use_subprocess=True, 
+            options=chrome_options,
+        )
         self.prepare_parsing()
 
         return self
@@ -35,7 +36,6 @@ class RugCheckParser:
             logger.error(f"При закрытии браузера произошла ошибка: {exc_value}")
 
         if self.driver:
-            logger.info(f"Закрытие браузера для парсинга с https://rugcheck.xyz/...")
             self.driver.close()
 
         return False
@@ -56,14 +56,14 @@ class RugCheckParser:
         return driver
         
     def get_risk_analysis(self) -> str:  
-        logger.debug(f"Начато определение риска монеты {self.address}")     
+        logger.debug(f"Начато определение риска монеты {self.address} на rugcheck")     
         
         try:
             risk_element = self.driver.find_element(
                 By.XPATH, 
                 "//*[@id='token-show']/div/div[3]/div[1]/div/div[2]/div/div[1]/h1"
             )
-            logger.debug(f"Уровень риска монеты {self.address}: {risk_element.text}")
+            logger.info(f"Уровень риска монеты {self.address}: {risk_element.text}")
             
             return risk_element.text
             
