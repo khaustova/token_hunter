@@ -46,14 +46,16 @@ def watch_dexscreener(request: HttpRequest) -> JsonResponse:
     
     data = json.loads(request.body)
     filter = data["filter"] if data["filter"] else "?rankBy=trendingScoreH6&order=desc&minLiq=5000&maxAge=1"
-    pages =int(data["pages"]) if data["pages"] else "1"
+    pages = int(data["pages"]) if data["pages"] else "1"
     
-    driver = Driver(
+    with SB(
         uc=True, 
-        #headless=True,
+        test=True, 
+        #xvfb=True,
+        headless2=True,
         extension_dir=settings.CAPTCHA_EXTENSION_DIR
-    )
-    dex_parser = DexScreeneWatcher(driver)
-    dex_parser.watch_coins(pages, filter)
+    ) as sb:
+        dex_parser = DexScreeneWatcher(sb)
+        dex_parser.watch_coins(pages, filter)
             
     return JsonResponse({"status": "done"})

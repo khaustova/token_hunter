@@ -56,14 +56,11 @@ class RugCheckParser:
         return driver
         
     def get_risk_analysis(self) -> str:  
-        logger.debug(f"Начато определение риска монеты {self.address} на rugcheck")     
-        
         try:
             risk_element = self.driver.find_element(
                 By.XPATH, 
                 "//*[@id='token-show']/div/div[3]/div[1]/div/div[2]/div/div[1]/h1"
             )
-            logger.info(f"Уровень риска монеты {self.address}: {risk_element.text}")
             
             return risk_element.text
             
@@ -73,8 +70,6 @@ class RugCheckParser:
             return None
         
     def get_top_holders(self):
-        logger.debug(f"Начато определение топа держателей монеты {self.address}")
-        
         try:
             rows = len(self.driver.find_elements(
                 By.XPATH, 
@@ -108,8 +103,6 @@ class RugCheckParser:
             return None
            
     def get_creator(self):
-        logger.debug(f"Начато определение риска монеты {self.address}")  
-           
         try:
             creator_element = self.driver.find_element(
                 By.XPATH,
@@ -126,8 +119,6 @@ class RugCheckParser:
             return None
    
     def get_lp_locked(self):
-        logger.debug(f"Начато определение заблокированной ликвидности монеты {self.address}")
-        
         try:
             lp_locked_element = self.driver.find_element(
                 By.XPATH,

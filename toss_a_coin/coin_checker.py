@@ -14,13 +14,11 @@ class CoinChecker:
     def __init__(self, coin_address: str):
         self.coin_address = coin_address
     
-    def first_check_coin(self):
+    def rugcheck_coin(self):
         with RugCheckParser(self.coin_address) as rug_check_parser:
             risk_level = rug_check_parser.get_risk_analysis()
-            if risk_level != "Good":
-                return False
             
-            return True
+        return risk_level
 
     def check_top_traders(self):
         print(1)
