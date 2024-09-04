@@ -1,7 +1,5 @@
 import json
-
 from copy import deepcopy
-
 from django import template
 from django.apps import apps
 from django.db.models import Count
@@ -15,7 +13,7 @@ from django.contrib.admin.models import LogEntry
 from django.core.paginator import Paginator
 from ..settings import get_settings
 from ..utils import order_items
-from ..forms import ParsingTopTradersForm, CheckCoinForm
+from toss_a_coin.forms import DexscreenerForm, CheckCoinForm
 from toss_a_coin.models import TopTrader
 
 register = template.Library()
@@ -226,10 +224,9 @@ def get_top_traders(context: template.Context) -> str:
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context['top_traders'] = page_obj
-    parsing_form = ParsingTopTradersForm()
-    context["parsing_form"] = parsing_form
     
     return "Топ кошельков"
+
 
 @register.simple_tag
 def get_wallet_link(address: str) -> str:
@@ -237,9 +234,9 @@ def get_wallet_link(address: str) -> str:
 
 
 @register.simple_tag(takes_context=True)
-def get_parsing_top_traders_form(context: template.Context) -> str:
-    parsing_form = ParsingTopTradersForm()
-    context["parsing_form"] = parsing_form
+def get_dexscreener_form(context: template.Context) -> str:
+    parsing_form = DexscreenerForm()
+    context["dexscreener_form"] = parsing_form
     
     return "Парсинг Dexscreener"
 
