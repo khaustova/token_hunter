@@ -16,15 +16,16 @@ logger = logging.getLogger(__name__)
 
 class DexScreeneWatcher():
     
-    def __init__(self, sb: SB):
+    def __init__(self, sb: SB, filter: str):
         self.sb = sb
+        self.filter = filter
 
-    def watch_coins(self, pages: str, filter: str=""):
+    def watch_coins(self):
         self._get_2captcha_api_key()
-        self.sb.uc_open_with_reconnect("https://dexscreener.com/solana/page-" + pages + filter, reconnect_time=4)
+        self.sb.uc_open_with_reconnect("https://dexscreener.com/" + self.filter, reconnect_time=4)
         #self.sb.uc_gui_click_captcha() 
         self._check_cloudflare()
-
+        time.sleep(15)
         visited_links = set()
         black_list = set()
 

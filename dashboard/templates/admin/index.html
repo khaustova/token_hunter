@@ -14,22 +14,21 @@
       {% block content-apps %}
 
       <div class="content-card">
-        <h4 class="content-card__title">{% get_parsing_top_traders_form %}</h4>
-        <div class="parsing__form">
+        <h4 class="content-card__title">{% get_dexscreener_form %}</h4>
+        <form class="parsing__form" action="{% url 'toss_a_coin:watch_dexscreener' %}" method="POST">
           {% csrf_token %}
-          {% for field in parsing_form %}
-            {{field.label_tag}}
-            {{field}}
+          {% for field in dexscreener_form %}
+            {{ field.label_tag }}
+            {{ field }}
             {% if field.errors%}
-              <div class="error">{{field.errors}}</div>
+              <div class="error">{{ field.errors }}</div>
             {% endif %}
           {% endfor %}
           <div class="parsing-buttons_wrapper">
-            <button class="parsing__button" id="parsing-top-button" type="submit" name='parsingTopButton'>Обновить топ кошельков 📈</button>
-            <button class="watcher__button" id="watch-dex-button" type="submit" name='watchDexButton'>Мониторинг Dexscreener 👀</button>
+            <button class="parsing__button" id="parsing-top-button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
+            <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг Dexscreener 👀</button>
           </div>
-          <div id="parsing-result"></div>
-        </div>
+        </form>
       </div>
 
       <div class="content-card">
@@ -190,44 +189,6 @@
         .then(response => response.json())
         .then(data => {
           document.getElementById("check-coin-result").innerText = `hello`;
-      })
-    });
-
-    document.getElementById("parsing-top-button").addEventListener("click", function(event) {
-      event.preventDefault();
-      const filter = document.getElementById("id_filter").value; 
-      const pages = document.getElementById("id_pages").value;
-      const url = "{% url 'toss_a_coin:parse_top_traders' %}"
-      fetch(url, {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": "{{ csrf_token }}"
-          },
-          body: JSON.stringify({"filter": filter, "pages": pages})
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log("Кошельки успешно скачаны");
-      })
-    });
-
-    document.getElementById("watch-dex-button").addEventListener("click", function(event) {
-      event.preventDefault();
-      const filter = document.getElementById("id_filter").value; 
-      const pages = document.getElementById("id_pages").value;
-      const url = "{% url 'toss_a_coin:watch_dexscreener' %}"
-      fetch(url, {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": "{{ csrf_token }}"
-          },
-          body: JSON.stringify({"filter": filter, "pages": pages})
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log("Процесс успешен");
       })
     });
   </script>
