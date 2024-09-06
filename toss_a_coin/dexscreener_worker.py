@@ -1,112 +1,116 @@
+import asyncio
 import time
 import logging
 import pandas as pd
 import random
+from asgiref.sync import async_to_sync
 from datetime import datetime
 from django.conf import settings
 from seleniumbase import SB
 from bs4 import BeautifulSoup
 from dexscreener import DexscreenerClient
+import nodriver as uc
+from nodriver.core.config import Config
 from .parsers.sol_parser import SolscanParser
 from .models import TopTrader
 from .coin_checker import CoinChecker
 
 logger = logging.getLogger(__name__)
 
-
-class DexScreeneWatcher():
-    
-    def __init__(self, sb: SB, filter: str):
-        self.sb = sb
+class DexScreenerWorker():
+    def __init__(self, browser, filter="?rankBy=trendingScoreH6&order=desc&minLiq=15000&maxAge=1"):
         self.filter = filter
+        self.browser = browser
+        
+    async def watch_coin(self):
+        #await self._get_2captcha_api_key()
+        dex_page = await self.browser.get('https://dexscreener.com/solana' + self.filter)
+        time.sleep(10)
+        visited_links, black_list = [], []
 
-    def watch_coins(self):
-        self._get_2captcha_api_key()
-        self.sb.uc_open_with_reconnect("https://dexscreener.com/" + self.filter, reconnect_time=4)
-        #self.sb.uc_gui_click_captcha() 
-        self._check_cloudflare()
-        time.sleep(15)
-        visited_links = set()
-        black_list = set()
+        logger.info(f"Начат мониторинг DexScreener") 
 
-        logger.info(f"Начат мониторинг DexScreener")  
         while True:
-            links = set(self.sb.find_elements("xpath", "//a[contains(@class, 'ds-dex-table-row')]"))
-            self.sb.sleep(random.randint(1, 3))
-            links -= visited_links
+            all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
 
+            links = [item for item in all_links if item not in visited_links]
+            await dex_page.wait(2)
             if links:
                 for link in links:
-                    self._check_cloudflare()
+                    await link.click()
+                    await self.browser.wait(3)
+                    visited_links.append(link)
                     
-                    try:
-                        if link in visited_links or link in black_list:
-                            continue
-                        else:
-                            link.click()
-                            self._check_cloudflare()      
-                            visited_links.add(link)
-                    except Exception as e:
-                        logger.error(f"Не удалось перейти по ссылке")
+                    coin_link = await dex_page.select_all("a.custom-isf5h9")
+                    coin_address = coin_link[1].attributes[-1].split("/")[-1]
+                    await dex_page.wait(5)
+                    risk_level = await self.rugcheck_coin(coin_address)
+
+                    logger.info(f"Уровень риска монеты {coin_address}: {risk_level}")    
+                    if risk_level != "Good":
+                        black_list.append(link)
+                        await dex_page.back()
+                        await self.browser.wait(3)
+                        
                         continue
-
-                    self.sb.sleep(random.randint(2, 3))
-
-                    coin_link = self.sb.find_elements("xpath", "//a[contains(@class, 'custom-isf5h9')]")[1]
-                    coin_address = coin_link.get_attribute("href").split("/")[-1]
                     
                     coin_checker = CoinChecker(coin_address)
                     
-                    risk_level = coin_checker.rugcheck_coin()
-                    if risk_level != "Good":
-                        logger.info(f"Монета на {link.get_attribute("href")} не прошла проверку на rugcheck.xyz, уровень риска: {risk_level}") 
-                        black_list.add(link)
-                        self.sb.go_back()
-                        time.sleep(random.randint(2, 3))
-                        continue
-                    logger.info(f"Монета на {link.get_attribute("href")} прошла проверку на rugcheck.xyz, уровень риска: {risk_level}")    
-                    
-                    logger.info(f":) Анализ монеты {link.get_attribute("href")}")
-                    
-                    self.sb.go_back()
-                    time.sleep(random.randint(2, 3))
-                    
-    def _get_2captcha_api_key(self):
-        self.sb.uc_open_with_reconnect(settings.CAPTCHA_EXTENSION_LINK)
-        time.sleep(1)
-        input_element = self.sb.find_element("xpath", "//input[@name='apiKey']")
-        input_value = input_element.get_attribute("value")
-        
-        if not input_value:
-            input_element.send_keys(settings.CAPTCHA_API_KEY)
+                    logger.info(f":) Анализ монеты {coin_address}")
 
-        self.sb.find_element("xpath", "//button[@id='connect']").click()
-        self.sb.wait_for_and_accept_alert()
+                    await dex_page.back()
+                    
+                    await self.browser.wait(3)
+
+            await self.browser.wait(10)
+            
+    async def rugcheck_coin(self, coin_address):
+        rugcheck_page = await self.browser.get("https://rugcheck.xyz/tokens/" + coin_address, new_tab=True)
+        await rugcheck_page.wait(2)
+        risk_level = await rugcheck_page.query_selector("div.risk h1.mb-0")
+        await rugcheck_page.close()
         
-    def _bypass_cloudflare(self):
-        self.sb.refresh()
-        time.sleep(5)
+        return risk_level.text
+         
+    async def _get_2captcha_api_key(self):
+        captcha_extenshion_page = await self.browser.get(settings.CAPTCHA_EXTENSION_LINK)
+        api_key_input = await captcha_extenshion_page.select("input[name=apiKey]")
+        
+        await api_key_input.send_keys(settings.CAPTCHA_API_KEY)
+        login_button = await captcha_extenshion_page.find("Login")
+        await login_button.click()
     
+    async def _check_cloudflare(self, page):
+        await self.browser.wait(random.randint(1, 2))
         try:
-            self.sb.find_element("div.captcha-solver-info").click()
+            await page.find("Verifying you are human.")
+            await self._bypass_cloudflare(page)
+        except:
+            return None
+             
+    async def _bypass_cloudflare(self, page):
+        try:
+            captcha_solve_button = await page.find("Solve with 2captcha")
+            await captcha_solve_button.click()
         except:
             logger.debug("Кнопка 2Captcha не найдена, повтор попытки")
-            self.sb.refresh()
-            self._bypass_cloudflare()
+            await page.reload()
+            await self._bypass_cloudflare(page)
             
-        while "Один момент" in self.sb.get_title() or "Just a moment" in self.sb.get_title():
-            logger.debug("Ожидание ответа от 2captcha...")
-            time.sleep(5)
+        while True:
+            try:
+                await page.find("Verifying you are human.")
+                logger.debug("Ожидание ответа от 2captcha...")
+                await self.browser.wait(5)
+            except:
+                break
             
         logger.info("Защита Cloudflare успешно пройдена")
-            
-    def _check_cloudflare(self):
-        self.sb.sleep(random.randint(1, 2))
-        if "Один момент" in self.sb.get_title() or "Just a moment" in self.sb.get_title():
-            logger.debug("Обнаружена защита Cloudflare")
-            self._bypass_cloudflare()
-              
-    def get_last_transactions(self):
-        rows = len(self.sb.find_elements("xpath", "//table/tbody/tr"))
-        element = self.sb.find_element("xpath", "//table/tbody/tr[3]")
+        
+async def run_dexscreener_watcher(filter):    
+    config = Config()
+   # config.add_extension("./extensions/captcha_solver")
+    browser = await uc.start(config=config)
+    dex_worker = DexScreenerWorker(browser, filter)
+    await dex_worker.watch_coin()
     
