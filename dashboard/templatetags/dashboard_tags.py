@@ -15,7 +15,6 @@ from ..settings import get_settings
 from ..utils import order_items
 from toss_a_coin.forms import DexscreenerForm, CheckCoinForm
 from toss_a_coin.models import TopTrader
-from toss_a_coin.views import WATCHER_ID
 from toss_a_coin.utils import get_watch_dexscreener_task_id
 
 register = template.Library()
