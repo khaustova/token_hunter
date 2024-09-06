@@ -20,13 +20,18 @@
           {% for field in dexscreener_form %}
             {{ field.label_tag }}
             {{ field }}
-            {% if field.errors%}
+            {% if field.errors %}
               <div class="error">{{ field.errors }}</div>
             {% endif %}
           {% endfor %}
           <div class="parsing-buttons_wrapper">
-            <button class="parsing__button" id="parsing-top-button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
-            <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг Dexscreener 👀</button>
+            <button class="parsing__button" id="parsing-top-button" type="submit" name="_parsing" {% get_watcher_id as watcher_id %}{% if watcher_id %} disabled="true"{% endif %}>Обновить топ кошельков 📈</button>
+            {% get_watcher_id as watcher_id %}{% if watcher_id %}
+              <button class="watcher__button watcher-stop__button" id="stop-dex-button" type="submit" name="_stop">Стоп ⛔</button>
+              <p>Выполняется мониторинг Dexscreener...</p>
+            {% else %}
+              <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг Dexscreener 👀</button>
+            {% endif %}
           </div>
         </form>
       </div>
@@ -193,4 +198,3 @@
     });
   </script>
 {% endblock %}
-

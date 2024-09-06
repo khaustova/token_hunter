@@ -15,6 +15,8 @@ from ..settings import get_settings
 from ..utils import order_items
 from toss_a_coin.forms import DexscreenerForm, CheckCoinForm
 from toss_a_coin.models import TopTrader
+from toss_a_coin.views import WATCHER_ID
+from toss_a_coin.utils import get_watch_dexscreener_task_id
 
 register = template.Library()
 
@@ -247,3 +249,9 @@ def get_check_coin_form(context: template.Context) -> str:
     context["check_coin_form"] = check_coin_form
 
     return "Проверка монеты"
+
+@register.simple_tag()
+def get_watcher_id() -> str:
+    task_id = get_watch_dexscreener_task_id()
+    
+    return task_id

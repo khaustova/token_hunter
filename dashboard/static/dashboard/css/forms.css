@@ -746,3 +746,19 @@ button[type=submit].check-coin__button {
     grid-template-columns: repeat(2, 1fr);
     column-gap: 5px;
 }
+
+button[type=submit].watcher-stop__button {
+    background-color: var(--color-delete);
+}
+
+button[type=submit].watcher-stop__button:hover {
+    background-color: #c96666;
+}
+
+button:disabled,
+button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: wait
+}
