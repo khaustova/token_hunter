@@ -6,10 +6,13 @@ class TopTrader(models.Model):
     """
     Модель данных о топ кошельках.
     """
-    
     coin = models.CharField(
         max_length=256, 
         verbose_name='Монета'
+    )
+    coin_address = models.CharField(
+        max_length=256, 
+        verbose_name='Адрес монеты'
     )
     pair = models.CharField(
         max_length=256, 
@@ -40,3 +43,55 @@ class TopTrader(models.Model):
 
     def __str__(self):
         return f"Кошелёк {self.maker} c {self.PNL} на {self.coin}"
+   
+ 
+class Status(models.TextChoices):
+    """
+    Модель статуса транзакции
+    """
+    OPEN = 'open', 'Открытая'
+    CLOSED = 'closed', 'Закрытая' 
+
+
+class Transaction(models.Model):
+    """ 
+    Модель данных совершаемых транзакций.
+    """
+    
+    coin = models.CharField(verbose_name="Монета", max_length=256, )
+    coin_address = models.CharField(verbose_name="Адрес", max_length=256, )
+    buying_price = models.FloatField(verbose_name="Цена покупки")
+    current_price = models.FloatField(blank=True, null=True, verbose_name="Текущая цена")
+    selling_price = models.FloatField(blank=True, null=True, verbose_name="Цена продажи")
+    opening_date = models.DateTimeField(auto_now_add=True, verbose_name="Время покупки")
+    closing_date = models.DateTimeField(blank=True, null=True, verbose_name="Время продажи")
+    PNL = models.FloatField(blank=True, null=True, verbose_name="PNL")
+    status = models.CharField(
+        max_length=64,
+        choices=Status.choices,
+        default=Status.OPEN,
+        verbose_name='Статус'
+    )
+    
+    class Meta:
+        verbose_name = "Транзакция"
+        verbose_name_plural = "Транзакции"
+
+    def __str__(self):
+        return self.coin_address
+
+
+# class TransactionsPriceHistory(models.Model):
+#     """ 
+#     Модель данных совершаемых транзакций.
+#     """
+#     transaction = models.ForeignKey("Transaction", on_delete=models.PROTECT)
+#     current_date = models.DateTimeField(auto_now_add=True, verbose_name="Текущая дата")
+#     current_price = models.FloatField(verbose_name="Текущая цена")
+    
+#     class Meta:
+#         verbose_name = "Транзакция"
+#         verbose_name_plural = "Транзакции"
+
+#     def __str__(self):
+#         return f"{self.transaction.coin_address} / {self.current_price}"
