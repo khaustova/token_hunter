@@ -25,12 +25,22 @@
             {% endif %}
           {% endfor %}
           <div class="parsing-buttons_wrapper">
-            <button class="parsing__button" id="parsing-top-button" type="submit" name="_parsing" {% get_watcher_id as watcher_id %}{% if watcher_id %} disabled="true"{% endif %}>Обновить топ кошельков 📈</button>
-            {% get_watcher_id as watcher_id %}{% if watcher_id %}
-              <button class="watcher__button watcher-stop__button" id="stop-dex-button" type="submit" name="_stop">Стоп ⛔</button>
+            {% get_watcher_tasks_id as watcher_tasks_ids %}
+            {% if watcher_tasks_ids.parsing_task_id != None %}
+              <button class="watcher__button watcher-stop__button" id="stop-parsing-button" type="submit" name="_stop_parsing">Стоп ⛔</button>
+              <p class="loading">Выполняется парсинг топа кошельков на Dexscreener</p>
+            {% elif watcher_tasks_ids.parsing_task_id == None %}
+              <button 
+              class="watcher__button" id="watch-dex-button" type="submit" name="_parsing" 
+              {% if watcher_tasks_ids.watching_task_id %} disabled="true"{% endif %}>Обновить топ кошельков 📈</button>
+            {% endif %}
+            {% if watcher_tasks_ids.watching_task_id != None %}
+              <button class="watcher__button watcher-stop__button" id="stop-monitoring-button" type="submit" name="_stop_monitoring">Стоп ⛔</button>
               <p class="loading">Выполняется мониторинг Dexscreener</p>
-            {% else %}
-              <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг Dexscreener 👀</button>
+            {% elif watcher_tasks_ids.watching_task_id == None %}
+              <button 
+              class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring" 
+              {% if watcher_tasks_ids.parsing_task_id %} disabled="true"{% endif %}>Мониторинг Dexscreener 👀</button>
             {% endif %}
           </div>
         </form>

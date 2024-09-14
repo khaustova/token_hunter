@@ -1,5 +1,6 @@
 __pycache__/
 .pytest_cache
+celerybeat-schedule.db
 latest_logs
 downloaded_files
 db.sqlite3

@@ -15,7 +15,7 @@ from ..settings import get_settings
 from ..utils import order_items
 from toss_a_coin.forms import DexscreenerForm, CheckCoinForm
 from toss_a_coin.models import TopTrader
-from toss_a_coin.utils import get_watch_dexscreener_task_id
+from toss_a_coin.src.utils import get_dexscreener_worker_tasks_ids
 
 register = template.Library()
 
@@ -219,7 +219,7 @@ def sort_header(header: dict, forloop: dict) -> str:
 
 @register.simple_tag(takes_context=True)
 def get_top_traders(context: template.Context) -> str:
-    top_traders = TopTrader.objects.values('maker').annotate(coin_count=Count('coin')).order_by('-coin_count')
+    top_traders = TopTrader.objects.values('maker').annotate(coin_count=Count('coin')).order_by('-coin_count')[:100]
     paginator = Paginator(top_traders, 10)
     request = context['request']
     page_number = request.GET.get('page')
@@ -249,8 +249,9 @@ def get_check_coin_form(context: template.Context) -> str:
 
     return "Проверка монеты"
 
+
 @register.simple_tag()
-def get_watcher_id() -> str:
-    task_id = get_watch_dexscreener_task_id()
+def get_watcher_tasks_id() -> str:
+    worker_tasks_ids = get_dexscreener_worker_tasks_ids()
     
-    return task_id
+    return worker_tasks_ids

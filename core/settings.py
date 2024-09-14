@@ -1,5 +1,8 @@
 from pathlib import Path
 from environ import Env
+from celery import Celery
+from celery.schedules import crontab
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "debug_toolbar",
     "django_celery_results",
+    "django_celery_beat",
     "bot",
     "toss_a_coin"
 ]
@@ -192,6 +196,13 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_EXTENDED = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
+# CELERY_BEAT_SCHEDULE = {
+#     "sample_task": {
+#         "task": "toss_a_coin.tasks.sample_task",
+#         "schedule": 2.0,
+#     },
+# }
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Logger
 
