@@ -14,11 +14,3 @@ app.conf.enable_utc = False
 app.conf.update(timezone="Europe/Moscow")
 
 app.autodiscover_tasks()
-
-# app.conf.beat_schedule = {
-#     'every': { 
-#         'task': 'toss_a_coin.sample_task',
-#         'schedule': 2.0,# по умолчанию выполняет каждую минуту, очень гибко 
-#     },                                                              # настраивается
-
-# }
