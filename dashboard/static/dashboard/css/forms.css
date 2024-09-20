@@ -762,3 +762,16 @@ button[disabled]{
   color: #666666;
   cursor: wait
 }
+
+input.sell-button {
+    background-color: #910808;
+    border-radius: 4px;
+    color: white;
+    width: 80px;
+    height: 32px;
+}
+
+input.sell-button:hover {
+    background-color: #815a5a;
+    cursor: pointer;
+}

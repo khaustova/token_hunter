@@ -15,7 +15,7 @@
 
       <div class="content-card">
         <h4 class="content-card__title">{% get_dexscreener_form %}</h4>
-        <form class="parsing__form" action="{% url 'toss_a_coin:watch_dexscreener' %}" method="POST">
+        <form class="parsing__form" action="{% url 'cointer:watch_dexscreener' %}" method="POST">
           {% csrf_token %}
           {% for field in dexscreener_form %}
             {{ field.label_tag }}
@@ -192,7 +192,7 @@
     document.getElementById("check-coin-button").addEventListener("click", function(event) {
       event.preventDefault();
       const coin = document.getElementById('check-coin-input').value;
-      const url = "{% url 'toss_a_coin:check_coin' %}"
+      const url = "{% url 'cointer:check_coin' %}"
       fetch(url, {
           method: "POST",
           headers: {
