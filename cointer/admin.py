@@ -13,7 +13,7 @@ class TopTradersAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ("coin", "buying_price", "selling_price", "PNL", "sell")
+    list_display = ("coin", "buying_price", "selling_price", "PNL", "link", "sell")
     list_per_page = 30
     list_filter = ("status",)
     change_list_template = 'dashboard/transactions.html'
@@ -25,4 +25,11 @@ class TransactionAdmin(admin.ModelAdmin):
             html = '<input class="sell-button" type="button" onclick="location.href=\'{}\'" value="Продать" />'.format(link)
             
             return format_html(html)
+        
+    def link(self, obj):
+        transaction = Transaction.objects.get(pk=obj.pk)
+        href = r"https://dexscreener.com/solana/" + transaction.pair
+        html = f'<a href={href}>Ссылка</a>'
+        
+        return format_html(html)
 
