@@ -1,7 +1,5 @@
 from pathlib import Path
 from environ import Env
-from celery import Celery
-from celery.schedules import crontab
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,9 +31,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "debug_toolbar",
     "django_celery_results",
-    "django_celery_beat",
     "bot",
-    "toss_a_coin"
+    "cointer"
 ]
 
 MIDDLEWARE = [
@@ -53,15 +50,15 @@ ROOT_URLCONF = "core.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -69,28 +66,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-X_FRAME_OPTIONS = 'SAMEORIGIN' 
+X_FRAME_OPTIONS = "SAMEORIGIN" 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 # DATABASES = {
-#     'default': {
-#         "ENGINE": 'django.db.backends.postgresql',
-#         "NAME": env("POSTGRES_DB"),
-#         "USER": env("POSTGRES_USER"),
-#         "PASSWORD": env("POSTGRES_PASSWORD"),
-#         "HOST": env("POSTGRES_HOST"),
-#         "PORT": env("POSTGRES_PORT"),
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
 #     }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
+        "HOST": env("POSTGRES_HOST"),
+        "PORT": env("POSTGRES_PORT"),
+    }
+}
 
 
 # Password validation
@@ -154,30 +151,33 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Dashboard
 
 DASHBOARD_CUSTOMIZATION = {
-    'search_model': 'auth.user',
-    'sidebar_icons': {
-        'auth.user': 'person',
-        'django_celery_results.taskresult': 'task',
+    "search_model": "cointer.transaction",
+    "sidebar_icons": {
+        "auth.user": "person",
+        "django_celery_results.taskresult": "task",
+        "cointer.toptrader": "account_balance_wallet",
+        "cointer.transaction": "contract",
     },
-    'hidden_apps': [
-        'dashboard',
-        'sites',
+    "hidden_apps": [
+        "dashboard",
+        "sites",
+        "auth",
     ],
-    'hidden_models': [
-        'auth.group',
-        'django_celery_results.groupresult',
+    "hidden_models": [
+        "django_celery_results.groupresult",
     ],
-    'apps_order': [
-        'django_celery_results',
-        'auth',
+    "apps_order": [
+        "cointer",
+        "django_celery_results",
+        "auth",
     ],
-    'extra_links': [
+    "extra_links": [
         {
-            'manager': [
+            "manager": [
                 {
-                    'name': 'Документация',
-                    'admin_url': '/admin/doc/',
-                    'icon': 'description'
+                    "name": "Документация",
+                    "admin_url": "/admin/doc/",
+                    "icon": "description"
                 },
             ]
         }
@@ -187,56 +187,49 @@ DASHBOARD_CUSTOMIZATION = {
 
 # Celery
 
-CELERY_BROKER_URL = env('CELERY_BROKER_URL')
-CELERY_ACCEPT_CONTENT = {'application/json'}
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Europe/Moscow'
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_ACCEPT_CONTENT = {"application/json"}
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Moscow"
+CELERY_RESULT_BACKEND = "django-db"
 CELERY_RESULT_EXTENDED = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
-# CELERY_BEAT_SCHEDULE = {
-#     "sample_task": {
-#         "task": "toss_a_coin.tasks.sample_task",
-#         "schedule": 2.0,
-#     },
-# }
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Logger
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
         },
-        'simple': {
-            'format': "%(levelname)-4s %(asctime)s [%(name)s]: %(message)s"
-        },
-    },
-    'handlers': {
-        'null': {
-            'level': 'DEBUG',
-            'class': 'logging.NullHandler',
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+        "simple": {
+            "format": "%(levelname)-4s %(asctime)s [%(name)s]: %(message)s"
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['null'],
-            'propagate': True,
-            'level': 'INFO',
+    "handlers": {
+        "null": {
+            "level": "DEBUG",
+            "class": "logging.NullHandler",
         },
-        'toss_a_coin': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple"
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["null"],
+            "propagate": True,
+            "level": "INFO",
+        },
+        "cointer": {
+            "handlers": ["console"],
+            "level": "DEBUG",
         }
     }
 }
