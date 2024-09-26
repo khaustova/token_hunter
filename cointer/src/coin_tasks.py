@@ -1,9 +1,8 @@
 import logging
 import time
-import pgbulk
-from celery.contrib.abortable import AbortableTask
+from datetime import datetime
 from core.celery import app
-from .utils import get_coins_prices 
+from .utils import get_coins_prices , get_coin_age
 from ..models import Transaction, Status
 
 logger = logging.getLogger(__name__)
@@ -30,19 +29,34 @@ def track_coins() -> str:
         coins_data = get_coins_prices(coins_str)
         
         for coin in coins_data:
-            if coin["dexId"] == "raydium":
-                coin_address = coin["baseToken"]["address"]
-                pair = coin["pairAddress"]
-                buying_price = buying_prices[pair.lower()]
-                current_price = float(coin["priceUsd"])
-                pnl = ((current_price - buying_price) / buying_price) * 100
-                if pnl > TAKE_PROFIT or pnl < STOP_LOSS:
-                    Transaction.objects.filter(coin_address=coin_address).update(
-                        selling_price=current_price,
-                        PNL=pnl,
-                        status=Status.CLOSED
+            coin_address = coin["baseToken"]["address"]
+            pair = coin["pairAddress"]
+            buying_price = buying_prices[pair.lower()]
+            current_price = float(coin["priceUsd"])
+            pnl = ((current_price - buying_price) / buying_price) * 100
+            
+            if pnl >= 60 or pnl < -30:
+                coin_age = get_coin_age(coin["pairCreatedAt"])
+                
+                Transaction.objects.filter(coin_address=coin_address).update(
+                    selling_price=current_price,
+                    selling_coin_age=coin_age,
+                    selling_transactions_buys_m5=coin["txns"]["m5"]["buys"],
+                    selling_transactions_sells_m5=coin["txns"]["m5"]["sells"],
+                    selling_transactions_buys_h1=coin["txns"]["h1"]["buys"],
+                    selling_transactions_sells_h1=coin["txns"]["h1"]["buys"],
+                    selling_volume_m5=coin["volume"]["m5"],
+                    selling_volume_h1=coin["volume"]["h1"],
+                    selling_price_change_m5=coin["priceChange"]["m5"],
+                    selling_price_change_h1=coin["priceChange"]["h1"],
+                    selling_liquidity=coin["liquidity"]["usd"],
+                    selling_fdv=coin["fdv"],
+                    selling_market_cap=coin["marketCap"],
+                    PNL=pnl,
+                    status=Status.CLOSED
+                    
                 )
-                    logger.info(f"Продажа монеты {coin_address} за {current_price} USD") 
+                logger.info(f"Продажа монеты {coin_address} за {current_price} USD") 
   
         time.sleep(1)
             
