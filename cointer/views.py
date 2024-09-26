@@ -1,6 +1,7 @@
 import json
 import logging
 from core.celery import app
+from datetime import datetime
 from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from .forms import DexscreenerForm
@@ -27,7 +28,7 @@ def watch_dexscreener(request: HttpRequest):
             if form.cleaned_data["filter"]:
                 filter = form.cleaned_data["filter"]  
             else:
-                filter = "?rankBy=trendingScoreH6&order=desc&minLiq=50000&maxAge=1"
+                filter = "?rankBy=trendingScoreH6&order=desc&minLiq=5000&maxAge=1"
             if form.cleaned_data["pages"]: 
                 pages = int(form.cleaned_data["pages"])  
             else:
@@ -40,7 +41,7 @@ def watch_dexscreener(request: HttpRequest):
             if form.cleaned_data["filter"]:
                 filter = form.cleaned_data["filter"]  
             else:
-                filter = "?rankBy=trendingScoreH6&order=desc&minLiq=50000&maxAge=1"
+                filter = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1"
                 
             process = watching_dexscreener_task.delay(filter)
             logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
@@ -78,11 +79,30 @@ def sell_coin(request: HttpRequest, transaction_id: int):
     """
     
     transaction = Transaction.objects.get(pk=transaction_id)
-    selling_price = float(get_coins_prices(transaction.pair)[0]["priceUsd"])
-    pnl = ((selling_price - transaction.buying_price) / transaction.buying_price) * 100
+    coin_data = get_coins_prices(transaction.pair)[0]
     
+    selling_price = float(coin_data["priceUsd"])
     transaction.selling_price = selling_price
+    pnl = ((selling_price - transaction.buying_price) / transaction.buying_price) * 100
     transaction.PNL = pnl
+    
+    now_date = datetime.now()
+    created_date = datetime.fromtimestamp(coin_data["pairCreatedAt"] / 1000)
+    coin_age = (now_date - created_date).total_seconds() / 60
+    transaction.selling_coin_age=coin_age
+    
+    transaction.selling_transactions_buys_m5=coin_data["txns"]["m5"]["buys"]
+    transaction.selling_transactions_sells_m5=coin_data["txns"]["m5"]["sells"]
+    transaction.selling_transactions_buys_h1=coin_data["txns"]["h1"]["buys"]
+    transaction.selling_transactions_sells_h1=coin_data["txns"]["h1"]["buys"]
+    transaction.selling_volume_m5=coin_data["volume"]["m5"]
+    transaction.selling_volume_h1=coin_data["volume"]["h1"]
+    transaction.selling_price_change_m5=coin_data["priceChange"]["m5"]
+    transaction.selling_price_change_h1=coin_data["priceChange"]["h1"]
+    transaction.selling_liquidity=coin_data["liquidity"]["usd"]
+    transaction.selling_fdv=coin_data["fdv"]
+    transaction.selling_market_cap=coin_data["marketCap"]
+    
     transaction.status = Status.CLOSED
     transaction.save()
 
