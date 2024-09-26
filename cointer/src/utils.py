@@ -1,6 +1,7 @@
 import httpx
 import time
 import logging
+from datetime import datetime
 from httpx._config import Timeout
 from core.celery import app
 
@@ -38,9 +39,20 @@ def get_dexscreener_worker_tasks_ids() -> str | None:
 
 def get_coins_prices(pairs: str | list[str]) -> dict:
     coin_prices_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pairs}"
-    coin_prices = httpx.get(coin_prices_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
+    coin_prices = None
     while not coin_prices:
         time.sleep(1)
-        coin_prices = httpx.get(coin_prices_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
+        try:
+            coin_prices = httpx.get(coin_prices_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
+        except:
+            continue
         
     return coin_prices
+
+
+def get_coin_age(created_date: datetime) -> str:
+    now_date = datetime.now()
+    created_date = datetime.fromtimestamp(created_date / 1000)
+    coin_age = (now_date - created_date).total_seconds() / 60
+    
+    return coin_age
