@@ -6,6 +6,8 @@ import pandas as pd
 import random
 from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup
+from datetime import datetime
+from threading import Timer
 from django.conf import settings
 from nodriver.core.config import Config
 from .coin_worker import buy_coin, CoinChecker
@@ -17,28 +19,39 @@ logger = logging.getLogger(__name__)
 class DexWorker():
     def __init__(self, browser):
         self.browser = browser
-        
+    
     async def watch_coin(self, filter: str):
         """
         Мониторит DexScreener на появление новых монет.
         Если монета прошла проверку, то покупает её.
         """
         
-        # await self._get_2captcha_api_key()
+        #await self._get_2captcha_api_key()
         dex_page = await self.browser.get('https://dexscreener.com/solana/raydium' + filter)
+        #await self._check_cloudflare(dex_page)
+        #await dex_page.wait(10)
         await asyncio.sleep(10)
-        visited_links, black_list = [], []
+        black_list = []
+        all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
+        step = 0
         
         while True:
+            # Регулярное обновление страницы для избежания ошибки "Aw, Snap!" 
+            step += 1
+            if step == 1000:
+                step = 0
+                await dex_page.reload()
+                await asyncio.sleep(5)
+                
+                
             all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
 
-            links = [item for item in all_links if item not in visited_links]
+            links = [item for item in all_links if item not in black_list]
             await asyncio.sleep(5)
             
             if links:
                 for link in links:
                     pair = link.attributes[-1].split("/")[-1]
-                    visited_links.append(link)
                     coin_checker = CoinChecker(pair)
                     
                     is_transaction = await self.check_transaction(coin_checker.coin_address)
@@ -46,31 +59,49 @@ class DexWorker():
                         await self.browser.wait(3)
                         continue
                     
-                    first_check_coin = coin_checker.check_coin()
-                    if not first_check_coin:
-                        logger.info(f"Монета {coin_checker.coin_name} не прошла первый этап проверки")
+                    if (not coin_checker.check_coin_age()
+                        or not coin_checker.check_token()
+                        or not coin_checker.check_price_change()
+                        or not coin_checker.check_socio()
+                    ):
+                        black_list.append(link)
                         continue
-                        
+    
                     await dex_page.wait(2)
-                    risk_level = await self.rugcheck_coin(coin_checker.coin_address)
+                    
+                    risk_level = await self.rugcheck(coin_checker.coin_address)
                     logger.info(f"Уровень риска монеты {coin_checker.coin_name}: {risk_level}")
                     
-                    if risk_level != "Good":
+                    if risk_level == None:
+                        continue
+                    elif risk_level != "Good":
                         black_list.append(link)
                         await self.browser.wait(3)
                         continue
-                        
+  
+                    await dex_page.wait(2)
+                    total_transfers = await self.get_total_transfers(coin_checker.coin_address)
+                    if not coin_checker.check_total_transfers(total_transfers):
+                        black_list.append(link)
+                        continue
+                    
+                    transfers_history = await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + coin_checker.coin_address, new_tab=True)
+
+                    try:
+                        await transfers_history.wait(3)
+                        await transfers_history.close()
+                    except:
+                        pass
+                    
                     await sync_to_async(buy_coin)(
                         pair,
+                        total_transfers,
                         coin_checker.coin_name, 
                         coin_checker.coin_address
                     )
 
-                    await self.browser.wait(2)
-
             await self.browser.wait(10)
         
-            
     async def parse_top_traders(self, filter: str="", pages: int=1):
         """
         Парсит pages страниц топов кошельков по монетам, ограниченным filter.
@@ -195,16 +226,48 @@ class DexWorker():
         """
         
         return list(Transaction.objects.filter(coin_address=coin_address))
+    
+    
+    async def get_total_transfers(self, coin_address):
+        """
+        Возвращает количество трансферов монеты coin_address с solscan.io.
+        """
+        
+        solcan_page = await self.browser.get(
+            "https://solscan.io/token/" + coin_address, 
+            new_tab=True
+        )
+        await solcan_page
+        
+        time.sleep(7)
+
+        total_transfers = None 
+        try:
+            total_transfers_div = await solcan_page.find("transfer(s)")
+            total_transfers_list = total_transfers_div.text_all.split()
+            if total_transfers_list[0] == "More":
+                total_transfers = total_transfers_list[2].replace(",", "")
+            elif total_transfers_list[0] == "Total":
+                total_transfers = total_transfers_list[1].replace(",", "")
+        except:
+            pass
             
-    async def rugcheck_coin(self, coin_address):
+        await solcan_page.close()
+ 
+        return int(total_transfers) if total_transfers else None
+            
+    async def rugcheck(self, coin_address):
         """
         Возвращает уровень риска монеты coin_address с rugcheck.xyz. 
         """
         
-        rugcheck_page = await self.browser.get("https://rugcheck.xyz/tokens/" + coin_address, new_tab=True)
+        rugcheck_page = await self.browser.get(
+            "https://rugcheck.xyz/tokens/" + coin_address, 
+            new_tab=True
+        )
         await rugcheck_page
         
-        time.sleep(10)
+        time.sleep(7)
        
         risk_level = None 
         try:
@@ -224,7 +287,7 @@ class DexWorker():
         
         await self.browser.wait(random.randint(1, 2))
         try:
-            await page.find("Verifying you are human.")
+            await page.find("Verifying you are human")
             await self._bypass_cloudflare(page)
         except:
             return None
@@ -271,7 +334,7 @@ async def run_dexscreener_watcher(filter):
     """
     
     config = Config()
-   # config.add_extension("./extensions/captcha_solver")
+    #config.add_extension("./extensions/captcha_solver")
     browser = await uc.start(config=config)
     dex_worker = DexWorker(browser)
     await dex_worker.watch_coin(filter)
