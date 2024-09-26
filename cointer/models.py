@@ -71,15 +71,159 @@ class Transaction(models.Model):
     buying_price = models.FloatField(
         verbose_name="Цена покупки"
     )
-    current_price = models.FloatField(
-        blank=True, 
-        null=True, 
-        verbose_name="Текущая цена"
-    )
     selling_price = models.FloatField(
         blank=True, 
         null=True,
         verbose_name="Цена продажи"
+    )
+    buying_coin_age = models.FloatField(
+        verbose_name="Возраст на момент покупки"
+    )
+    selling_coin_age = models.FloatField(
+        blank=True, 
+        null=True,
+        verbose_name="Возраст на момент продажи"
+    )
+    buying_transactions_buys_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество покупок на момент покупки (5 минут)"
+    )
+    buying_transactions_sells_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество продаж на момент покупки (5 минут)"
+    )
+    buying_transactions_buys_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество покупок на момент покупки (1 час)"
+    )
+    buying_transactions_sells_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество продаж на момент покупки (1 час)"
+    )
+    buying_total_transfers = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество трансферов на момент покупки"
+    )
+    buying_total_transactions = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество транзакций на момент покупки"
+    )
+    selling_transactions_buys_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество покупок на момент продажи (5 минут)"
+    )
+    selling_transactions_sells_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество продаж на момент продажи (5 минут)"
+    )
+    selling_transactions_buys_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество покупок на момент продажи (1 час)"
+    )
+    selling_transactions_sells_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Количество продаж на момент продажи (1 час)"
+    )
+    buying_volume_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Объём торгов на момент покупки (5 минут)"
+    )
+    selling_volume_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Объём торгов на момент продажи (5 минут)"
+    )
+    buying_volume_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Объём торгов на момент покупки (1 час)"
+    )
+    selling_volume_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Объём торгов на момент продажи (1 час)"
+    )
+    buying_price_change_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Изменение цены на момент покупки (5 минут)"
+    )
+    buying_price_change_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Изменение цены на момент покупки (1 час)"
+    )
+    selling_price_change_m5 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Изменение цены на момент продажи (5 минут)"
+    )
+    selling_price_change_h1 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Изменение цены на момент продажи (1 час)"
+    )
+    buying_liquidity = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Ликвидность на момент покупки (5 минут)"
+    )
+    selling_liquidity = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Ликвидность на момент продажи (5 минут)"
+    )
+    buying_fdv = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="FDV на момент покупки"
+    )
+    selling_fdv = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="FDV на момент продажи"
+    )
+    buying_market_cap = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Рыночная капитализация на момент покупки"
+    )
+    selling_market_cap = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Рыночная капитализация на момент продажи"
+    )
+    is_telegram = models.BooleanField(
+        default=False,
+        verbose_name="Наличие Телеграма"
+    )
+    is_twitter = models.BooleanField(
+        default=False,
+        verbose_name="Наличие Твиттера"
+    )
+    is_website = models.BooleanField(
+        default=False,
+        verbose_name="Наличие сайта"
+    )
+    opening_date = models.DateTimeField(
+        auto_now_add=True, 
+        verbose_name="Время покупки"
+    )
+    closing_date = models.DateTimeField(
+        blank=True, 
+        null=True, 
+        verbose_name="Время продажи"
     )
     opening_date = models.DateTimeField(
         auto_now_add=True, 
@@ -104,9 +248,11 @@ class Transaction(models.Model):
         verbose_name='Статус'
     )
     
+    
     class Meta:
         verbose_name = "Транзакция"
         verbose_name_plural = "Транзакции"
 
     def __str__(self):
         return self.pair
+    
