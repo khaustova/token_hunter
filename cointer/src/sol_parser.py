@@ -1,4 +1,5 @@
 import logging
+import json
 import time
 import os
 import pandas as pd
@@ -29,7 +30,7 @@ class SolanaParser():
     def __init__(self):
         self._transactions_api = TransactionsAPI(HELIUS_API_KEY)
         
-    def get_transactions_history(self, address: str, number: None=None):
+    def get_transactions_history(self, name: str, address: str, number: int=100):
         last_transaction = ""
             
         logger.info(f"Начата загрузка истории транзакций для токена {address}.")  
@@ -47,34 +48,21 @@ class SolanaParser():
                 logger.info(f"История транзакций токена {address} успешно загружена.")
                 break
             
-            last_transaction = transactions[-1]["signature"] if self.mode == "Helius" else transactions[-1]
+            last_transaction = transactions[-1]["signature"]
             transaction_history.extend(transactions)
             
-        if number != None and number < len(transaction_history):
+        if number < len(transaction_history):
             transaction_history = transaction_history[:number]
-        else:
-            number = len(transaction_history)
-        transaction_history.append(1)         
-        info_for_each_transactions = [] 
         
-        logger.info(f"Начато получение информации о первых {number} покупках токена {address}.")  
-        current_number = 1 
+        os.makedirs(f"/transactions_history/{name}", exist_ok=True)
+        
+        step = 1
         for transaction in transaction_history:
-            # Транзакции фильтруются и учитываются лишь относящиеся к покупке.
-            if current_number <= number:
-                transaction_info = self._get_transaction_info(transaction, address)
-                    
-                if transaction_info:
-                    logger.debug(f"Транзакция {current_number}: {transaction_info}")
-                    info_for_each_transactions.append(transaction_info)
-                    current_number += 1      
+            with open(f"/transactions_history/{name}/{name}_{step}.json", "w") as file:
+                json.dump(transaction, file)
+            step += 1
         
-        logger.info(f"Получена информация о первых {current_number} покупках токена {address}.")
-        
-        temp_df = pd.DataFrame(info_for_each_transactions)
-        temp_df.to_csv('history.csv')
-        
-        return info_for_each_transactions
+        return 
     
     def _get_transaction_info(self, transaction, address):
         """
