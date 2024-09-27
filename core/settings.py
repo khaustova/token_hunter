@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from environ import Env
 
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_celery_results",
     "bot",
+    "django_telethon",
     "cointer"
 ]
 
@@ -118,7 +120,7 @@ TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -245,3 +247,10 @@ HELIUS_API_KEY = env("HELIUS_API_KEY")
 CAPTCHA_API_KEY = env("CAPTCHA_API_KEY")
 CAPTCHA_EXTENSION_LINK = env("CAPTCHA_EXTENSION_LINK")
 CAPTCHA_EXTENSION_DIR = env("CAPTCHA_EXTENSION_DIR")
+
+# TELETHON
+TELETHON_API_ID=env("TELETHON_API_ID") 
+TELETHON_API_HASH=env("TELETHON_API_HASH")
+TELEGRAM_PHONE_NUMBER = env("TELEGRAM_PHONE_NUMBER")
+
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"

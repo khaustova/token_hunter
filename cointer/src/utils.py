@@ -23,7 +23,6 @@ def get_active_tasks() -> list:
 def get_dexscreener_worker_tasks_ids() -> str | None:
     try:
         active_tasks = get_active_tasks()
-        print(active_tasks)
         tasks_ids = {"parsing_task_id": None, "watching_task_id": None}
         for task in active_tasks:
             if task["name"] == "cointer.src.dex_tasks.watching_dexscreener_task":

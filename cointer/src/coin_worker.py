@@ -47,7 +47,7 @@ class CoinChecker:
         return True
         
     def check_price_change(self):
-        if self.coin_data["priceChange"]["m5"] < -10:
+        if self.coin_data["priceChange"]["m5"] < -10 or self.coin_data["priceChange"]["m5"] > 100:
             logger.debug(f"⨉ Стоимость монеты {self.coin_name} падала больше, чем на 10 %")
             return False
             
