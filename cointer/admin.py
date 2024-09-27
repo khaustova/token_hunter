@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin, ExportActionMixin
 from .models import TopTrader, Transaction, Status
 
 
@@ -9,13 +11,20 @@ class TopTradersAdmin(admin.ModelAdmin):
     list_display = ("maker", "coin", "bought", "sold", "PNL")
     list_per_page = 50
     list_filter = ("coin",)
-    
+
+
+class TransactionResource(resources.ModelResource):
+    class Meta:
+        model = Transaction  
+   
 
 @admin.register(Transaction)
-class TransactionAdmin(admin.ModelAdmin):
+class TransactionAdmin(ImportExportModelAdmin):
     list_display = ("coin", "buying_price", "selling_price", "PNL", "link", "sell")
     list_per_page = 30
     list_filter = ("status",)
+    resource_classes = [TransactionResource]
+    
     change_list_template = 'dashboard/transactions.html'
 
     def sell(self, obj):
@@ -32,4 +41,7 @@ class TransactionAdmin(admin.ModelAdmin):
         html = f'<a href={href}>Ссылка</a>'
         
         return format_html(html)
+    
+    
+
 

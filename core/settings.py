@@ -1,4 +1,5 @@
 import os
+from import_export.formats.base_formats import XLSX
 from pathlib import Path
 from environ import Env
 
@@ -32,8 +33,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "debug_toolbar",
     "django_celery_results",
-    "bot",
     "django_telethon",
+    "import_export",
     "cointer"
 ]
 
@@ -120,7 +121,7 @@ TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
-USE_TZ = False
+USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -254,3 +255,7 @@ TELETHON_API_HASH=env("TELETHON_API_HASH")
 TELEGRAM_PHONE_NUMBER = env("TELEGRAM_PHONE_NUMBER")
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+# Export
+
+EXPORT_FORMATS = [XLSX]
