@@ -35,14 +35,14 @@ class DexWorker():
         #await self._check_cloudflare(dex_page)
         #await dex_page.wait(10)
         await asyncio.sleep(10)
-        black_list = []
+        black_list, transactions_list = [], []
         all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
         step = 0
         
         while True:
             # Регулярное обновление страницы для избежания ошибки "Aw, Snap!" 
             step += 1
-            if step == 1000:
+            if step == 200:
                 step = 0
                 await dex_page.reload()
                 await asyncio.sleep(5)
@@ -52,22 +52,16 @@ class DexWorker():
 
             links = [item for item in all_links if item not in black_list]
             await asyncio.sleep(5)
-            
+            #print(links)
             if links:
                 for link in links:
                     pair = link.attributes[-1].split("/")[-1]
                     coin_checker = CoinChecker(pair)
                     
-                    is_transaction = await self.check_transaction(coin_checker.coin_address)
-                    if is_transaction:
-                        await self.browser.wait(3)
+                    if link in transactions_list:
                         continue
                     
-                    if (not coin_checker.check_coin_age()
-                        or not coin_checker.check_token()
-                        # or not coin_checker.check_price_change()
-                        # or not coin_checker.check_socio()
-                    ):
+                    if not coin_checker.check_coin_age():
                         black_list.append(link)
                         continue
     
@@ -80,23 +74,16 @@ class DexWorker():
                         continue
                     elif risk_level != "Good":
                         black_list.append(link)
-                        await self.browser.wait(3)
                         continue
   
                     await dex_page.wait(2)
                     total_transfers = await self.get_total_transfers(coin_checker.coin_address)
-                    # if not coin_checker.check_total_transfers(total_transfers):
-                    #     black_list.append(link)
-                    #     continue
+                    if not coin_checker.check_total_transfers(total_transfers):
+                        black_list.append(link)
+                        continue
                     
-                    transfers_history = await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + coin_checker.coin_address, new_tab=True)
+                    await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + coin_checker.coin_address, new_tab=True)
 
-                    try:
-                        await transfers_history.wait(3)
-                        await transfers_history.close()
-                    except:
-                        pass
-                    
                     await sync_to_async(buy_coin)(
                         pair,
                         total_transfers,
@@ -104,19 +91,22 @@ class DexWorker():
                         coin_checker.coin_address
                     )
                     
-                    # app, is_created = App.objects.update_or_create(
-                    # api_id=settings.TELETHON_API_ID,
-                    # api_hash=settings.TELETHON_API_HASH
-                    # )
-                    # cs, cs_is_created = ClientSession.objects.update_or_create(
-                    #     name="default",
-                    # )
-                    # telegram_client = TelegramClient(DjangoSession(client_session=cs), app.api_id, app.api_hash)
-                    # await telegram_client.connect()
-                            
-                    # await telegram_client.send_message("@maestro", coin_checker.coin_address)
+                    # prebuy_coin_checker = CoinChecker()
+                    #     if prebuy_coin_checker.prebuy_check(total_transfers):
+                            # app, is_created = App.objects.update_or_create(
+                            # api_id=settings.TELETHON_API_ID,
+                            # api_hash=settings.TELETHON_API_HASH
+                            # )
+                            # cs, cs_is_created = ClientSession.objects.update_or_create(
+                            #     name="default",
+                            # )
+                            # telegram_client = TelegramClient(DjangoSession(client_session=cs), app.api_id, app.api_hash)
+                            # await telegram_client.connect()
+                                    
+                            # await telegram_client.send_message("@maestro", coin_checker.coin_address)
+                     
+                    transactions_list.append(link)
                     
-
             await self.browser.wait(10)
         
     async def parse_top_traders(self, filter: str="", pages: int=1):
@@ -292,6 +282,12 @@ class DexWorker():
             risk_level = risk_level_element.text
         except:
             pass
+        
+        # try:
+        #     mutable_metadata = await rugcheck_page.find("Mutable metadata")
+        #     risk_level = "Mutable metadata"
+        # except:
+        #     pass
             
         await rugcheck_page.close()
         

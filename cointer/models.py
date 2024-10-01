@@ -48,8 +48,17 @@ class Status(models.TextChoices):
     """
     Модель статуса транзакции.
     """
-    OPEN = 'open', 'Открытая'
-    CLOSED = 'closed', 'Закрытая' 
+    OPEN = "open", "Открытая"
+    CLOSED = "closed", "Закрытая"
+   
+ 
+class Type(models.TextChoices):
+    """
+    Модель статуса транзакции.
+    """
+    TEST = "test", "Тест"
+    EMULATION = "emulation", "Эмуляция"
+    REAL = "real", "Реальная"
 
 
 class Transaction(models.Model):
@@ -225,15 +234,6 @@ class Transaction(models.Model):
         null=True, 
         verbose_name="Время продажи"
     )
-    opening_date = models.DateTimeField(
-        auto_now_add=True, 
-        verbose_name="Время покупки"
-    )
-    closing_date = models.DateTimeField(
-        blank=True, 
-        null=True, 
-        verbose_name="Время продажи"
-    )
     PNL = models.DecimalField(
         blank=True, 
         null=True,
@@ -246,6 +246,12 @@ class Transaction(models.Model):
         choices=Status.choices,
         default=Status.OPEN,
         verbose_name='Статус'
+    )
+    type = models.CharField(
+        max_length=64,
+        choices=Type.choices,
+        default=Type.TEST,
+        verbose_name='Тип'
     )
     
     

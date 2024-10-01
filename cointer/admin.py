@@ -20,9 +20,9 @@ class TransactionResource(resources.ModelResource):
 
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin):
-    list_display = ("coin", "buying_price", "selling_price", "PNL", "link", "sell")
+    list_display = ("coin", "buying_price", "selling_price", "PNL", "link", "type", "sell", "is_twitter")
     list_per_page = 30
-    list_filter = ("status",)
+    list_filter = ("status", "type", "is_twitter")
     resource_classes = [TransactionResource]
     
     change_list_template = 'dashboard/transactions.html'

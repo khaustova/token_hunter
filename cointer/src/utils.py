@@ -40,10 +40,11 @@ def get_coins_prices(pairs: str | list[str]) -> dict:
     coin_prices_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pairs}"
     coin_prices = None
     while not coin_prices:
-        time.sleep(1)
         try:
             coin_prices = httpx.get(coin_prices_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
         except:
+            logger.debug(f"Не удалось получить данные по монете {pairs}. Повтор попытки")
+            time.sleep(1)
             continue
         
     return coin_prices
