@@ -325,9 +325,12 @@ def update_transactions_info(context: template.Context, data: list) -> SafeText:
     current_pnls = []
     for cur_price, buy_price in zip(current_prices.values(), buying_prices):
         buy_price = buy_price.replace(",", ".")
-        pnl = ((float(cur_price) - float(buy_price)) / float(buy_price)) * 100
-        round_pnl = round(pnl, 2)
-        current_pnls.append(round_pnl)
+        if cur_price:
+            pnl = ((float(cur_price) - float(buy_price)) / float(buy_price)) * 100
+            round_pnl = round(pnl, 2)
+            current_pnls.append(round_pnl)
+        else:
+            current_pnls.append(None)
         
     for list, pair, c_price, c_pnl in zip(data, pairs, current_prices.values(), current_pnls):
         if Transaction.objects.filter(pair=pair, status=Status.CLOSED).exists():
