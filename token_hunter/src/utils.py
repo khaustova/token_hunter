@@ -25,10 +25,10 @@ def get_dexscreener_worker_tasks_ids() -> str | None:
         active_tasks = get_active_tasks()
         tasks_ids = {"parsing_task_id": None, "watching_task_id": None}
         for task in active_tasks:
-            if task["name"] == "cointer.src.dex_tasks.watching_dexscreener_task":
+            if task["name"] == "token_hunter.src.dex.tasks.watching_dexscreener_task":
                 tasks_ids["watching_task_id"] = task["id"]
                 break
-            elif task["name"] == "cointer.src.dex_tasks.parsing_dexscreener_task":
+            elif task["name"] == "token_hunter.src.dex.tasks.parsing_dexscreener_task":
                 tasks_ids["parsing_task_id"] = task["id"]
                 break
         return tasks_ids
@@ -36,23 +36,23 @@ def get_dexscreener_worker_tasks_ids() -> str | None:
         return tasks_ids
     
 
-def get_coins_prices(pairs: str | list[str]) -> dict:
-    coin_prices_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pairs}"
-    coin_prices = None
-    while not coin_prices:
+def get_token_data(pairs: str | list[str]) -> dict:
+    token_data_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pairs}"
+    token_data = None
+    while not token_data:
         try:
-            coin_prices = httpx.get(coin_prices_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
+            token_data = httpx.get(token_data_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
         except:
-            logger.debug(f"Не удалось получить данные по монете {pairs}. Повтор попытки")
+            logger.debug(f"Не удалось получить данные через API. Повтор попытки")
             time.sleep(1)
             continue
         
-    return coin_prices
+    return token_data
 
 
-def get_coin_age(created_date: datetime) -> str:
+def get_token_age(created_date: datetime) -> str:
     now_date = datetime.now()
     created_date = datetime.fromtimestamp(created_date / 1000)
-    coin_age = (now_date - created_date).total_seconds() / 60
+    token_age = (now_date - created_date).total_seconds() / 60
     
-    return coin_age
+    return token_age

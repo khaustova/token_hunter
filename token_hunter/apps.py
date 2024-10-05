@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class CointerConfig(AppConfig):
+class TokenHunterConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "cointer"
+    name = "token_hunter"

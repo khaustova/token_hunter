@@ -3,10 +3,10 @@ import logging
 from celery.contrib.abortable import AbortableTask
 from core.celery import app
 from asgiref.sync import async_to_sync
-from .dex_worker import run_dexscreener_watcher, run_dexscreener_parser
-
+from .screener import run_dexscreener_watcher, run_dexscreener_parser
 
 logger = logging.getLogger(__name__)
+
 
 @app.task(bind=True, base=AbortableTask)
 def watching_dexscreener_task(self, filter: str) -> str:

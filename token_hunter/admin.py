@@ -1,16 +1,17 @@
 from django.contrib import admin
+from django.shortcuts import reverse, redirect
 from django.utils.html import format_html
 from django.urls import reverse
 from import_export import resources
-from import_export.admin import ImportExportModelAdmin, ExportActionMixin
-from .models import TopTrader, Transaction, Status
+from import_export.admin import ImportExportModelAdmin
+from .models import TopTrader, Transaction, Settings, Status
 
 
 @admin.register(TopTrader)
 class TopTradersAdmin(admin.ModelAdmin):
-    list_display = ("maker", "coin", "bought", "sold", "PNL")
+    list_display = ("maker", "token_name", "bought", "sold", "PNL")
     list_per_page = 50
-    list_filter = ("coin",)
+    list_filter = ("token_name",)
 
 
 class TransactionResource(resources.ModelResource):
@@ -20,9 +21,9 @@ class TransactionResource(resources.ModelResource):
 
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin):
-    list_display = ("coin", "buying_price", "selling_price", "PNL", "link", "type", "sell", "is_twitter")
+    list_display = ("token_name", "buying_price", "selling_price", "PNL", "link", "mode", "sell")
     list_per_page = 30
-    list_filter = ("status", "type", "is_twitter")
+    list_filter = ("status", "mode")
     resource_classes = [TransactionResource]
     
     change_list_template = 'dashboard/transactions.html'
@@ -30,7 +31,7 @@ class TransactionAdmin(ImportExportModelAdmin):
     def sell(self, obj):
         transaction = Transaction.objects.get(pk=obj.pk)
         if transaction.status == Status.OPEN:
-            link = reverse("cointer:sell_coin", args=[obj.pk])
+            link = reverse("token_hunter:sell_token", args=[obj.pk])
             html = '<input class="sell-button" type="button" onclick="location.href=\'{}\'" value="Продать" />'.format(link)
             
             return format_html(html)
@@ -42,6 +43,16 @@ class TransactionAdmin(ImportExportModelAdmin):
         
         return format_html(html)
     
+
+@admin.register(Settings)
+class SettingsAdmin(admin.ModelAdmin):
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        first_obj = self.model.objects.first()
+        if first_obj is not None:
+            return redirect(reverse('admin:token_hunter_settings_change', args=(first_obj.pk,)))
+        return redirect(reverse('admin:token_hunter_settings_add'))
     
 
 

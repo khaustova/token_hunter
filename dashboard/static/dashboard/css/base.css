@@ -829,9 +829,9 @@ label[for=id_pages] {
     margin-top: 5px;
 }
 
-/* Coin checker form */
+/* token checker form */
 
-.check-coin__form {
+.check-token__form {
     display: flex;
     flex-direction: column;
 }

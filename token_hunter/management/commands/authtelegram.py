@@ -8,6 +8,10 @@ from telethon.errors import SessionPasswordNeededError
 
      
 async def telegram_authorize():
+    """
+    Авторизация в Телеграме через ввод кода для входа.
+    """
+    
     app, is_created = App.objects.update_or_create(
     api_id=settings.TELETHON_API_ID,
     api_hash=settings.TELETHON_API_HASH

@@ -6,28 +6,23 @@ import pandas as pd
 import random
 from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup
-from datetime import datetime
-from telethon import TelegramClient
 from django.conf import settings
 from nodriver.core.config import Config
-from telethon.sync import TelegramClient
-from django_telethon.sessions import DjangoSession
-from django_telethon.models import App, ClientSession
-from telethon.errors import SessionPasswordNeededError
-from .coin_worker import buy_coin, CoinChecker
-from ..models import TopTrader, Transaction
+from ..tokens.buyer import TokenBuyer
+from ..tokens.checker import TokenChecker
+from ...models import TopTrader, Transaction, Mode
 
 logger = logging.getLogger(__name__)
 
 
-class DexWorker():
+class DexScreener():
     def __init__(self, browser):
         self.browser = browser
     
-    async def watch_coin(self, filter: str):
+    async def watch_token(self, filter: str):
         """
-        Мониторит DexScreener на появление новых монет.
-        Если монета прошла проверку, то покупает её.
+        Мониторит DexScreener на появление новых токенов Solana.
+        Если токен прошёл проверку, то покупает его.
         """
         
         #await self._get_2captcha_api_key()
@@ -46,64 +41,49 @@ class DexWorker():
                 step = 0
                 await dex_page.reload()
                 await asyncio.sleep(5)
-                
-                
+                   
             all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
 
             links = [item for item in all_links if item not in black_list]
             await asyncio.sleep(5)
-            #print(links)
             if links:
                 for link in links:
                     pair = link.attributes[-1].split("/")[-1]
-                    coin_checker = CoinChecker(pair)
+                    token_checker = TokenChecker(pair)
                     
                     if link in transactions_list:
                         continue
                     
-                    if not coin_checker.check_coin_age():
+                    if not token_checker.check_age():
                         black_list.append(link)
                         continue
     
                     await dex_page.wait(2)
                     
-                    risk_level = await self.rugcheck(coin_checker.coin_address)
-                    logger.info(f"Уровень риска монеты {coin_checker.coin_name}: {risk_level}")
+                    risk_level = await self.rugcheck(token_checker.token_address)
+                    logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
                     
                     if risk_level == None:
                         continue
                     elif risk_level != "Good":
                         black_list.append(link)
-                        continue
+                        #continue
   
                     await dex_page.wait(2)
-                    total_transfers = await self.get_total_transfers(coin_checker.coin_address)
-                    if not coin_checker.check_total_transfers(total_transfers):
+                    total_transfers = await self.get_total_transfers(token_checker.token_address)
+                    if not token_checker.check_transfers(total_transfers):
                         black_list.append(link)
-                        continue
+                        #continue
                     
-                    await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + coin_checker.coin_address, new_tab=True)
+                    await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + token_checker.token_address, new_tab=True)
+                    
+                    token_buyer = TokenBuyer(pair, total_transfers)
+                    if token_buyer.check_token() or 1:
+                    #     mode = Mode.EMULATION
+                    # else:
+                        mode = Mode.DATA_COLLECTION
 
-                    await sync_to_async(buy_coin)(
-                        pair,
-                        total_transfers,
-                        coin_checker.coin_name, 
-                        coin_checker.coin_address
-                    )
-                    
-                    # prebuy_coin_checker = CoinChecker()
-                    #     if prebuy_coin_checker.prebuy_check(total_transfers):
-                            # app, is_created = App.objects.update_or_create(
-                            # api_id=settings.TELETHON_API_ID,
-                            # api_hash=settings.TELETHON_API_HASH
-                            # )
-                            # cs, cs_is_created = ClientSession.objects.update_or_create(
-                            #     name="default",
-                            # )
-                            # telegram_client = TelegramClient(DjangoSession(client_session=cs), app.api_id, app.api_hash)
-                            # await telegram_client.connect()
-                                    
-                            # await telegram_client.send_message("@maestro", coin_checker.coin_address)
+                        await sync_to_async(token_buyer.buy_token)(mode)
                      
                     transactions_list.append(link)
                     
@@ -111,7 +91,7 @@ class DexWorker():
         
     async def parse_top_traders(self, filter: str="", pages: int=1):
         """
-        Парсит pages страниц топов кошельков по монетам, ограниченным filter.
+        Парсит pages страниц топов кошельков по токенам, ограниченным filter.
         """
         
         for page in range(1, pages + 1):
@@ -129,7 +109,7 @@ class DexWorker():
                     pair = link.attributes[-1].split("/")[-1]
                     is_visited = await self.check_visited_top_traders_link(pair)
                     if is_visited:
-                        logger.debug(f"Монета на странице уже проанализирована")
+                        logger.debug(f"Токен на странице уже проанализирован")
                         await self.browser.wait(5)
                         continue
                     
@@ -143,13 +123,13 @@ class DexWorker():
                     top_traders_button = await dex_page.find("Top Traders")
                     await top_traders_button.click()
                                         
-                    coin_link = await dex_page.query_selector_all("a.custom-isf5h9")
-                    coin_address = coin_link[1].attributes[-1].split("/")[-1]
+                    token_link = await dex_page.query_selector_all("a.custom-isf5h9")
+                    token_address = token_link[1].attributes[-1].split("/")[-1]
                     
                     await dex_page.wait(10)
                     
-                    risk_level = await self.rugcheck_coin(coin_address)
-                    logger.info(f"Уровень риска монеты {coin_address}: {risk_level}")    
+                    risk_level = await self.rugcheck_token(token_address)
+                    logger.info(f"Уровень риска токена {token_address}: {risk_level}")    
                     if risk_level != "Good":
                         await dex_page.back()
                         await dex_page
@@ -166,7 +146,7 @@ class DexWorker():
     
     def save_top_traders(self, pair: str, soup: BeautifulSoup) -> None:
         """
-        Сохраняет топ кошельки монеты pair в базу данных из страницы soup.
+        Сохраняет топ кошельки токена pair в базу данных из страницы soup.
         Не учитываются кошельки, которые только продали, но не купили.
         """
         
@@ -207,8 +187,8 @@ class DexWorker():
         
         for index, row in temp_df.iterrows():
             tt = TopTrader.objects.create(
-                coin = "s",
-                coin_address=token_addres,
+                token = "s",
+                token_address=token_addres,
                 pair = pair,
                 maker=row["makers"],
                 chain=chain,
@@ -221,27 +201,27 @@ class DexWorker():
     @sync_to_async
     def check_visited_top_traders_link(self, pair: str):
         """
-        Проверяет наличие сохранённых топ кошельков по монете pair.
+        Проверяет наличие сохранённых топ кошельков токена pair.
         """
         
         return list(TopTrader.objects.all().filter(pair=pair))
     
     @sync_to_async
-    def check_transaction(self, coin_address: str):
+    def check_transaction(self, token_address: str):
         """
-        Проверяет наличие позиции по покупке монеты coin_address.
+        Проверяет наличие позиции по покупке токена token_address.
         """
         
-        return list(Transaction.objects.filter(coin_address=coin_address))
+        return list(Transaction.objects.filter(token_address=token_address))
     
     
-    async def get_total_transfers(self, coin_address):
+    async def get_total_transfers(self, token_address):
         """
-        Возвращает количество трансферов монеты coin_address с solscan.io.
+        Возвращает количество трансферов токена token_address с solscan.io.
         """
         
         solcan_page = await self.browser.get(
-            "https://solscan.io/token/" + coin_address, 
+            "https://solscan.io/token/" + token_address, 
             new_tab=True
         )
         await solcan_page
@@ -263,13 +243,13 @@ class DexWorker():
  
         return int(total_transfers) if total_transfers else None
             
-    async def rugcheck(self, coin_address):
+    async def rugcheck(self, token_address):
         """
-        Возвращает уровень риска монеты coin_address с rugcheck.xyz. 
+        Возвращает уровень риска токена token_address с rugcheck.xyz. 
         """
         
         rugcheck_page = await self.browser.get(
-            "https://rugcheck.xyz/tokens/" + coin_address, 
+            "https://rugcheck.xyz/tokens/" + token_address, 
             new_tab=True
         )
         await rugcheck_page
@@ -349,8 +329,8 @@ async def run_dexscreener_watcher(filter):
     config = Config()
     #config.add_extension("./extensions/captcha_solver")
     browser = await uc.start(config=config)
-    dex_worker = DexWorker(browser)
-    await dex_worker.watch_coin(filter)
+    dex_worker = DexScreener(browser)
+    await dex_worker.watch_token(filter)
 
 
 async def run_dexscreener_parser(filter, pages):  
@@ -361,5 +341,5 @@ async def run_dexscreener_parser(filter, pages):
     config = Config()
    # config.add_extension("./extensions/captcha_solver")
     browser = await uc.start(config=config, sandbox=False)
-    dex_worker = DexWorker(browser)
+    dex_worker = DexScreener(browser)
     await dex_worker.parse_top_traders(filter, pages)

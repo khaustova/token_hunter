@@ -14,9 +14,9 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.admin.templatetags.admin_list import result_list
 from django.contrib.admin.templatetags.base import InclusionAdminNode
 from django.core.paginator import Paginator
-from cointer.forms import DexscreenerForm, CheckCoinForm
-from cointer.models import TopTrader, Transaction, Status
-from cointer.src.utils import get_dexscreener_worker_tasks_ids, get_coins_prices
+from token_hunter.forms import DexscreenerForm, CheckTokenForm
+from token_hunter.models import TopTrader, Transaction, Status
+from token_hunter.src.utils import get_dexscreener_worker_tasks_ids, get_token_data
 from ..settings import get_settings
 from ..utils import order_items
 
@@ -226,7 +226,7 @@ def get_top_traders(context: template.Context) -> str:
     Добавляет в контекст данные о топ 100 кошельках с учётом пагинации.
     """
     
-    top_traders = TopTrader.objects.values("maker").annotate(coin_count=Count("coin")).order_by("-coin_count")[:100]
+    top_traders = TopTrader.objects.values("maker").annotate(token_count=Count("token_name")).order_by("-token_count")[:100]
     paginator = Paginator(top_traders, 10)
     request = context["request"]
     page_number = request.GET.get("page")
@@ -254,19 +254,19 @@ def get_dexscreener_form(context: template.Context) -> str:
     dexscreener_form = DexscreenerForm()
     context["dexscreener_form"] = dexscreener_form
     
-    return "Парсинг Dexscreener"
+    return "Dexscreener"
 
 
 @register.simple_tag(takes_context=True)
-def get_check_coin_form(context: template.Context) -> str:
+def get_check_token_form(context: template.Context) -> str:
     """
-    Добавляет в контекст форму для проверки монеты.
+    Добавляет в контекст форму для проверки токена.
     """
     
-    check_coin_form = CheckCoinForm()
-    context["check_coin_form"] = check_coin_form
+    check_token_form = CheckTokenForm()
+    context["check_token_form"] = check_token_form
 
-    return "Проверка монеты"
+    return "Проверка токена"
 
 
 @register.simple_tag()
@@ -297,7 +297,7 @@ def transactions_result_list_tag(parser, token):
 @register.simple_tag(takes_context=True)
 def update_transactions_info(context: template.Context, data: list) -> SafeText:
     """
-    Добавляет в контекст данные для каждой транзакции: текущую стоимость монеты
+    Добавляет в контекст данные для каждой транзакции: текущую стоимость токена
     и текущий PNL.
     """
     
@@ -316,11 +316,11 @@ def update_transactions_info(context: template.Context, data: list) -> SafeText:
         buying_prices.append(buying_price)
         
     pairs_str = ",".join(pairs)
-    coins_data = get_coins_prices(pairs_str)
+    tokens_data = get_token_data(pairs_str)
     
     current_prices = dict(zip(pairs, [None for _ in range(len(pairs))]))
-    for coin in coins_data:
-        current_prices[coin["pairAddress"].lower()] = coin["priceUsd"]
+    for token_data in tokens_data:
+        current_prices[token_data["pairAddress"].lower()] = token_data["priceUsd"]
        
     current_pnls = []
     for cur_price, buy_price in zip(current_prices.values(), buying_prices):

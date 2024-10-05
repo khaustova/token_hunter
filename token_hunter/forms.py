@@ -17,7 +17,7 @@ class DexscreenerForm(forms.Form):
                 'placeholder': 'По умолчанию парсится по рейтингу трендов за 6 часов'
             }
         ),
-        label="Введите фильтр для поиска монет:",
+        label="Введите фильтр для поиска токена:",
     )
     pages = forms.CharField(
         required=False, 
@@ -29,19 +29,19 @@ class DexscreenerForm(forms.Form):
         label="Введите количество страниц:",
     )
     
-class CheckCoinForm(forms.Form): 
+class CheckTokenForm(forms.Form): 
     """
-    Форма для базовой проверки монеты.
+    Форма для базовой проверки токена.
     """
      
-    coin = forms.CharField(
+    token = forms.CharField(
         required=False,
         widget=forms.TextInput(
             attrs={
                 "placeholder": "Сейчас поддерживается только сеть SOLANA", 
-                "id": "check-coin-input", 
-                "name": "coin"
+                "id": "check-token-input", 
+                "name": "token"
             }
         ),
-        label="Введите название монеты:",
+        label="Введите название токена:",
     )

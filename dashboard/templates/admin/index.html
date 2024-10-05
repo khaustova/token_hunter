@@ -15,7 +15,7 @@
 
       <div class="content-card">
         <h4 class="content-card__title">{% get_dexscreener_form %}</h4>
-        <form class="parsing__form" action="{% url 'cointer:watch_dexscreener' %}" method="POST">
+        <form class="parsing__form" action="{% url 'token_hunter:watch_dexscreener' %}" method="POST">
           {% csrf_token %}
           {% for field in dexscreener_form %}
             {{ field.label_tag }}
@@ -47,18 +47,18 @@
       </div>
 
       <div class="content-card">
-        <h4 class="content-card__title">{% get_check_coin_form %}</h4>
+        <h4 class="content-card__title">{% get_check_token_form %}</h4>
           {% csrf_token %}
-          {% for field in check_coin_form %}
+          {% for field in check_token_form %}
             {{field.label_tag}}
-            <div class="check-coin__form">
+            <div class="check-token__form">
             {{field}}
             {% if field.errors%}
               <div class="error">{{field.errors}}</div>
             {% endif %}
           {% endfor %}
-          <button class="check-coin__button" id="check-coin-button" type="submit" name='checkCoinButton'>Проверить монету 🔎</button>
-          <div id="check-coin-result"></div>
+          <button class="check-token__button" id="check-token-button" type="submit" name='checktokenButton'>Проверить токен 🔎</button>
+          <div id="check-token-result"></div>
         </div>
       </div>
 
@@ -77,7 +77,7 @@
                   <a href="{{ solsniffer_link }}">{{ trader.maker }}</a>
                 </td>
                 <td>
-                  {{ trader.coin_count }}
+                  {{ trader.token_count }}
                 </td>
               </tr>
             {% endfor %}
@@ -189,21 +189,21 @@
   </div>
 
   <script>
-    document.getElementById("check-coin-button").addEventListener("click", function(event) {
+    document.getElementById("check-token-button").addEventListener("click", function(event) {
       event.preventDefault();
-      const coin = document.getElementById('check-coin-input').value;
-      const url = "{% url 'cointer:check_coin' %}"
+      const token = document.getElementById('check-token-input').value;
+      const url = "{% url 'token_hunter:check_token' %}"
       fetch(url, {
           method: "POST",
           headers: {
               "Content-Type": "application/json",
               "X-CSRFToken": "{{ csrf_token }}"
           },
-          body: JSON.stringify(coin)
+          body: JSON.stringify(token)
         })
         .then(response => response.json())
         .then(data => {
-          document.getElementById("check-coin-result").innerText = `hello`;
+          document.getElementById("check-token-result").innerText = `hello`;
       })
     });
   </script>

@@ -5,20 +5,24 @@ from datetime import datetime
 from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from .forms import DexscreenerForm
-from .models import Transaction, Status
-from .src.dex_tasks import watching_dexscreener_task, parsing_dexscreener_task
-from .src.utils import get_dexscreener_worker_tasks_ids, get_coins_prices
+from .models import Transaction, Status, Settings
+from .src.dex.tasks import watching_dexscreener_task, parsing_dexscreener_task
+from .src.utils import get_dexscreener_worker_tasks_ids, get_token_data
 
 logger = logging.getLogger(__name__)
+
+try:
+    settings = Settings.objects.all().first()
+    FILTER = settings.filter
+except:
+    FILTER = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1"
 
 
 @require_POST
 def watch_dexscreener(request: HttpRequest):
     """
     В зависимости от нажатой кнопки запускает задачу парсинга топа кошельков 
-    или мониторинга DexScreener для поиска и покупки монет.
-    Возможно выполнение лишь одной задачи одновременно.
-    Выполняющуюся задачу можно остановить.
+    или мониторинга DexScreener для поиска и покупки токенов.
     """
     
     form = DexscreenerForm(request.POST)
@@ -28,7 +32,7 @@ def watch_dexscreener(request: HttpRequest):
             if form.cleaned_data["filter"]:
                 filter = form.cleaned_data["filter"]  
             else:
-                filter = "?rankBy=trendingScoreH6&order=desc&minLiq=5000&maxAge=1"
+                filter = FILTER
             if form.cleaned_data["pages"]: 
                 pages = int(form.cleaned_data["pages"])  
             else:
@@ -41,7 +45,7 @@ def watch_dexscreener(request: HttpRequest):
             if form.cleaned_data["filter"]:
                 filter = form.cleaned_data["filter"]  
             else:
-                filter = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1"
+                filter = FILTER
                 
             process = watching_dexscreener_task.delay(filter)
             logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
@@ -63,47 +67,47 @@ def watch_dexscreener(request: HttpRequest):
     return HttpResponseRedirect("/")
         
 
-def check_coin(request: HttpRequest) -> JsonResponse:
+def check_token(request: HttpRequest) -> JsonResponse:
     """
-    Базовая проверка введённой в форму монеты.
+    Базовая проверка введённого в форму токена.
     """
     
-    coin = json.loads(request.body)
+    token = json.loads(request.body)
 
     return JsonResponse({"status": "done"})
 
 
-def sell_coin(request: HttpRequest, transaction_id: int):
+def sell_token(request: HttpRequest, transaction_id: int):
     """
-    Продажа монеты из панели администратора.
+    Продажа токена из панели администратора.
     """
     
     transaction = Transaction.objects.get(pk=transaction_id)
-    coin_data = get_coins_prices(transaction.pair)[0]
+    token_data = get_token_data(transaction.pair)[0]
     
-    selling_price = float(coin_data["priceUsd"])
+    selling_price = float(token_data["priceUsd"])
     transaction.selling_price = selling_price
     pnl = ((selling_price - transaction.buying_price) / transaction.buying_price) * 100
     transaction.PNL = pnl
     
     now_date = datetime.now()
-    created_date = datetime.fromtimestamp(coin_data["pairCreatedAt"] / 1000)
-    coin_age = (now_date - created_date).total_seconds() / 60
-    transaction.selling_coin_age=coin_age
+    created_date = datetime.fromtimestamp(token_data["pairCreatedAt"] / 1000)
+    token_age = (now_date - created_date).total_seconds() / 60
     
-    transaction.selling_transactions_buys_m5=coin_data["txns"]["m5"]["buys"]
-    transaction.selling_transactions_sells_m5=coin_data["txns"]["m5"]["sells"]
-    transaction.selling_transactions_buys_h1=coin_data["txns"]["h1"]["buys"]
-    transaction.selling_transactions_sells_h1=coin_data["txns"]["h1"]["buys"]
-    transaction.selling_volume_m5=coin_data["volume"]["m5"]
-    transaction.selling_volume_h1=coin_data["volume"]["h1"]
-    transaction.selling_price_change_m5=coin_data["priceChange"]["m5"]
-    transaction.selling_price_change_h1=coin_data["priceChange"]["h1"]
-    transaction.selling_liquidity=coin_data["liquidity"]["usd"]
-    transaction.selling_fdv=coin_data["fdv"]
-    transaction.selling_market_cap=coin_data["marketCap"]
-    
+    transaction.selling_token_age = token_age
+    transaction.selling_transactions_buys_m5 = token_data["txns"]["m5"]["buys"]
+    transaction.selling_transactions_sells_m5 = token_data["txns"]["m5"]["sells"]
+    transaction.selling_transactions_buys_h1 = token_data["txns"]["h1"]["buys"]
+    transaction.selling_transactions_sells_h1 = token_data["txns"]["h1"]["buys"]
+    transaction.selling_volume_m5 = token_data["volume"]["m5"]
+    transaction.selling_volume_h1 = token_data["volume"]["h1"]
+    transaction.selling_price_change_m5 = token_data["priceChange"]["m5"]
+    transaction.selling_price_change_h1 = token_data["priceChange"]["h1"]
+    transaction.selling_liquidity = token_data["liquidity"]["usd"]
+    transaction.selling_fdv = token_data["fdv"]
+    transaction.selling_market_cap = token_data["marketCap"]
+    transaction.closing_date = datetime.now()
     transaction.status = Status.CLOSED
     transaction.save()
 
-    return HttpResponseRedirect("/cointer/transaction")
+    return HttpResponseRedirect("/token_hunter/transaction")

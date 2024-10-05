@@ -21,8 +21,6 @@ CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(" ")
 
 INTERNAL_IPS = env("INTERNAL_IPS").split(" ")
 
-# Application definition
-
 INSTALLED_APPS = [
     "dashboard",
     "django.contrib.admin",
@@ -35,7 +33,7 @@ INSTALLED_APPS = [
     "django_celery_results",
     "django_telethon",
     "import_export",
-    "cointer"
+    "token_hunter"
 ]
 
 MIDDLEWARE = [
@@ -71,16 +69,6 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 X_FRAME_OPTIONS = "SAMEORIGIN" 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -91,7 +79,6 @@ DATABASES = {
         "PORT": env("POSTGRES_PORT"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -111,7 +98,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -122,7 +108,6 @@ TIME_ZONE = "Europe/Moscow"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -139,7 +124,6 @@ STATIC_ROOT = BASE_DIR / "static"
 #     },
 # }
 
-
 # Media files
 
 MEDIA_URL = "media/"
@@ -150,16 +134,17 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
 # Dashboard
 
 DASHBOARD_CUSTOMIZATION = {
-    "search_model": "cointer.transaction",
+    "search_model": "token_hunter.transaction",
     "sidebar_icons": {
         "auth.user": "person",
         "django_celery_results.taskresult": "task",
-        "cointer.toptrader": "account_balance_wallet",
-        "cointer.transaction": "contract",
+        "token_hunter.toptrader": "account_balance_wallet",
+        "token_hunter.transaction": "contract",
+        "token_hunter.settings": "settings",
+        "django_telethon.session": "cases",
     },
     "hidden_apps": [
         "dashboard",
@@ -168,11 +153,20 @@ DASHBOARD_CUSTOMIZATION = {
     ],
     "hidden_models": [
         "django_celery_results.groupresult",
+        "django_telethon.login",
+        "django_telethon.sentfile",
+        "django_telethon.updatestate",
+        "django_telethon.entity",
+        "django_telethon.clientsession",
+        "django_telethon.app",
     ],
     "apps_order": [
-        "cointer",
+        "token_hunter",
+        "token_hunter.transaction",
+        "token_hunter.toptrader",
+        "token_hunter.settings",
         "django_celery_results",
-        "auth",
+        "django_telethon",
     ],
     "extra_links": [
         {
@@ -187,7 +181,6 @@ DASHBOARD_CUSTOMIZATION = {
     ],
 }
 
-
 # Celery
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
@@ -198,7 +191,6 @@ CELERY_TIMEZONE = "Europe/Moscow"
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_RESULT_EXTENDED = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-
 
 # Logger
 
@@ -230,26 +222,26 @@ LOGGING = {
             "propagate": True,
             "level": "INFO",
         },
-        "cointer": {
+        "token_hunter": {
             "handlers": ["console"],
             "level": "DEBUG",
         }
     }
 }
 
-
 # SOLANA API
 
 MORALIS_API_KEY = env("MORALIS_API_KEY")
 HELIUS_API_KEY = env("HELIUS_API_KEY")
 
-
 # CAPTCHA
+
 CAPTCHA_API_KEY = env("CAPTCHA_API_KEY")
 CAPTCHA_EXTENSION_LINK = env("CAPTCHA_EXTENSION_LINK")
 CAPTCHA_EXTENSION_DIR = env("CAPTCHA_EXTENSION_DIR")
 
 # TELETHON
+
 TELETHON_API_ID=env("TELETHON_API_ID") 
 TELETHON_API_HASH=env("TELETHON_API_HASH")
 TELEGRAM_PHONE_NUMBER = env("TELEGRAM_PHONE_NUMBER")

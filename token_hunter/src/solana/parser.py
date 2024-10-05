@@ -13,7 +13,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from urllib.parse import urljoin
-from logger import get_logger
 
 SOLANA_TOKEN_ADDRESS = "So11111111111111111111111111111111111111112"
 HELIUS_API_KEY = os.getenv("HELIUS_API_KEY")
@@ -81,7 +80,7 @@ class SolanaParser():
             ):
                 transaction_info["type"] = "buy"
                 transaction_info["sol"] = transaction["tokenTransfers"][0]["tokenAmount"]
-                transaction_info["coin"] = transaction["tokenTransfers"][1]["tokenAmount"] 
+                transaction_info["token"] = transaction["tokenTransfers"][1]["tokenAmount"] 
                 
             elif ( # Если происходит продажа:
                 transaction["tokenTransfers"][1]["mint"] == SOLANA_TOKEN_ADDRESS 
@@ -89,7 +88,7 @@ class SolanaParser():
             ):
                 transaction_info["type"] = "sell"
                 transaction_info["sol"] = transaction["tokenTransfers"][1]["tokenAmount"]
-                transaction_info["coin"] = transaction["tokenTransfers"][0]["tokenAmount"] 
+                transaction_info["token"] = transaction["tokenTransfers"][0]["tokenAmount"] 
         except:
             return None
         

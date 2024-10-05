@@ -8,7 +8,7 @@ from django_telethon.urls import django_telethon_urls
 admin.autodiscover()
 
 urlpatterns = [
-    path("", include("cointer.urls")),
+    path("", include("token_hunter.urls")),
     path("", admin.site.urls),
     path('telegram/', django_telethon_urls()),
     path("__debug__/", include(debug_toolbar.urls)),

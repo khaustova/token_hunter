@@ -736,7 +736,7 @@ content: "";
 
 button[type=submit].parsing__button, 
 button[type=submit].watcher__button,
-button[type=submit].check-coin__button {
+button[type=submit].check-token__button {
     margin-top: 3px;
     height: 34px;
 }
