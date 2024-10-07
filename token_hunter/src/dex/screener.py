@@ -60,32 +60,68 @@ class DexScreener():
     
                     await dex_page.wait(2)
                     
-                    risk_level = await self.rugcheck(token_checker.token_address)
-                    logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
+                    await link.click()
+                    await self.browser.wait(3)
                     
-                    if risk_level == None:
-                        continue
-                    elif risk_level != "Good":
-                        black_list.append(link)
+                    
+                    try:
+                        snipers_button = await dex_page.find("Snipers")
+                        await snipers_button.click()
+                        dex_page.wait(5)
+                    except:
+                        return
+ 
+                    # risk_level = await self.rugcheck(token_checker.token_address)
+                    # logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
+                    
+                    # if risk_level == None:
+                    #     continue
+                    # elif risk_level != "Good":
+                    #     black_list.append(link)
                         #continue
   
-                    await dex_page.wait(2)
-                    total_transfers = await self.get_total_transfers(token_checker.token_address)
-                    if not token_checker.check_transfers(total_transfers):
-                        black_list.append(link)
-                        #continue
+                    # await dex_page.wait(2)
+                    # total_transfers = await self.get_total_transfers(token_checker.token_address)
+                    # if not token_checker.check_transfers(total_transfers):
+                    #     black_list.append(link)
+                    #     #continue
                     
-                    await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + token_checker.token_address, new_tab=True)
+                    # await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + token_checker.token_address, new_tab=True)
                     
-                    token_buyer = TokenBuyer(pair, total_transfers)
-                    if token_buyer.check_token() or 1:
-                    #     mode = Mode.EMULATION
-                    # else:
-                        mode = Mode.DATA_COLLECTION
+                    # token_buyer = TokenBuyer(pair, total_transfers)
+                    # if token_buyer.check_token() or 1:
+                    # #     mode = Mode.EMULATION
+                    # # else:
+                    #     mode = Mode.DATA_COLLECTION
+                    
+                    try:
+                        await link.click()
+                        await self.browser.wait(3)
+                    except:
+                        await self.browser.wait(3)
+                        continue
+                    
+                    snipers_button = await dex_page.find("Snipers")
+                    await snipers_button.click()
+                    
+                    await dex_page.wait(3)
+                    
+                    top_snipers_data = await self.get_snipers(dex_page)
 
-                        await sync_to_async(token_buyer.buy_token)(mode)
+                    top_traders_button = await dex_page.find("Top Traders")
+                    await top_traders_button.click()
+                    
+                    await dex_page.wait(3)
+                    
+                    top_traders_data = await self.get_top_traders(dex_page)
+
+                    #await sync_to_async(token_buyer.buy_token)(mode)
                      
-                    transactions_list.append(link)
+                    # transactions_list.append(link)
+                    
+                    await dex_page.back()
+                    
+                    return
                     
             await self.browser.wait(10)
         
@@ -107,7 +143,7 @@ class DexScreener():
             if links:
                 for link in links:
                     pair = link.attributes[-1].split("/")[-1]
-                    is_visited = await self.check_visited_top_traders_link(pair)
+                    is_visited = await self._check_visited_top_traders_link(pair)
                     if is_visited:
                         logger.debug(f"Токен на странице уже проанализирован")
                         await self.browser.wait(5)
@@ -134,87 +170,191 @@ class DexScreener():
                         await dex_page.back()
                         await dex_page
                         continue
-
-                    page_sourse = await dex_page.get_content()
-                    soup = BeautifulSoup(page_sourse, "html.parser")
-                    await sync_to_async(self.save_top_traders)(pair, soup)
                     
-                    await asyncio.sleep(5)
-
+                    top_traders_button = await dex_page.find("Top Traders")
+                    await top_traders_button.click()
+                    
+                    await dex_page.wait(3)
+                    
+                    top_traders_data = await self.get_top_traders(dex_page)
+                    
                     await dex_page.back()
                     
-    
-    def save_top_traders(self, pair: str, soup: BeautifulSoup) -> None:
-        """
-        Сохраняет топ кошельки токена pair в базу данных из страницы soup.
-        Не учитываются кошельки, которые только продали, но не купили.
-        """
-        
-        token_address_link = soup.find_all("a", class_="chakra-link chakra-button custom-isf5h9")[1]
-        token_addres = token_address_link.get("href").split("/")[-1]
-        
-        links = soup.find_all("a", class_="chakra-link chakra-button custom-1hhf88o")
-        data = {}
-
-        data["makers"] = [a.get("href").split("/")[-1] for a in links]
-        
-        sums = soup.find_all("div", class_="custom-1o79wax")
-        bought_list = []
-        sold_list = []
-        for i in range(len(sums)):
-            if sums[i].find("span").text == "-":
-                number = None
-            else:
-                str_number = sums[i].find("span").text[1:]
-                number = str_number.lstrip("0").lstrip("$")
-                number = number.replace(",", "").replace(".", "").replace("K", "000").replace("M", "000000")
-                number = int(number)
+                    
+    async def get_snipers(self, page):
+        snipers_table = await page.select("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
+        snipers_table_html = await snipers_table.get_html()
             
-            if i % 2 == 0:
-                bought_list.append(number)
+        soup = BeautifulSoup(snipers_table_html, "html.parser")
+        snipers_data = {
+            "held_all": 0,
+            "sold_all": 0,
+            "sold_some": 0,
+            "bought_100_less": 0,
+            "bought_100_500": 0,
+            "bought_500_1000": 0,
+            "bought_1000_2500": 0,
+            "bought_2500_5000": 0,
+            "bought_5000_more": 0,
+            "sold_100_less": 0,
+            "sold_100_500": 0,
+            "sold_500_1000": 0,
+            "sold_1000_2500": 0,
+            "sold_2500_5000": 0,
+            "sold_5000_more": 0,
+            "pnl_100_less": 0,
+            "pnl_100_500": 0,
+            "pnl_500_1000": 0,
+            "pnl_1000_2500": 0,
+            "pnl_2500_5000": 0,
+            "pnl_5000_more": 0,
+            "no_bought": 0,
+            "pnl_profit": 0,
+            "pnl_loss": 0,
+        }
+        
+        
+        main_div = soup.find("div", recursive=False)
+        snipers_divs = main_div.find_all("div", recursive=False)
+        for divs in snipers_divs[1:]:
+            snipers_spans = divs.find_all("span")
+            bought = snipers_spans[5].text
+            sold = "-"
+            if snipers_spans[2].text == "Held all":
+                snipers_data["held_all"] += 1
+                if bought != "-":
+                    bought = await self.clear_number(bought)
+            elif snipers_spans[2].text == "Sold all" or snipers_spans[2].text == "Sold some":
+                if snipers_spans[2].text == "Sold all":
+                    snipers_data["sold_all"] += 1
+                elif snipers_spans[2].text == "Sold some":
+                    snipers_data["sold_some"] += 1
+                    
+                if bought != "-":
+                    bought = await self.clear_number(bought)
+                    sold = await self.clear_number(snipers_spans[10].text)
+                    pnl = sold - float(bought)
+                else:
+                    sold = await self.clear_number(snipers_spans[6].text)
+                    pnl = sold
+                    snipers_data["no_bought"] += 1
+                    
+                if pnl > 0:
+                    snipers_data["pnl_profit"] += 1
+                else:
+                    snipers_data["pnl_loss"] += 1
+                    
+            snipers_data = await self.count_costs(snipers_data, bought, sold, pnl)
+            
+        return snipers_data
+                    
+    async def get_top_traders(self, page):
+        top_traders_table = await page.select("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
+        top_traders_table_html = await top_traders_table.get_html()
+        
+        soup = BeautifulSoup(top_traders_table_html, "html.parser")
+        top_traders_data = {
+            "bought_100_less": 0,
+            "bought_100_500": 0,
+            "bought_500_1000": 0,
+            "bought_1000_2500": 0,
+            "bought_2500_5000": 0,
+            "bought_5000_more": 0,
+            "sold_100_less": 0,
+            "sold_100_500": 0,
+            "sold_500_1000": 0,
+            "sold_1000_2500": 0,
+            "sold_2500_5000": 0,
+            "sold_5000_more": 0,
+            "pnl_100_less": 0,
+            "pnl_100_500": 0,
+            "pnl_500_1000": 0,
+            "pnl_1000_2500": 0,
+            "pnl_2500_5000": 0,
+            "pnl_5000_more": 0,
+            "no_bought": 0,
+            "pnl_profit": 0,
+            "pnl_loss": 0,
+        }
+        
+        main_div = soup.find("div", recursive=False)
+        top_traders_divs = main_div.find_all("div", recursive=False)
+        for divs in top_traders_divs[1:]:
+            top_traders_spans = divs.find_all("span")
+            bought = top_traders_spans[2].text
+            if bought == "-":
+                top_traders_data["no_bought"] += 1
+                sold = await self.clear_number(top_traders_spans[3].text)
+                pnl = sold
             else:
-                sold_list.append(number)
-        data["bought"] = bought_list
-        data["sold"] = sold_list
+                bought = await self.clear_number(bought)
+                if sold != "-":
+                    sold = await self.clear_number(top_traders_spans[7].text)
+                    pnl = sold - bought
+            print(bought, sold)
+            
+            if pnl > 0:
+                top_traders_data["pnl_profit"] += 1
+            else:
+                top_traders_data["pnl_loss"] += 1
+                    
+            top_traders_data = await self.count_costs(top_traders_data, bought, sold, pnl)
+            
+        return top_traders_data
+                    
+    async def clear_number(self, number_str: str):
+        number_str = number_str.lstrip("0").lstrip("$")
+        number_str = number_str.replace(",", "").replace(">", "").replace("<", "").replace("$", "")
+        if "K" in number_str or "M" in number_str:
+            number_str = number_str.replace(".", "").replace("K", "000").replace("M", "000000")
+        number = float(number_str)
+        
+        return number
 
-        token_address_link = soup.find_all("a", class_="chakra-link chakra-button custom-isf5h9")[1]
-        token_addres = token_address_link.get("href").split("/")[-1]
-        chain = "SOL"
-        
-        temp_df = pd.DataFrame(data)
-        temp_df.dropna(inplace=True)
-        temp_df["pnl"] = temp_df["sold"] - temp_df["bought"]
-        
-        for index, row in temp_df.iterrows():
-            tt = TopTrader.objects.create(
-                token = "s",
-                token_address=token_addres,
-                pair = pair,
-                maker=row["makers"],
-                chain=chain,
-                bought=row["bought"],
-                sold=row["sold"],
-                PNL=row["pnl"]    
-            )
+    async def count_costs(self, data, bought, sold, pnl):
+        if bought != "-":      
+            if bought >= 0 and bought < 100:
+                data["bought_100_less"] += 1
+            elif bought >= 100 and bought < 500:
+                data["bought_100_500"] += 1
+            elif bought >= 500 and bought < 1000:
+                data["bought_500_1000"] += 1
+            elif bought >= 1000 and bought < 2500:
+                data["bought_1000_2500"] += 1
+            elif bought >= 2500 and bought < 5000:
+                data["bought_2500_5000"] += 1
+            elif bought >= 5000:
+                data["bought_5000_more"] += 1
+                
+        if sold != "-":      
+            if sold >= 0 and sold < 100:
+                data["sold_100_less"] += 1
+            elif sold >= 100 and sold < 500:
+                data["sold_100_500"] += 1
+            elif sold >= 500 and sold < 1000:
+                data["sold_500_1000"] += 1
+            elif sold >= 1000 and sold < 2500:
+                data["sold_1000_2500"] += 1
+            elif sold >= 2500 and sold < 5000:
+                data["sold_2500_5000"] += 1
+            elif sold >= 5000:
+                data["sold_5000_more"] += 1
+                
+        if pnl >= 0 and pnl < 100:
+            data["pnl_100_less"] += 1
+        elif pnl >= 100 and pnl < 500:
+            data["pnl_100_500"] += 1
+        elif pnl >= 500 and pnl < 1000:
+            data["pnl_500_1000"] += 1
+        elif pnl >= 1000 and pnl < 2500:
+            data["pnl_1000_2500"] += 1
+        elif pnl >= 2500 and pnl < 5000:
+            data["pnl_2500_5000"] += 1
+        elif pnl >= 5000:
+            data["pnl_5000_more"] += 1
+                
+        return data
 
-
-    @sync_to_async
-    def check_visited_top_traders_link(self, pair: str):
-        """
-        Проверяет наличие сохранённых топ кошельков токена pair.
-        """
-        
-        return list(TopTrader.objects.all().filter(pair=pair))
-    
-    @sync_to_async
-    def check_transaction(self, token_address: str):
-        """
-        Проверяет наличие позиции по покупке токена token_address.
-        """
-        
-        return list(Transaction.objects.filter(token_address=token_address))
-    
-    
     async def get_total_transfers(self, token_address):
         """
         Возвращает количество трансферов токена token_address с solscan.io.
@@ -319,6 +459,22 @@ class DexScreener():
         await api_key_input.send_keys(settings.CAPTCHA_API_KEY)
         login_button = await captcha_extenshion_page.find("Login")
         await login_button.click()
+        
+    @sync_to_async
+    def _check_visited_top_traders_link(self, pair: str):
+        """
+        Проверяет наличие сохранённых топ кошельков токена pair.
+        """
+        
+        return list(TopTrader.objects.all().filter(pair=pair))
+    
+    @sync_to_async
+    def _check_transaction(self, token_address: str):
+        """
+        Проверяет наличие позиции по покупке токена token_address.
+        """
+        
+        return list(Transaction.objects.filter(token_address=token_address))
 
 
 async def run_dexscreener_watcher(filter):
