@@ -226,7 +226,7 @@ def get_top_traders(context: template.Context) -> str:
     Добавляет в контекст данные о топ 100 кошельках с учётом пагинации.
     """
     
-    top_traders = TopTrader.objects.values("maker").annotate(token_count=Count("token_name")).order_by("-token_count")[:100]
+    top_traders = TopTrader.objects.values("wallet_address").annotate(token_count=Count("token_name")).order_by("-token_count")[:100]
     paginator = Paginator(top_traders, 10)
     request = context["request"]
     page_number = request.GET.get("page")
