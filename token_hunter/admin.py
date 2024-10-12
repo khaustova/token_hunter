@@ -9,7 +9,7 @@ from .models import TopTrader, Transaction, Settings, Status
 
 @admin.register(TopTrader)
 class TopTradersAdmin(admin.ModelAdmin):
-    list_display = ("maker", "token_name", "bought", "sold", "PNL")
+    list_display = ("wallet_address", "token_name", "bought", "sold", "PNL")
     list_per_page = 50
     list_filter = ("token_name",)
 

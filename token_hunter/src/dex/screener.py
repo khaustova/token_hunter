@@ -19,7 +19,7 @@ class DexScreener():
     def __init__(self, browser):
         self.browser = browser
     
-    async def watch_token(self, filter: str):
+    async def monitor_tokens(self, filter: str) -> None:
         """
         Мониторит DexScreener на появление новых токенов Solana.
         Если токен прошёл проверку, то покупает его.
@@ -59,73 +59,74 @@ class DexScreener():
                         continue
     
                     await dex_page.wait(2)
-                    
-                    await link.click()
-                    await self.browser.wait(3)
-                    
-                    
-                    try:
-                        snipers_button = await dex_page.find("Snipers")
-                        await snipers_button.click()
-                        dex_page.wait(5)
-                    except:
-                        return
  
-                    # risk_level = await self.rugcheck(token_checker.token_address)
-                    # logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
+                    risk_level = await self.rugcheck(token_checker.token_address)
+                    logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
                     
-                    # if risk_level == None:
-                    #     continue
-                    # elif risk_level != "Good":
-                    #     black_list.append(link)
-                        #continue
+                    if risk_level == None:
+                        continue
+                    elif risk_level != "Good":
+                        black_list.append(link)
+                        continue
   
-                    # await dex_page.wait(2)
-                    # total_transfers = await self.get_total_transfers(token_checker.token_address)
+                    await dex_page.wait(2)
+                    total_transfers = await self.get_total_transfers(token_checker.token_address)
                     # if not token_checker.check_transfers(total_transfers):
                     #     black_list.append(link)
                     #     #continue
                     
                     # await self.browser.get('https://api-v2.solscan.io/v2/token/transfer/export?address=' + token_checker.token_address, new_tab=True)
+
+                    token_buyer = TokenBuyer(pair, total_transfers)
+                    if token_buyer.check_token() or 1:
+                    #     mode = Mode.EMULATION
+                    # else:
+                        mode = Mode.DATA_COLLECTION
                     
-                    # token_buyer = TokenBuyer(pair, total_transfers)
-                    # if token_buyer.check_token() or 1:
-                    # #     mode = Mode.EMULATION
-                    # # else:
-                    #     mode = Mode.DATA_COLLECTION
+                    # try:
+                    #     await link.click()
+                    #     await self.browser.wait(3)
+                    # except:
+                    #     await self.browser.wait(3)
+                    #     continue
+                        
+                    page = await self.browser.get("https://dexscreener.com" + link.attributes[-1], new_tab=True)
                     
-                    try:
-                        await link.click()
-                        await self.browser.wait(3)
+                    await page
+                    
+                    await page.sleep(3)
+                    
+                    try:  
+                        snipers_button = await page.find("Snipers")
+                        await snipers_button.click()
+                        await page.sleep(3)
+                        top_snipers_data = await self.get_snipers(page)
                     except:
-                        await self.browser.wait(3)
-                        continue
-                    
-                    snipers_button = await dex_page.find("Snipers")
-                    await snipers_button.click()
-                    
-                    await dex_page.wait(3)
-                    
-                    top_snipers_data = await self.get_snipers(dex_page)
+                        top_snipers_data = None
+                        
+                    try:  
+                        top_traders_button = await page.find("Top Traders")
+                        await top_traders_button.click()
+                        await page.sleep(3)
+                        top_traders_data = await self.get_top_traders(page)
+                    except:
+                        top_traders_data = None
 
-                    top_traders_button = await dex_page.find("Top Traders")
-                    await top_traders_button.click()
-                    
-                    await dex_page.wait(3)
-                    
-                    top_traders_data = await self.get_top_traders(dex_page)
+                    await page.close()
 
-                    #await sync_to_async(token_buyer.buy_token)(mode)
+                    print(top_snipers_data, top_traders_data)
+
+                    await sync_to_async(token_buyer.buy_token)(
+                        mode,
+                        top_snipers_data,
+                        top_traders_data
+                    )
                      
-                    # transactions_list.append(link)
-                    
-                    await dex_page.back()
-                    
-                    return
+                    transactions_list.append(link)
                     
             await self.browser.wait(10)
         
-    async def parse_top_traders(self, filter: str="", pages: int=1):
+    async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
         """
         Парсит pages страниц топов кошельков по токенам, ограниченным filter.
         """
@@ -181,21 +182,52 @@ class DexScreener():
                     await dex_page.back()
                     
                     
-    async def get_snipers(self, page):
-        snipers_table = await page.select("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
-        snipers_table_html = await snipers_table.get_html()
-            
+    async def get_snipers(self, page) -> dict:
+        """
+        Получает данные о покупках и продажах из таблицы Snipers на странице 
+        токена. Подсчитывает количество значений в зависимости от диапазона, 
+        а также количество снайперов, держащих или продавших (часть или всё).
+        Сохраняет информацию о первых десяти транзакциях.
+        Возвращает результат в виде словаря.
+        """
+        
+        snipers_table = await page.query_selector("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
+        await snipers_table
+        snipers_table_html = await snipers_table.get_html()    
+        
         soup = BeautifulSoup(snipers_table_html, "html.parser")
         snipers_data = {
             "held_all": 0,
             "sold_all": 0,
             "sold_some": 0,
+            "bought_1": None,
+            "sold_1": None,
+            "bought_2": None,
+            "sold_2": None,
+            "bought_3": None,
+            "sold_3": None,
+            "bought_4": None,
+            "sold_4": None,            
+            "bought_5": None,
+            "sold_5": None,            
+            "bought_6": None,
+            "sold_6": None,
+            "bought_7": None,
+            "sold_7": None,
+            "bought_8": None,
+            "sold_8": None,
+            "bought_9": None,
+            "sold_9": None,
+            "bought_10": None,
+            "sold_10": None,
+            "bought_01_less": 0,
             "bought_100_less": 0,
             "bought_100_500": 0,
             "bought_500_1000": 0,
             "bought_1000_2500": 0,
             "bought_2500_5000": 0,
             "bought_5000_more": 0,
+            "sold_01_less": 0,
             "sold_100_less": 0,
             "sold_100_500": 0,
             "sold_500_1000": 0,
@@ -213,53 +245,81 @@ class DexScreener():
             "pnl_loss": 0,
         }
         
-        
         main_div = soup.find("div", recursive=False)
         snipers_divs = main_div.find_all("div", recursive=False)
+        step = 1
         for divs in snipers_divs[1:]:
             snipers_spans = divs.find_all("span")
-            bought = snipers_spans[5].text
+            bought = await self._get_list_element_by_index(snipers_spans, 5)
             sold = "-"
-            if snipers_spans[2].text == "Held all":
+            pnl = None
+            
+            operation = await self._get_list_element_by_index(snipers_spans, 2)
+            if operation == "Held all":
                 snipers_data["held_all"] += 1
                 if bought != "-":
-                    bought = await self.clear_number(bought)
-            elif snipers_spans[2].text == "Sold all" or snipers_spans[2].text == "Sold some":
-                if snipers_spans[2].text == "Sold all":
+                    bought = await self._clear_number(bought)
+                    
+            elif operation == "Sold all" or operation == "Sold some":
+                if operation == "Sold all":
                     snipers_data["sold_all"] += 1
-                elif snipers_spans[2].text == "Sold some":
+                elif operation == "Sold some":
                     snipers_data["sold_some"] += 1
                     
                 if bought != "-":
-                    bought = await self.clear_number(bought)
-                    sold = await self.clear_number(snipers_spans[10].text)
-                    pnl = sold - float(bought)
+                    bought = await self._clear_number(bought)
+                    sold = await self._get_list_element_by_index(snipers_spans, 10)
+                        
+                    if sold != "-":
+                        sold = await self._clear_number(sold)
+                        pnl = sold - bought
                 else:
-                    sold = await self.clear_number(snipers_spans[6].text)
-                    pnl = sold
-                    snipers_data["no_bought"] += 1
+                    sold = await self._get_list_element_by_index(snipers_spans, 6)
+                    if sold != "-":
+                        sold = await self._clear_number(sold)
+                        pnl = sold
+                        snipers_data["no_bought"] += 1
+                        
+                if pnl:
+                    if pnl > 0:
+                        snipers_data["pnl_profit"] += 1
+                    else:
+                        snipers_data["pnl_loss"] += 1
+                        
+            if step <= 10:
+                if bought != "-":
+                    snipers_data[f"bought_{step}"] = bought
+                if sold != "-":
+                    snipers_data[f"sold_{step}"] = sold
                     
-                if pnl > 0:
-                    snipers_data["pnl_profit"] += 1
-                else:
-                    snipers_data["pnl_loss"] += 1
-                    
-            snipers_data = await self.count_costs(snipers_data, bought, sold, pnl)
+                step += 1
+          
+            snipers_data = await self._count_costs(snipers_data, bought, sold, pnl)
             
         return snipers_data
                     
-    async def get_top_traders(self, page):
-        top_traders_table = await page.select("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
-        top_traders_table_html = await top_traders_table.get_html()
+    async def get_top_traders(self, page, mode="monitor") -> dict:
+        """
+        Получает данные о покупках и продажах из таблицы Top Traders на странице 
+        токена. Подсчитывает количество значений в зависимости от диапазона
+        и возвращает результат в виде словаря.
+        """
         
+        await page.wait(2)
+        top_traders_table = await page.query_selector("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
+        await top_traders_table
+        top_traders_table_html = await top_traders_table.get_html()
+
         soup = BeautifulSoup(top_traders_table_html, "html.parser")
         top_traders_data = {
+            "bought_01_less": 0,
             "bought_100_less": 0,
             "bought_100_500": 0,
             "bought_500_1000": 0,
             "bought_1000_2500": 0,
             "bought_2500_5000": 0,
             "bought_5000_more": 0,
+            "sold_01_less": 0,
             "sold_100_less": 0,
             "sold_100_500": 0,
             "sold_500_1000": 0,
@@ -273,6 +333,7 @@ class DexScreener():
             "pnl_2500_5000": 0,
             "pnl_5000_more": 0,
             "no_bought": 0,
+            "no_sold": 0,
             "pnl_profit": 0,
             "pnl_loss": 0,
         }
@@ -280,29 +341,77 @@ class DexScreener():
         main_div = soup.find("div", recursive=False)
         top_traders_divs = main_div.find_all("div", recursive=False)
         for divs in top_traders_divs[1:]:
-            top_traders_spans = divs.find_all("span")
-            bought = top_traders_spans[2].text
+            top_trader_spans = divs.find_all("span")
+            
+            if mode == "parse":
+                top_trader_link = divs.find("a")["href"]
+                wallet_address = top_trader_link.split("/")[-1]
+                
+            bought = await self._get_list_element_by_index(top_trader_spans, 2)
+            sold = await self._get_list_element_by_index(top_trader_spans, 7)
+            pnl = None
+            
             if bought == "-":
                 top_traders_data["no_bought"] += 1
-                sold = await self.clear_number(top_traders_spans[3].text)
-                pnl = sold
-            else:
-                bought = await self.clear_number(bought)
                 if sold != "-":
-                    sold = await self.clear_number(top_traders_spans[7].text)
-                    pnl = sold - bought
-            print(bought, sold)
-            
-            if pnl > 0:
-                top_traders_data["pnl_profit"] += 1
+                    sold = await self._clear_number(sold)
+                    pnl = sold
+                else:
+                    top_traders_data["no_sold"] += 1  
             else:
-                top_traders_data["pnl_loss"] += 1
+                bought = await self._clear_number(bought)
+                if sold != "-":
+                    sold = await self._clear_number(sold)
+                    pnl = sold - bought
+                else:
+                    top_traders_data["no_sold"] += 1
                     
-            top_traders_data = await self.count_costs(top_traders_data, bought, sold, pnl)
+            if pnl:
+                if pnl > 0:
+                    top_traders_data["pnl_profit"] += 1
+                else:
+                    top_traders_data["pnl_loss"] += 1
+                    
+            top_traders_data = await self._count_costs(top_traders_data, bought, sold, pnl)
             
         return top_traders_data
+    
+    async def rugcheck(self, token_address):
+        """
+        Возвращает уровень риска токена token_address с rugcheck.xyz. 
+        """
+        
+        rugcheck_page = await self.browser.get(
+            "https://rugcheck.xyz/tokens/" + token_address, 
+            new_tab=True
+        )
+        await rugcheck_page
+        
+        time.sleep(7)
+       
+        risk_level = None 
+        try:
+            risk_level_element = await rugcheck_page.query_selector("div.risk h1.mb-0")
+            risk_level = risk_level_element.text
+        except:
+            pass
+        
+        # try:
+        #     mutable_metadata = await rugcheck_page.find("Mutable metadata")
+        #     risk_level = "Mutable metadata"
+        # except:
+        #     pass
+            
+        await rugcheck_page.close()
+        
+        return risk_level
                     
-    async def clear_number(self, number_str: str):
+    async def _clear_number(self, number_str: str) -> float:
+        """
+        Преобразует переданную строку в число, удаляя лишние символы и 
+        обрабатывая значения с "K" и "M".
+        """
+        
         number_str = number_str.lstrip("0").lstrip("$")
         number_str = number_str.replace(",", "").replace(">", "").replace("<", "").replace("$", "")
         if "K" in number_str or "M" in number_str:
@@ -311,9 +420,22 @@ class DexScreener():
         
         return number
 
-    async def count_costs(self, data, bought, sold, pnl):
-        if bought != "-":      
-            if bought >= 0 and bought < 100:
+    async def _count_costs(
+        self, 
+        data: dict, 
+        bought: str | int, 
+        sold: str | int, 
+        pnl: str | int
+    ) -> dict:
+        """
+        Обновляет счетчики в словаре data в соответствии со значениями покупки 
+        bought, продажи sold и значением pnl.
+        """
+        
+        if bought != "-":
+            if bought == 0.1:
+                data["bought_01_less"] += 1 
+            elif bought > 0.1 and bought < 100:
                 data["bought_100_less"] += 1
             elif bought >= 100 and bought < 500:
                 data["bought_100_500"] += 1
@@ -326,7 +448,9 @@ class DexScreener():
             elif bought >= 5000:
                 data["bought_5000_more"] += 1
                 
-        if sold != "-":      
+        if sold != "-": 
+            if sold == 0.1:
+                data["sold_01_less"] += 1    
             if sold >= 0 and sold < 100:
                 data["sold_100_less"] += 1
             elif sold >= 100 and sold < 500:
@@ -340,18 +464,19 @@ class DexScreener():
             elif sold >= 5000:
                 data["sold_5000_more"] += 1
                 
-        if pnl >= 0 and pnl < 100:
-            data["pnl_100_less"] += 1
-        elif pnl >= 100 and pnl < 500:
-            data["pnl_100_500"] += 1
-        elif pnl >= 500 and pnl < 1000:
-            data["pnl_500_1000"] += 1
-        elif pnl >= 1000 and pnl < 2500:
-            data["pnl_1000_2500"] += 1
-        elif pnl >= 2500 and pnl < 5000:
-            data["pnl_2500_5000"] += 1
-        elif pnl >= 5000:
-            data["pnl_5000_more"] += 1
+        if pnl:     
+            if pnl >= 0 and pnl < 100:
+                data["pnl_100_less"] += 1
+            elif pnl >= 100 and pnl < 500:
+                data["pnl_100_500"] += 1
+            elif pnl >= 500 and pnl < 1000:
+                data["pnl_500_1000"] += 1
+            elif pnl >= 1000 and pnl < 2500:
+                data["pnl_1000_2500"] += 1
+            elif pnl >= 2500 and pnl < 5000:
+                data["pnl_2500_5000"] += 1
+            elif pnl >= 5000:
+                data["pnl_5000_more"] += 1
                 
         return data
 
@@ -383,36 +508,6 @@ class DexScreener():
  
         return int(total_transfers) if total_transfers else None
             
-    async def rugcheck(self, token_address):
-        """
-        Возвращает уровень риска токена token_address с rugcheck.xyz. 
-        """
-        
-        rugcheck_page = await self.browser.get(
-            "https://rugcheck.xyz/tokens/" + token_address, 
-            new_tab=True
-        )
-        await rugcheck_page
-        
-        time.sleep(7)
-       
-        risk_level = None 
-        try:
-            risk_level_element = await rugcheck_page.query_selector("div.risk h1.mb-0")
-            risk_level = risk_level_element.text
-        except:
-            pass
-        
-        # try:
-        #     mutable_metadata = await rugcheck_page.find("Mutable metadata")
-        #     risk_level = "Mutable metadata"
-        # except:
-        #     pass
-            
-        await rugcheck_page.close()
-        
-        return risk_level
-
     async def _check_cloudflare(self, page):
         """
         Проверяет наличие защиты Cloudflare.
@@ -460,6 +555,19 @@ class DexScreener():
         login_button = await captcha_extenshion_page.find("Login")
         await login_button.click()
         
+    async def _get_list_element_by_index(self, lst: list, ind: int) -> str:
+        """
+        Возвращает элемент списка с индексом ind.
+        Если его не существует, то возвращает "-".
+        """
+        
+        try:
+            result = lst[ind].text
+        except IndexError:
+            result = "-"
+            
+        return result
+        
     @sync_to_async
     def _check_visited_top_traders_link(self, pair: str):
         """
@@ -485,8 +593,8 @@ async def run_dexscreener_watcher(filter):
     config = Config()
     #config.add_extension("./extensions/captcha_solver")
     browser = await uc.start(config=config)
-    dex_worker = DexScreener(browser)
-    await dex_worker.watch_token(filter)
+    dexscreener = DexScreener(browser)
+    await dexscreener.monitor_tokens(filter)
 
 
 async def run_dexscreener_parser(filter, pages):  
