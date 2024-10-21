@@ -1,6 +1,7 @@
 import httpx
 import time
 import logging
+import requests
 from datetime import datetime
 from httpx._config import Timeout
 from core.celery import app
@@ -41,7 +42,8 @@ def get_token_data(pairs: str | list[str]) -> dict:
     token_data = None
     while not token_data:
         try:
-            token_data = httpx.get(token_data_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
+            token_data = requests.get(token_data_url).json()["pairs"]
+            #token_data = httpx.get(token_data_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
         except:
             logger.debug(f"Не удалось получить данные через API. Повтор попытки")
             time.sleep(1)

@@ -86,26 +86,26 @@ def sell_token(request: HttpRequest, transaction_id: int):
     token_data = get_token_data(transaction.pair)[0]
     
     selling_price = float(token_data["priceUsd"])
-    transaction.selling_price = selling_price
-    pnl = ((selling_price - transaction.buying_price) / transaction.buying_price) * 100
+    transaction.price_s = selling_price
+    pnl = ((selling_price - transaction.price_b) / transaction.price_b) * 100
     transaction.PNL = pnl
     
     now_date = datetime.now()
     created_date = datetime.fromtimestamp(token_data["pairCreatedAt"] / 1000)
     token_age = (now_date - created_date).total_seconds() / 60
     
-    transaction.selling_token_age = token_age
-    transaction.selling_transactions_buys_m5 = token_data["txns"]["m5"]["buys"]
-    transaction.selling_transactions_sells_m5 = token_data["txns"]["m5"]["sells"]
-    transaction.selling_transactions_buys_h1 = token_data["txns"]["h1"]["buys"]
-    transaction.selling_transactions_sells_h1 = token_data["txns"]["h1"]["buys"]
-    transaction.selling_volume_m5 = token_data["volume"]["m5"]
-    transaction.selling_volume_h1 = token_data["volume"]["h1"]
-    transaction.selling_price_change_m5 = token_data["priceChange"]["m5"]
-    transaction.selling_price_change_h1 = token_data["priceChange"]["h1"]
-    transaction.selling_liquidity = token_data["liquidity"]["usd"]
-    transaction.selling_fdv = token_data["fdv"]
-    transaction.selling_market_cap = token_data["marketCap"]
+    transaction.token_age_s = token_age
+    transaction.buys_m5_s = token_data["txns"]["m5"]["buys"]
+    transaction.sells_m5_s = token_data["txns"]["m5"]["sells"]
+    transaction.buys_h1_s = token_data["txns"]["h1"]["buys"]
+    transaction.sells_h1_s = token_data["txns"]["h1"]["buys"]
+    transaction.volume_m5_s = token_data["volume"]["m5"]
+    transaction.volume_h1_s = token_data["volume"]["h1"]
+    transaction.price_change_m5_s = token_data["priceChange"]["m5"]
+    transaction.price_change_h1_s = token_data["priceChange"]["h1"]
+    transaction.liquidity_s = token_data["liquidity"]["usd"]
+    transaction.fdv_s = token_data["fdv"]
+    transaction.market_cap_s = token_data["marketCap"]
     transaction.closing_date = datetime.now()
     transaction.status = Status.CLOSED
     transaction.save()

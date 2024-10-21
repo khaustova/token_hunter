@@ -311,8 +311,11 @@ def update_transactions_info(context: template.Context, data: list) -> SafeText:
 
         buying_price_td = list[2]
         buying_price_soup = BeautifulSoup(buying_price_td, "lxml")
-        buying_price_element = buying_price_soup.find("td", {"class": "field-buying_price"})
-        buying_price = buying_price_element.text
+        buying_price_element = buying_price_soup.find("td", {"class": "field-price_b"})
+        if buying_price_element:
+            buying_price = buying_price_element.text
+        else:
+            buying_price = None
         buying_prices.append(buying_price)
         
     pairs_str = ",".join(pairs)

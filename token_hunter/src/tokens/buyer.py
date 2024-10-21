@@ -43,7 +43,7 @@ class TokenBuyer:
         solana_parser.get_transactions_history(self.token_name, self.token_address)
 
 
-    def buy_token(self, mode, top_snipers_data, top_traders_data):
+    def buy_token(self, mode, snipers_data, top_traders_data):
         """
         Покупка токена.
         """
@@ -57,29 +57,29 @@ class TokenBuyer:
             pair=self.pair,
             token_name=self.token_name,
             token_address=self.token_address,
-            buying_token_age=token_age,
-            buying_price=token_data["priceUsd"],
-            buying_buys_m5=token_data["txns"]["m5"]["buys"],
-            buying_sells_m5=token_data["txns"]["m5"]["sells"],
-            buying_buys_h1=token_data["txns"]["h1"]["buys"],
-            buying_sells_h1=token_data["txns"]["h1"]["sells"],
-            buying_buys_h6=token_data["txns"]["h6"]["buys"],
-            buying_sells_h6=token_data["txns"]["h6"]["sells"],
-            buying_buys_h24=token_data["txns"]["h24"]["buys"],
-            buying_sells_h24=token_data["txns"]["h24"]["sells"],
-            buying_total_transfers=self.total_transfers,
-            buying_total_transactions=total_transactions,
-            buying_volume_m5=token_data["volume"]["m5"],
-            buying_volume_h1=token_data["volume"]["h1"],
-            buying_volume_h6=token_data["volume"]["h6"],
-            buying_volume_h24=token_data["volume"]["h24"],
-            buying_price_change_m5=token_data["priceChange"]["m5"],
-            buying_price_change_h1=token_data["priceChange"]["h1"],
-            buying_price_change_h6=token_data["priceChange"]["h6"],
-            buying_price_change_h24=token_data["priceChange"]["h24"],
-            buying_liquidity=token_data["liquidity"]["usd"],
-            buying_fdv=token_data["fdv"],
-            buying_market_cap=token_data["marketCap"],
+            token_age_b=token_age,
+            price_b=token_data["priceUsd"],
+            buys_m5_b=token_data["txns"]["m5"]["buys"],
+            sells_m5_b=token_data["txns"]["m5"]["sells"],
+            buys_h1_b=token_data["txns"]["h1"]["buys"],
+            sells_h1_b=token_data["txns"]["h1"]["sells"],
+            buys_h6_b=token_data["txns"]["h6"]["buys"],
+            sells_h6_b=token_data["txns"]["h6"]["sells"],
+            buys_h24_b=token_data["txns"]["h24"]["buys"],
+            sells_h24_b=token_data["txns"]["h24"]["sells"],
+            transfers_b=self.total_transfers,
+            transactions_b=total_transactions,
+            volume_m5_b=token_data["volume"]["m5"],
+            volume_h1_b=token_data["volume"]["h1"],
+            volume_h6_b=token_data["volume"]["h6"],
+            volume_h24_b=token_data["volume"]["h24"],
+            price_change_m5_b=token_data["priceChange"]["m5"],
+            price_change_h1_b=token_data["priceChange"]["h1"],
+            price_change_h6_b=token_data["priceChange"]["h6"],
+            price_change_h24_b=token_data["priceChange"]["h24"],
+            liquidity_b=token_data["liquidity"]["usd"],
+            fdv_b=token_data["fdv"],
+            market_cap_b=token_data["marketCap"],
             is_telegram=socials_info["is_telegram"],
             is_twitter=socials_info["is_twitter"],
             is_website=socials_info["is_website"],
@@ -87,82 +87,41 @@ class TokenBuyer:
             mode=mode
         )
         
-        if top_snipers_data:
-            transaction.snipers_held_all = top_snipers_data["held_all"]
-            transaction.snipers_sold_some = top_snipers_data["sold_some"]
-            transaction.snipers_sold_all = top_snipers_data["sold_all"]
-            transaction.snipers_bought_N1 = top_snipers_data["bought_1"]
-            transaction.snipers_sold_N1 = top_snipers_data["sold_1"]
-            transaction.snipers_bought_N2 = top_snipers_data["bought_2"]
-            transaction.snipers_sold_N2 = top_snipers_data["sold_2"]
-            transaction.snipers_bought_N3 = top_snipers_data["bought_3"]
-            transaction.snipers_sold_N3 = top_snipers_data["sold_3"]
-            transaction.snipers_bought_N4 = top_snipers_data["bought_4"]
-            transaction.snipers_sold_N4 = top_snipers_data["sold_4"]
-            transaction.snipers_bought_N5 = top_snipers_data["bought_5"]
-            transaction.snipers_sold_N5 = top_snipers_data["sold_5"]
-            transaction.snipers_bought_N6 = top_snipers_data["bought_6"]
-            transaction.snipers_sold_N6 = top_snipers_data["sold_6"]
-            transaction.snipers_bought_N7 = top_snipers_data["bought_7"]
-            transaction.snipers_sold_N7 = top_snipers_data["sold_7"]
-            transaction.snipers_bought_N8 = top_snipers_data["bought_8"]
-            transaction.snipers_sold_N8 = top_snipers_data["sold_8"]
-            transaction.snipers_bought_N9 = top_snipers_data["bought_9"]
-            transaction.snipers_sold_N9 = top_snipers_data["sold_9"]
-            transaction.snipers_bought_N10 = top_snipers_data["bought_10"]
-            transaction.snipers_sold_N10 = top_snipers_data["sold_10"]
-            transaction.snipers_bought_01_less = top_snipers_data["bought_01_less"]
-            transaction.snipers_bought_100_less = top_snipers_data["bought_100_less"]
-            transaction.snipers_bought_100_500 = top_snipers_data["bought_100_500"]
-            transaction.snipers_bought_500_1000 = top_snipers_data["bought_500_1000"]
-            transaction.snipers_bought_1000_2500 = top_snipers_data["bought_1000_2500"]
-            transaction.snipers_bought_2500_5000 = top_snipers_data["bought_2500_5000"]
-            transaction.snipers_bought_5000_more = top_snipers_data["bought_5000_more"]
-            transaction.snipers_sold_01_less = top_snipers_data["sold_01_less"]
-            transaction.snipers_sold_100_less = top_snipers_data["sold_100_less"]
-            transaction.snipers_sold_100_500 = top_snipers_data["sold_100_500"]
-            transaction.snipers_sold_500_1000 = top_snipers_data["sold_500_1000"]
-            transaction.snipers_sold_1000_2500 = top_snipers_data["sold_1000_2500"]
-            transaction.snipers_sold_2500_5000 = top_snipers_data["sold_2500_5000"]
-            transaction.snipers_sold_5000_more = top_snipers_data["sold_5000_more"]
-            transaction.snipers_pnl_100_less = top_snipers_data["pnl_100_less"]
-            transaction.snipers_pnl_100_500 = top_snipers_data["pnl_100_500"]
-            transaction.snipers_pnl_500_1000 = top_snipers_data["pnl_500_1000"]
-            transaction.snipers_pnl_1000_2500 = top_snipers_data["pnl_1000_2500"]
-            transaction.snipers_pnl_2500_5000 = top_snipers_data["pnl_2500_5000"]
-            transaction.snipers_pnl_5000_more = top_snipers_data["pnl_5000_more"]
-            transaction.snipers_no_bought = top_snipers_data["no_bought"]
-            transaction.snipers_pnl_profit = top_snipers_data["pnl_profit"]
-            transaction.snipers_pnl_loss  = top_snipers_data["pnl_loss"]
+        if snipers_data:
+            transaction.sns_held_all = snipers_data["held_all"]
+            transaction.sns_sold_some = snipers_data["sold_some"]
+            transaction.sns_sold_all = snipers_data["sold_all"]
+            transaction.sns_bought = snipers_data["bought"]
+            transaction.sns_sold = snipers_data["sold"]
+            transaction.sns_sum_bought = snipers_data["sum_bought"]
+            transaction.sns_sum_sold = snipers_data["sum_sold"]
+            transaction.sns_bought_01_less = snipers_data["bought_01_less"]
+            transaction.sns_bought_5000_more = snipers_data["bought_5000_more"]
+            transaction.sns_sold_01_less = snipers_data["sold_01_less"]
+            transaction.sns_sold_5000_more = snipers_data["sold_5000_more"]
+            transaction.sns_pnl_5000_more = snipers_data["pnl_5000_more"]
+            transaction.sns_no_bought = snipers_data["no_bought"]
+            transaction.sns_pnl_profit = snipers_data["pnl_profit"]
+            transaction.sns_pnl_loss  = snipers_data["pnl_loss"]
             transaction.save()
             
         if top_traders_data:
-            transaction.top_traders_bought_01_less = top_traders_data["bought_01_less"]
-            transaction.top_traders_bought_100_less = top_traders_data["bought_100_less"]
-            transaction.top_traders_bought_100_500 = top_traders_data["bought_100_500"]
-            transaction.top_traders_bought_500_1000 = top_traders_data["bought_500_1000"]
-            transaction.top_traders_bought_1000_2500 = top_traders_data["bought_1000_2500"]
-            transaction.top_traders_bought_2500_5000 = top_traders_data["bought_2500_5000"]
-            transaction.top_traders_bought_5000_more = top_traders_data["bought_5000_more"]
-            transaction.top_traders_sold_01_less = top_traders_data["sold_01_less"]
-            transaction.top_traders_sold_100_less = top_traders_data["sold_100_less"]
-            transaction.top_traders_sold_100_500 = top_traders_data["sold_100_500"]
-            transaction.top_traders_sold_500_1000 = top_traders_data["sold_500_1000"]
-            transaction.top_traders_sold_1000_2500 = top_traders_data["sold_1000_2500"]
-            transaction.top_traders_sold_2500_5000 = top_traders_data["sold_2500_5000"]
-            transaction.top_traders_sold_5000_more = top_traders_data["sold_5000_more"]
-            transaction.top_traders_pnl_100_less = top_traders_data["pnl_100_less"]
-            transaction.top_traders_pnl_100_500 = top_traders_data["pnl_100_500"]
-            transaction.top_traders_pnl_500_1000 = top_traders_data["pnl_500_1000"]
-            transaction.top_traders_pnl_1000_2500 = top_traders_data["pnl_1000_2500"]
-            transaction.top_traders_pnl_2500_5000 = top_traders_data["pnl_2500_5000"]
-            transaction.top_traders_pnl_5000_more = top_traders_data["pnl_5000_more"]
-            transaction.top_traders_no_bought = top_traders_data["no_bought"]
-            transaction.top_traders_no_sold = top_traders_data["no_sold"]
-            transaction.top_traders_pnl_profit = top_traders_data["pnl_profit"]
-            transaction.top_traders_pnl_loss = top_traders_data["pnl_loss"]
+            transaction.tt_bought = top_traders_data["bought"]
+            transaction.tt_sold = top_traders_data["sold"]
+            transaction.tt_sum_bought = top_traders_data["sum_bought"]
+            transaction.tt_sum_sold = top_traders_data["sum_sold"]
+            transaction.tt_bought_01_less = top_traders_data["bought_01_less"]
+            transaction.tt_bought_5000_more = top_traders_data["bought_5000_more"]
+            transaction.tt_sold_01_less = top_traders_data["sold_01_less"]
+            transaction.tt_sold_5000_more = top_traders_data["sold_5000_more"]
+            transaction.tt_pnl_5000_more = top_traders_data["pnl_5000_more"]
+            transaction.tt_no_bought = top_traders_data["no_bought"]
+            transaction.tt_no_sold = top_traders_data["no_sold"]
+            transaction.tt_pnl_profit = top_traders_data["pnl_profit"]
+            transaction.tt_pnl_loss = top_traders_data["pnl_loss"]
             transaction.save()
-    
+            
+
         logger.info(f"Покупка токена {self.token_name} за {token_data["priceUsd"]} USD") 
         is_update_process = False
         try:
