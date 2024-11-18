@@ -14,12 +14,13 @@ logger = logging.getLogger(__name__)
 
 class TokenBuyer:
     
-    def __init__(self, pair, total_transfers=None):
+    def __init__(self, pair, total_transfers=None, is_mutable_metadata=True):
         self.pair = pair
         self.token_data = get_token_data(self.pair)[0]
         self.token_address = self.token_data["baseToken"]["address"]
         self.token_name = self.token_data["baseToken"]["name"]
         self.total_transfers = total_transfers
+        self.is_mutable_metadata = is_mutable_metadata
         self.settings = Settings.objects.all().first()
         self.token_checker = TokenChecker(pair)
         
@@ -47,7 +48,6 @@ class TokenBuyer:
         """
         Покупка токена.
         """
-        print(1)
         token_data = get_token_data(self.pair)[0]
         token_age = get_token_age(token_data["pairCreatedAt"])
         total_transactions = token_data["txns"]["h1"]["buys"] + token_data["txns"]["h1"]["sells"]
@@ -80,6 +80,7 @@ class TokenBuyer:
             liquidity=token_data["liquidity"]["usd"],
             fdv=token_data["fdv"],
             market_cap=token_data["marketCap"],
+            is_mutable_metadata = self.is_mutable_metadata,
             is_telegram=socials_info["is_telegram"],
             is_twitter=socials_info["is_twitter"],
             is_website=socials_info["is_website"],

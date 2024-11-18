@@ -60,7 +60,9 @@ class DexScreener():
     
                     await dex_page.wait(2)
  
-                    risk_level = await self.rugcheck(token_checker.token_address)
+                    rugcheck = await self.rugcheck(token_checker.token_address)
+                    risk_level = rugcheck["risk_level"]
+                    is_mutable_metadata = rugcheck["is_mutable_metadata"]
                     logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
                     
                     # if risk_level == None:
@@ -100,11 +102,8 @@ class DexScreener():
                         continue
 
                     await page.close()
-                    print(4)
-                    token_buyer = TokenBuyer(pair, total_transfers)
-                    print(3)
+                    token_buyer = TokenBuyer(pair, total_transfers, is_mutable_metadata)
                     mode = Mode.DATA_COLLECTION
-                    print(2)
                     await sync_to_async(token_buyer.buy_token)(
                         mode,
                         snipers_data,
@@ -318,15 +317,20 @@ class DexScreener():
         except:
             pass
         
-        # try:
-        #     mutable_metadata = await rugcheck_page.find("Mutable metadata")
-        #     risk_level = "Mutable metadata"
-        # except:
-        #     pass
+        try:
+            mutable_metadata = await rugcheck_page.find("Mutable metadata")
+            is_mutable_metadata = True
+        except:
+            is_mutable_metadata = False
+            
+        result = {
+            "risk_level": risk_level,
+            "is_mutable_metadata": is_mutable_metadata,
+        }
             
         await rugcheck_page.close()
         
-        return risk_level
+        return result
                     
     async def _clear_number(self, number_str: str) -> float:
         """
