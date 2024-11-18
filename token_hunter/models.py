@@ -302,6 +302,8 @@ class Transaction(models.Model):
 
 class Settings(models.Model):
     filter = models.CharField(
+        blank=True,
+        null=True,
         max_length=1024,
         default="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
         verbose_name="Фильтр по умолчанию"
