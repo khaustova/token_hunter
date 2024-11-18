@@ -26,7 +26,7 @@ class DexScreener():
         """
         
         #await self._get_2captcha_api_key()
-        dex_page = await self.browser.get('https://dexscreener.com/solana/raydium' + filter)
+        dex_page = await self.browser.get("https://dexscreener.com/solana/raydium" + filter)
         #await self._check_cloudflare(dex_page)
         #await dex_page.wait(10)
         await asyncio.sleep(10)
@@ -63,11 +63,11 @@ class DexScreener():
                     risk_level = await self.rugcheck(token_checker.token_address)
                     logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
                     
-                    if risk_level == None:
-                        continue
-                    elif risk_level != "Good":
-                        black_list.append(link)
-                        continue
+                    # if risk_level == None:
+                    #     continue
+                    # elif risk_level != "Good":
+                    #     black_list.append(link)
+                    #     continue
   
                     await dex_page.wait(2)
                     total_transfers = await self.get_total_transfers(token_checker.token_address)
@@ -100,26 +100,11 @@ class DexScreener():
                         continue
 
                     await page.close()
-
+                    print(4)
                     token_buyer = TokenBuyer(pair, total_transfers)
-                    
-                    if (top_traders_data and 
-                        snipers_data and
-                        top_traders_data.get("sum_sold") != 0 and 
-                        top_traders_data.get("sum_bought") != 0 and
-                        top_traders_data["sum_sold"] / top_traders_data["sum_bought"] < 3 and
-                        snipers_data["held_all"] < 80 and
-                        snipers_data["no_bought"] < 20 and
-                        snipers_data["pnl_loss"] < 30 and
-                        token_buyer.token_data.get("info") and
-                        token_buyer.token_data["priceChange"]["m5"] > - 15 and
-                        token_buyer.token_data["volume"]["m5"] > 500 and
-                        total_transfers > 100 and total_transfers < 2500
-                    ):
-                        mode = Mode.EMULATION
-                    else:
-                        mode = Mode.DATA_COLLECTION
-
+                    print(3)
+                    mode = Mode.DATA_COLLECTION
+                    print(2)
                     await sync_to_async(token_buyer.buy_token)(
                         mode,
                         snipers_data,
@@ -195,7 +180,9 @@ class DexScreener():
         Возвращает результат в виде словаря.
         """
         
-        snipers_table = await page.query_selector("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
+        snipers_table = await page.query_selector(
+            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
+        )
         await snipers_table
         snipers_table_html = await snipers_table.get_html()    
         
@@ -204,18 +191,6 @@ class DexScreener():
             "held_all": 0,
             "sold_all": 0,
             "sold_some": 0,
-            "bought": "",
-            "sold": "",
-            "sum_bought": 0,
-            "sum_sold" : 0,
-            "bought_01_less": 0,
-            "bought_5000_more": 0,
-            "sold_01_less": 0,
-            "sold_5000_more": 0,
-            "pnl_5000_more": 0,
-            "no_bought": 0,
-            "pnl_profit": 0,
-            "pnl_loss": 0,
         }
         
         main_div = soup.find("div", recursive=False)
@@ -226,7 +201,7 @@ class DexScreener():
             snipers_spans = divs.find_all("span")
             bought = await self._get_list_element_by_index(snipers_spans, 5)
             sold = "-"
-            pnl = None
+            pnl = 0
             
             operation = await self._get_list_element_by_index(snipers_spans, 2)
             if operation == "Held all":
@@ -252,36 +227,20 @@ class DexScreener():
                     if sold != "-":
                         sold = await self._clear_number(sold)
                         pnl = sold
-                        
-            if pnl:
-                if pnl > 0:
-                    snipers_data["pnl_profit"] += 1
-                else:
-                    snipers_data["pnl_loss"] += 1
-                    
-                if pnl >= 5000:
-                    snipers_data["pnl_5000_more"] +=1
-                
+  
             if bought != "-":
                 bought_lst.append(bought)
-                if bought >= 5000:
-                    snipers_data["bought_5000_more"] += 1
-                elif bought == 0.1:
-                    snipers_data["bought_01_less"] += 1
             else:
                 bought_lst.append(0)
                 
             if sold != "-":
                 sold_lst.append(sold)
-                if sold >= 5000:
-                    snipers_data["sold_5000_more"] += 1
-                elif sold == 0.1:
-                    snipers_data["sold_01_less"] += 1
             else:
                 sold_lst.append(0)
                 
         
-        snipers_data = await self._update_transactions_data(snipers_data, bought_lst, sold_lst)
+        snipers_data["bought"] = " ".join(map(str, bought_lst))
+        snipers_data["sold"] = " ".join(map(str, sold_lst))
  
         return snipers_data
                     
@@ -293,26 +252,14 @@ class DexScreener():
         """
         
         await page.wait(2)
-        top_traders_table = await page.query_selector("main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)")
+        top_traders_table = await page.query_selector(
+            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
+        )
         await top_traders_table
         top_traders_table_html = await top_traders_table.get_html()
 
         soup = BeautifulSoup(top_traders_table_html, "html.parser")
-        top_traders_data = {
-            "bought": "",
-            "sold": "",
-            "sum_bought": 0,
-            "sum_sold" : 0,
-            "bought_01_less": 0,
-            "bought_5000_more": 0,
-            "sold_01_less": 0,
-            "sold_5000_more": 0,
-            "pnl_5000_more": 0,
-            "no_bought": 0,
-            "no_sold": 0,
-            "pnl_profit": 0,
-            "pnl_loss": 0,
-        }
+        top_traders_data = {}
         
         main_div = soup.find("div", recursive=False)
         top_traders_divs = main_div.find_all("div", recursive=False)
@@ -325,53 +272,29 @@ class DexScreener():
                 wallet_address = top_trader_link.split("/")[-1]
                 
             bought = await self._get_list_element_by_index(top_trader_spans, 2)
-            pnl = None
-            
+
             if bought == "-":
                 sold = await self._get_list_element_by_index(top_trader_spans, 3)
-                top_traders_data["no_bought"] += 1
                 if sold != "-":
                     sold = await self._clear_number(sold)
-                    pnl = sold
-                else:
-                    top_traders_data["no_sold"] += 1  
             else:
                 bought = await self._clear_number(bought)
                 sold = await self._get_list_element_by_index(top_trader_spans, 7)
                 if sold != "-":
                     sold = await self._clear_number(sold)
-                    pnl = sold - bought
-                else:
-                    top_traders_data["no_sold"] += 1
-  
-            if pnl:
-                if pnl > 0:
-                    top_traders_data["pnl_profit"] += 1
-                else:
-                    top_traders_data["pnl_loss"] += 1
-                    
-                if pnl >= 5000:
-                    top_traders_data["pnl_5000_more"] +=1
                 
             if bought != "-":
                 bought_lst.append(bought)
-                if bought >= 5000:
-                    top_traders_data["bought_5000_more"] += 1
-                elif bought == 0.1:
-                    top_traders_data["bought_01_less"] += 1
             else:
                 bought_lst.append(0)
                 
             if sold != "-":
                 sold_lst.append(sold)
-                if sold >= 5000:
-                    top_traders_data["sold_5000_more"] += 1
-                elif sold == 0.1:
-                    top_traders_data["sold_01_less"] += 1
             else:
                 sold_lst.append(0)
 
-        top_traders_data = await self._update_transactions_data(top_traders_data, bought_lst, sold_lst)
+        top_traders_data["bought"] = " ".join(map(str, bought_lst))
+        top_traders_data["sold"] = " ".join(map(str, sold_lst))
             
         return top_traders_data
     
@@ -423,26 +346,6 @@ class DexScreener():
             number = float(number_str)
         
         return number
-    
-    async def _update_transactions_data(
-        self, 
-        data: dict, 
-        bought_lst: list[float], 
-        sold_lst: list[float], 
-    ) -> dict:
-        """
-        Обновляет счетчики в словаре data в соответствии со значениями покупки 
-        bought и продажи sold.
-        """
-        
-        data["bought"] = " ".join(map(str, bought_lst))
-        data["sold"] = " ".join(map(str, sold_lst))
-        data["sum_bought"] = sum(bought_lst)
-        data["sum_sold"] = sum(sold_lst)
-        data["no_bought"] = bought_lst.count(0)
-        data["no_sold"] = sold_lst.count(0)
-     
-        return data
 
     async def get_total_transfers(self, token_address):
         """

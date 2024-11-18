@@ -56,5 +56,6 @@ def get_token_age(created_date: datetime) -> str:
     now_date = datetime.now()
     created_date = datetime.fromtimestamp(created_date / 1000)
     token_age = (now_date - created_date).total_seconds() / 60
+    token_age = round(token_age, 2)
     
     return token_age
