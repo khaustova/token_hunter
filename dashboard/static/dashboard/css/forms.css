@@ -582,14 +582,10 @@ select[name="action"] {
 .form-row .vBigIntegerField,
 .form-row input[type="text"],
 .form-row input[type="email"],
-.form-row input[type="password"] {
-    display: block;
-    width: calc(100% - 200px);
-}
-
+.form-row input[type="password"],
 .form-row select {
     display: block;
-    width: 100%;
+    width: calc(100% - 200px);
 }
 
 label.required::after {
