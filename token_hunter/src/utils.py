@@ -21,7 +21,11 @@ def get_active_tasks() -> list:
     return active_tasks[worker]
 
 
-def get_dexscreener_worker_tasks_ids() -> str | None:
+def get_dexscreener_worker_tasks_ids() -> dict | None:
+    """
+    Возвращает информацию о запущенных задачах мониторинга и парсинга данных.
+    """
+    
     try:
         active_tasks = get_active_tasks()
         tasks_ids = {"parsing_task_id": None, "watching_task_id": None}
@@ -38,6 +42,10 @@ def get_dexscreener_worker_tasks_ids() -> str | None:
     
 
 def get_token_data(pairs: str | list[str]) -> dict:
+    """
+    Возвращает данные о токена или списке токенов с DexScreener.
+    """
+    
     token_data_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pairs}"
     token_data = None
     while not token_data:
@@ -53,6 +61,10 @@ def get_token_data(pairs: str | list[str]) -> dict:
 
 
 def get_token_age(created_date: datetime) -> str:
+    """
+    Возвращает текущий возраст токена.
+    """
+    
     now_date = datetime.now()
     created_date = datetime.fromtimestamp(created_date / 1000)
     token_age = (now_date - created_date).total_seconds() / 60
