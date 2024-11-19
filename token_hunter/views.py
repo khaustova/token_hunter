@@ -95,17 +95,6 @@ def sell_token(request: HttpRequest, transaction_id: int):
     token_age = (now_date - created_date).total_seconds() / 60
     
     transaction.token_age_s = token_age
-    transaction.buys_m5_s = token_data["txns"]["m5"]["buys"]
-    transaction.sells_m5_s = token_data["txns"]["m5"]["sells"]
-    transaction.buys_h1_s = token_data["txns"]["h1"]["buys"]
-    transaction.sells_h1_s = token_data["txns"]["h1"]["buys"]
-    transaction.volume_m5_s = token_data["volume"]["m5"]
-    transaction.volume_h1_s = token_data["volume"]["h1"]
-    transaction.price_change_m5_s = token_data["priceChange"]["m5"]
-    transaction.price_change_h1_s = token_data["priceChange"]["h1"]
-    transaction.liquidity_s = token_data["liquidity"]["usd"]
-    transaction.fdv_s = token_data["fdv"]
-    transaction.market_cap_s = token_data["marketCap"]
     transaction.closing_date = datetime.now()
     transaction.status = Status.CLOSED
     transaction.save()
