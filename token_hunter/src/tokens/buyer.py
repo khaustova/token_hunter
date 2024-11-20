@@ -44,7 +44,7 @@ class TokenBuyer:
         solana_parser.get_transactions_history(self.token_name, self.token_address)
 
 
-    def buy_token(self, mode, snipers_data, top_traders_data):
+    def buy_token(self, mode, snipers_data, top_traders_data, twitter_data, telegram_data):
         """
         Покупка токена.
         """
@@ -99,6 +99,19 @@ class TokenBuyer:
         if top_traders_data:
             transaction.tt_bought = top_traders_data["bought"]
             transaction.tt_sold = top_traders_data["sold"]
+            transaction.save()
+            
+        if twitter_data:
+            transaction.twitter_days = twitter_data.get("twitter_days")
+            transaction.twitter_followers = twitter_data.get("twitter_followers")
+            transaction.twitter_smart_followers = twitter_data.get("twitter_smart_followers")
+            transaction.twitter_tweets = twitter_data.get("twitter_tweets")
+            transaction.is_twitter_error = twitter_data.get("is_twitter_error")
+            transaction.save()
+            
+        if telegram_data:
+            transaction.telegram_members = telegram_data.get("telegram_members")
+            transaction.is_telegram_error = telegram_data.get("is_telegram_error")
             transaction.save()
             
 

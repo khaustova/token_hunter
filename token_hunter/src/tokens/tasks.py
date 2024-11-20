@@ -36,7 +36,6 @@ def track_tokens() -> str:
             tokens_data = get_token_data(tokens_str)
         else:
             tokens_amount = len(buying_prices.keys())
-            print(tokens_amount)
             tokens_data = []
             for i in range(29, tokens_amount + 1, 29):
                 tokens = list(buying_prices.keys())[i-29:i]

@@ -2,12 +2,16 @@ import asyncio
 import time
 import logging
 import nodriver as uc
-import pandas as pd
 import random
 from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup
+from datetime import datetime
 from django.conf import settings
+from django_telethon.sessions import DjangoSession
+from django_telethon.models import App, ClientSession
 from nodriver.core.config import Config
+from telethon import TelegramClient
+from telethon.tl.functions.channels import GetFullChannelRequest
 from ..tokens.buyer import TokenBuyer
 from ..tokens.checker import TokenChecker
 from ...models import TopTrader, Transaction, Mode
@@ -26,7 +30,9 @@ class DexScreener():
         """
         
         #await self._get_2captcha_api_key()
-        dex_page = await self.browser.get("https://dexscreener.com/solana/raydium" + filter)
+        dex_page = await self.browser.get(
+            "https://dexscreener.com/solana/raydium" + filter
+        )
         #await self._check_cloudflare(dex_page)
         #await dex_page.wait(10)
         await asyncio.sleep(10)
@@ -54,22 +60,27 @@ class DexScreener():
                     if link in transactions_list:
                         continue
                     
+                    is_transaction = await self._check_transaction(token_checker.token_address)
+                    if is_transaction:
+                        black_list.append(link)
+                        continue
+                    
                     if not token_checker.check_age():
                         black_list.append(link)
                         continue
     
                     await dex_page.wait(2)
- 
+
                     rugcheck = await self.rugcheck(token_checker.token_address)
                     risk_level = rugcheck["risk_level"]
                     is_mutable_metadata = rugcheck["is_mutable_metadata"]
                     logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
                     
-                    # if risk_level == None:
-                    #     continue
-                    # elif risk_level != "Good":
-                    #     black_list.append(link)
-                    #     continue
+                    if risk_level == None:
+                        continue
+                    elif risk_level != "Good":
+                        black_list.append(link)
+                        continue
   
                     await dex_page.wait(2)
                     total_transfers = await self.get_total_transfers(token_checker.token_address)
@@ -77,7 +88,10 @@ class DexScreener():
                         black_list.append(link)
                         continue
                         
-                    page = await self.browser.get("https://dexscreener.com" + link.attributes[-1], new_tab=True)
+                    page = await self.browser.get(
+                        "https://dexscreener.com" + link.attributes[-1], 
+                        new_tab=True
+                    )
                     
                     time.sleep(5)
 
@@ -102,12 +116,31 @@ class DexScreener():
                         continue
 
                     await page.close()
-                    token_buyer = TokenBuyer(pair, total_transfers, is_mutable_metadata)
+                    token_buyer = TokenBuyer(
+                        pair, 
+                        total_transfers, 
+                        is_mutable_metadata
+                    )
+                    twitter_data, telegram_data = None, None
+                    info = token_checker.token_data.get("info")
+                    if info:
+                        socials_data = info.get("socials")
+                        if socials_data:
+                            for data in socials_data:
+                                if data.get("type") == "twitter":
+                                    twitter_name = data.get("url").split("/")[-1]
+                                    twitter_data = await self.get_twitter_data(twitter_name)
+                                elif data.get("type") == "telegram":
+                                    channel_name = data.get("url").split("/")[-1]
+                                    telegram_data = await self.get_telegram_data(channel_name)
+                    
                     mode = Mode.DATA_COLLECTION
                     await sync_to_async(token_buyer.buy_token)(
                         mode,
                         snipers_data,
-                        top_traders_data
+                        top_traders_data,
+                        twitter_data,
+                        telegram_data,
                     )
                      
                     transactions_list.append(link)
@@ -122,7 +155,9 @@ class DexScreener():
         for page in range(1, pages + 1):
             logger.info(f"Начат парсинг топ кошельков на странице {page}")
             #await self._get_2captcha_api_key()
-            dex_page = await self.browser.get("https://dexscreener.com/solana/page-" + str(page) + filter)
+            dex_page = await self.browser.get(
+                "https://dexscreener.com/solana/page-" + str(page) + filter
+            )
             
             await asyncio.sleep(10)
             
@@ -331,6 +366,128 @@ class DexScreener():
         await rugcheck_page.close()
         
         return result
+    
+    async def get_twitter_data(self, twitter_name: str) -> dict:
+        """
+        Получает данные о твиттере токена: количестве подписчиков, 
+        в т.ч. известных, возрасте аккаунта и количестве твитов,  
+        """
+        
+        getmoni_page = await self.browser.get(
+            "https://discover.getmoni.io/" + twitter_name, 
+            new_tab=True
+        )
+        await getmoni_page
+        
+        time.sleep(8)
+        
+        twitter_data = {}
+        try:
+            page_src = await getmoni_page.query_selector(
+                "main > div > div"
+            )
+            await page_src
+            page_html = await page_src.get_html()
+            soup = BeautifulSoup(page_html, "html.parser")
+            
+            info_element = (
+                soup
+                .find("div")
+                .find_all("div", recursive=False)[0]
+                .find_all("article")[1]
+            )
+            created_date_str = (
+                info_element
+                .find_all("li")[1]
+                .find_all("span")[1]
+                .text
+            )
+            created_date = datetime.strptime(created_date_str, "%d %b %Y").date()
+            twitter_data["twitter_days"] = (datetime.now().date() - created_date).days
+            twitter_data["twitter_tweets"] = (
+                info_element
+                .find_all("li")[-1]
+                .find_all("span")[1]
+                .text
+            )
+            if twitter_data["twitter_tweets"] == "—":
+                twitter_data["twitter_tweets"] = 0
+            else:
+                twitter_data["twitter_tweets"] = await self._clear_number(twitter_data["twitter_tweets"])
+            
+            followers_element = (
+                soup
+                .find("div")
+                .find_all("section")[1]
+                .find_all("article")[0]
+                .find("div")
+                .find_all("div")[1]
+            )
+            twitter_data["twitter_followers"] = (
+                followers_element
+                .find_all("div")[3]
+                .find_all("span")[0]
+                .text
+            )
+            twitter_data["twitter_followers"] = await self._clear_number(twitter_data["twitter_followers"])
+            twitter_data["twitter_smart_followers"] = (
+                followers_element
+                .find_all("div")[6]
+                .find_all("span")[1]
+                .text
+            )
+            twitter_data["twitter_smart_followers"] = await self._clear_number(twitter_data["twitter_smart_followers"])
+            twitter_data["is_twitter_error"] = False
+        except:
+            twitter_data["is_twitter_error"] = True
+        
+        await getmoni_page.close()
+         
+        print(twitter_data)
+            
+        return twitter_data    
+
+    async def get_telegram_data(self, raw_channel_name: str) -> dict:
+        """
+        Получает данные о телеграм-канале токена: количестве подписчиков, 
+        возрасте первого чата и наличии отметки 'скам'.
+        """
+        
+        channel_name = ""
+        for letter in raw_channel_name:
+            if letter.isalnum() or letter == "_":
+                channel_name += letter;
+            else:
+                break
+        
+        app, is_created = App.objects.update_or_create(
+        api_id=settings.TELETHON_API_ID,
+        api_hash=settings.TELETHON_API_HASH
+        )
+        cs, cs_is_created = ClientSession.objects.update_or_create(
+            name="default",
+        )
+
+        telegram_client = TelegramClient(
+            DjangoSession(client_session=cs), 
+            app.api_id, 
+            app.api_hash
+        )
+        
+        await telegram_client.connect()
+        
+        telegram_data = {}
+        try:
+            channel_connect = await telegram_client.get_entity(channel_name)
+            channel_full_info = await telegram_client(GetFullChannelRequest(channel=channel_connect))
+            telegram_data["telegram_members"] = int(channel_full_info.full_chat.participants_count)
+            telegram_data["is_telegram_error"] = False
+        except:
+            telegram_data["is_telegram_error"] = True
+        
+        print(telegram_data)
+        
+        return telegram_data
                     
     async def _clear_number(self, number_str: str) -> float:
         """
@@ -339,7 +496,14 @@ class DexScreener():
         """
         
         number_str = number_str.lstrip("$")
-        number_str = number_str.replace(",", "").replace(">", "").replace("<", "").replace("$", "")
+        number_str = (
+            number_str
+            .replace(",", "")
+            .replace(">", "")
+            .replace("<", "")
+            .replace("$", "")
+            .replace(" ", "")
+        )
         if number_str[-1] == "K":
             number_str = number_str[:-1]
             number = float(number_str) * 1000

@@ -220,6 +220,43 @@ class Transaction(models.Model):
         default=False,
         verbose_name="Наличие сайта"
     )
+    telegram_members = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Количество подписчиков в Телеграме"
+    )
+    is_telegram_error = models.BooleanField(
+        blank=True,
+        null=True,
+        default=False,
+        verbose_name="Телеграм указан, но не существует"
+    )
+    twitter_days = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Возраст Твиттера (дни)"
+    )
+    twitter_tweets = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Количество постов в Твиттере"
+    )
+    twitter_followers = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Количество подписчиков в Твиттере"
+    )
+    twitter_smart_followers = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Количество известных подписчиков в Твиттере"
+    )
+    is_twitter_error = models.BooleanField(
+        blank=True,
+        null=True,
+        default=False,
+        verbose_name="Твиттер указан, но не существует"
+    )
     opening_date = models.DateTimeField(
         auto_now_add=True, 
         verbose_name="Время покупки"
