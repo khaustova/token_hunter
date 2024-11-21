@@ -442,9 +442,7 @@ class DexScreener():
             twitter_data["is_twitter_error"] = True
         
         await getmoni_page.close()
-         
-        print(twitter_data)
-            
+
         return twitter_data    
 
     async def get_telegram_data(self, raw_channel_name: str) -> dict:
@@ -484,8 +482,6 @@ class DexScreener():
             telegram_data["is_telegram_error"] = False
         except:
             telegram_data["is_telegram_error"] = True
-        
-        print(telegram_data)
         
         return telegram_data
                     

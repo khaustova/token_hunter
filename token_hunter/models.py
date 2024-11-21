@@ -220,6 +220,12 @@ class Transaction(models.Model):
         default=False,
         verbose_name="Наличие сайта"
     )
+    boosts = models.IntegerField(
+        blank=True,
+        null=True,
+        default=0,
+        verbose_name="Буст"
+    )
     telegram_members = models.IntegerField(
         blank=True,
         null=True,

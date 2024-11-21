@@ -114,6 +114,9 @@ class TokenBuyer:
             transaction.is_telegram_error = telegram_data.get("is_telegram_error")
             transaction.save()
             
+        if token_data.get("boosts"):
+            transaction.boosts = token_data["boosts"].get("active")
+            transaction.save()
 
         logger.info(f"Покупка токена {self.token_name} за {token_data["priceUsd"]} USD") 
         is_update_process = False
