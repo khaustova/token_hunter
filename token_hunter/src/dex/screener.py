@@ -40,6 +40,20 @@ class DexScreener():
         all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
         step = 0
         
+        app, is_created = App.objects.update_or_create(
+        api_id=settings.TELETHON_API_ID,
+        api_hash=settings.TELETHON_API_HASH
+        )
+        cs, cs_is_created = ClientSession.objects.update_or_create(
+            name="default",
+        )
+        telegram_client = TelegramClient(
+            DjangoSession(client_session=cs), 
+            app.api_id, 
+            app.api_hash
+        )
+        await telegram_client.connect()
+
         while True:
             # Регулярное обновление страницы для избежания ошибки "Aw, Snap!" 
             step += 1
@@ -132,7 +146,7 @@ class DexScreener():
                                     twitter_data = await self.get_twitter_data(twitter_name)
                                 elif data.get("type") == "telegram":
                                     channel_name = data.get("url").split("/")[-1]
-                                    telegram_data = await self.get_telegram_data(channel_name)
+                                    telegram_data = await self.get_telegram_data(telegram_client, channel_name)
                     
                     mode = Mode.DATA_COLLECTION
                     await sync_to_async(token_buyer.buy_token)(
@@ -445,7 +459,7 @@ class DexScreener():
 
         return twitter_data    
 
-    async def get_telegram_data(self, raw_channel_name: str) -> dict:
+    async def get_telegram_data(self, telegram_client, raw_channel_name: str) -> dict:
         """
         Получает данные о телеграм-канале токена: количестве подписчиков, 
         возрасте первого чата и наличии отметки 'скам'.
@@ -457,23 +471,7 @@ class DexScreener():
                 channel_name += letter;
             else:
                 break
-        
-        app, is_created = App.objects.update_or_create(
-        api_id=settings.TELETHON_API_ID,
-        api_hash=settings.TELETHON_API_HASH
-        )
-        cs, cs_is_created = ClientSession.objects.update_or_create(
-            name="default",
-        )
 
-        telegram_client = TelegramClient(
-            DjangoSession(client_session=cs), 
-            app.api_id, 
-            app.api_hash
-        )
-        
-        await telegram_client.connect()
-        
         telegram_data = {}
         try:
             channel_connect = await telegram_client.get_entity(channel_name)
@@ -538,7 +536,7 @@ class DexScreener():
         await solcan_page.close()
  
         return int(total_transfers) if total_transfers else None
-            
+      
     async def _check_cloudflare(self, page):
         """
         Проверяет наличие защиты Cloudflare.
