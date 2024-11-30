@@ -68,8 +68,8 @@ class DexScreener():
             await asyncio.sleep(5)
             if links:
                 for link in links:
-                    pair = link.attributes[-1].split("/")[-1]
-                    token_checker = TokenChecker(pair)
+                    pairs = link.attributes[-1].split("/")[-1]
+                    token_checker = TokenChecker(pairs)
 
                     if link in transactions_list:
                         continue
@@ -102,52 +102,18 @@ class DexScreener():
                         black_list.append(link)
                         continue
                         
-                    page = await self.browser.get(
-                        "https://dexscreener.com" + link.attributes[-1], 
-                        new_tab=True
-                    )
+                    snipers_data, top_traders_data = await self.get_transactions_info(pairs)
                     
-                    time.sleep(5)
+                    twitter_data, telegram_data = await self.get_social_info(
+                        token_checker.token_data.get("info"),
+                        telegram_client
+                    )
 
-                    try:  
-                        snipers_button = await page.find("Snipers")
-                        time.sleep(3)
-                        await snipers_button.click()  
-                        time.sleep(3)                            
-                        snipers_data = await self.get_snipers(page)
-                    except:
-                        await page.close()
-                        continue
-  
-                    try:  
-                        top_traders_button = await page.find("Top Traders")
-                        time.sleep(3)
-                        await top_traders_button.click()
-                        time.sleep(3)
-                        top_traders_data = await self.get_top_traders(page)
-                    except:
-                        await page.close()
-                        continue
-
-                    await page.close()
                     token_buyer = TokenBuyer(
-                        pair, 
+                        pairs, 
                         total_transfers, 
                         is_mutable_metadata
                     )
-                    twitter_data, telegram_data = None, None
-                    info = token_checker.token_data.get("info")
-                    if info:
-                        socials_data = info.get("socials")
-                        if socials_data:
-                            for data in socials_data:
-                                if data.get("type") == "twitter":
-                                    twitter_name = data.get("url").split("/")[-1]
-                                    twitter_data = await self.get_twitter_data(twitter_name)
-                                elif data.get("type") == "telegram":
-                                    channel_name = data.get("url").split("/")[-1]
-                                    telegram_data = await self.get_telegram_data(telegram_client, channel_name)
-                    
                     mode = Mode.DATA_COLLECTION
                     await sync_to_async(token_buyer.buy_token)(
                         mode,
@@ -160,6 +126,66 @@ class DexScreener():
                     transactions_list.append(link)
                     
             await self.browser.wait(10)
+            
+    async def get_transactions_info(self, pairs: str) -> tuple:
+        """
+        Открывает страницу токена и сохраняет информацию о транзакциях
+        снайперов и топ трейдеров.
+        """
+        
+        page = await self.browser.get(
+            "https://dexscreener.com/solana/" + pairs, 
+            new_tab=True
+        )
+        
+        time.sleep(5)
+
+        try:  
+            snipers_button = await page.find("Snipers")
+            time.sleep(3)
+            await snipers_button.click()  
+            time.sleep(3)                            
+            snipers_data = await self.get_snipers(page)
+        except:
+            await page.close()
+            snipers_data = None
+
+        try:  
+            top_traders_button = await page.find("Top Traders")
+            time.sleep(3)
+            await top_traders_button.click()
+            time.sleep(3)
+            top_traders_data = await self.get_top_traders(page)
+        except:
+            await page.close()
+            top_traders_data = None
+
+        await page.close()
+        
+        return (snipers_data, top_traders_data)
+    
+    async def get_social_info(
+        self, 
+        socials_info: dict,
+        telegram_client: TelegramClient
+    ) -> tuple:
+        """
+        Возвращает данные о телеграме и твиттере токена.
+        """
+        
+        twitter_data, telegram_data = None, None
+        if socials_info:
+            socials_data = socials_info.get("socials")
+            if socials_data:
+                for data in socials_data:
+                    if data.get("type") == "twitter":
+                        twitter_name = data.get("url").split("/")[-1]
+                        twitter_data = await self.get_twitter_data(twitter_name)
+                    elif data.get("type") == "telegram":
+                        channel_name = data.get("url").split("/")[-1]
+                        telegram_data = await self.get_telegram_data(telegram_client, channel_name)
+                        
+        return (twitter_data, telegram_data)
         
     async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
         """
@@ -453,7 +479,8 @@ class DexScreener():
             twitter_data["twitter_smart_followers"] = await self._clear_number(twitter_data["twitter_smart_followers"])
             twitter_data["is_twitter_error"] = False
         except:
-            twitter_data["is_twitter_error"] = True
+            if not twitter_data:
+                twitter_data["is_twitter_error"] = True
         
         await getmoni_page.close()
 
