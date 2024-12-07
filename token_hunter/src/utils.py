@@ -71,3 +71,13 @@ def get_token_age(created_date: datetime) -> str:
     token_age = round(token_age, 2)
     
     return token_age
+
+
+def get_pairs_count(token_address):
+    try:
+        pairs = requests.get("https://api.dexscreener.com/latest/dex/tokens/" + token_address).json()["pairs"]
+        count = len(pairs)
+    except:
+        count = 0
+        
+    return count
