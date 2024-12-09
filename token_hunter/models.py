@@ -60,6 +60,7 @@ class Mode(models.TextChoices):
     """
     DATA_COLLECTION = "data_collection", "Сбор данных"
     EMULATION = "emulation", "Эмуляция"
+    BOOSTED = "boosted", "Boosted",
     REAL = "real", "Реальная покупка"
 
 
@@ -101,11 +102,6 @@ class Transaction(models.Model):
         blank=True, 
         null=True, 
         verbose_name="Количество трансферов"
-    )
-    transactions = models.IntegerField(
-        blank=True, 
-        null=True, 
-        verbose_name="Количество транзакций"
     )
     buys_m5 = models.IntegerField(
         blank=True, 
@@ -321,6 +317,31 @@ class Transaction(models.Model):
         decimal_places=2,
         verbose_name="PNL"
     )
+    PNL_10 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL 10 %"
+    )
+    PNL_20 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL 20 %"
+    )
+    PNL_30 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL 30 %"
+    )
+    PNL_40 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL 40 %"
+    )
+    PNL_50 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL 50 %"
+    )
     status = models.CharField(
         max_length=64,
         choices=Status.choices,
@@ -341,7 +362,6 @@ class Transaction(models.Model):
 
     def __str__(self):
         return self.pair
-    
 
 class Settings(models.Model):
     filter = models.CharField(
