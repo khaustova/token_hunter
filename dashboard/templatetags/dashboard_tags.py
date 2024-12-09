@@ -16,7 +16,8 @@ from django.contrib.admin.templatetags.base import InclusionAdminNode
 from django.core.paginator import Paginator
 from token_hunter.forms import DexscreenerForm, CheckTokenForm
 from token_hunter.models import TopTrader, Transaction, Status
-from token_hunter.src.utils import get_dexscreener_worker_tasks_ids, get_token_data
+from token_hunter.src.utils.tasks_data import get_dexscreener_worker_tasks_ids
+from token_hunter.src.utils.tokens_data import get_pairs_data
 from ..settings import get_settings
 from ..utils import order_items
 
@@ -319,7 +320,7 @@ def update_transactions_info(context: template.Context, data: list) -> SafeText:
         buying_prices.append(buying_price)
         
     pairs_str = ",".join(pairs)
-    tokens_data = get_token_data(pairs_str)
+    tokens_data = get_pairs_data(pairs_str)
     
     current_prices = dict(zip(pairs, [None for _ in range(len(pairs))]))
     for token_data in tokens_data:

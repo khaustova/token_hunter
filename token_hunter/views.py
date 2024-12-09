@@ -6,8 +6,13 @@ from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from .forms import DexscreenerForm
 from .models import Transaction, Status, Settings
-from .src.dex.tasks import watching_dexscreener_task, parsing_dexscreener_task
-from .src.utils import get_dexscreener_worker_tasks_ids, get_token_data
+from .src.dex.tasks import (
+    watching_dexscreener_task, 
+    watching_boosted_tokens_task,
+    parsing_dexscreener_task,
+)
+from .src.utils.tokens_data import get_pairs_data
+from .src.utils.tasks_data import get_dexscreener_worker_tasks_ids
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +55,10 @@ def watch_dexscreener(request: HttpRequest):
             process = watching_dexscreener_task.delay(filter)
             logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
             
+        elif "_boosted_monitoring" in request.POST:
+            process = watching_boosted_tokens_task.delay()
+            logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {process.id}")
+            
         elif "_stop_monitoring" in request.POST:
             tasks_ids = get_dexscreener_worker_tasks_ids()
             task_id = tasks_ids["watching_task_id"]
@@ -57,12 +66,20 @@ def watch_dexscreener(request: HttpRequest):
             app.control.revoke(task_id, terminate=True)
             logger.info(f"Выполнение задачи {task_id}  мониторинга DexScreener остановлено")
             
+        elif "_stop_boosted_monitoring" in request.POST:
+            tasks_ids = get_dexscreener_worker_tasks_ids()
+            task_id = tasks_ids["boosted_task_id"]
+                
+            app.control.revoke(task_id, terminate=True)
+            logger.info(f"Выполнение задачи {task_id} мониторинга boosted токенов на DexScreener остановлено")
+            
         elif "_stop_parsing" in request.POST:
             tasks_ids = get_dexscreener_worker_tasks_ids()
             task_id = tasks_ids["parsing_task_id"]
                 
             app.control.revoke(task_id, terminate=True)
             logger.info(f"Выполнение задачи {task_id} парсинга топа кошельков на DexScreener остановлено")
+            
         
     return HttpResponseRedirect("/")
         
@@ -83,7 +100,7 @@ def sell_token(request: HttpRequest, transaction_id: int):
     """
     
     transaction = Transaction.objects.get(pk=transaction_id)
-    token_data = get_token_data(transaction.pair)[0]
+    token_data = get_pairs_data(transaction.pair)[0]
     
     selling_price = float(token_data["priceUsd"])
     transaction.price_s = selling_price

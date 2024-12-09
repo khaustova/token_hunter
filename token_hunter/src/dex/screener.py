@@ -3,6 +3,7 @@ import time
 import logging
 import nodriver as uc
 import random
+import requests
 from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -14,6 +15,11 @@ from telethon import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
 from ..tokens.buyer import TokenBuyer
 from ..tokens.checker import TokenChecker
+from ..utils.tokens_data import (
+    get_pairs_count, 
+    get_latest_boosted_tokens, 
+    get_token_data
+)
 from ...models import TopTrader, Transaction, Mode
 
 logger = logging.getLogger(__name__)
@@ -22,6 +28,19 @@ logger = logging.getLogger(__name__)
 class DexScreener():
     def __init__(self, browser):
         self.browser = browser
+        
+        app, is_created = App.objects.update_or_create(
+        api_id=settings.TELETHON_API_ID,
+        api_hash=settings.TELETHON_API_HASH
+        )
+        cs, cs_is_created = ClientSession.objects.update_or_create(
+            name="default",
+        )
+        self.telegram_client = TelegramClient(
+            DjangoSession(client_session=cs), 
+            app.api_id, 
+            app.api_hash
+        )
     
     async def monitor_tokens(self, filter: str) -> None:
         """
@@ -36,24 +55,11 @@ class DexScreener():
         #await self._check_cloudflare(dex_page)
         #await dex_page.wait(10)
         await asyncio.sleep(10)
-        black_list, transactions_list = [], []
+        black_list, watch_list = [], []
         all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
         step = 0
+        await self.telegram_client.connect()
         
-        app, is_created = App.objects.update_or_create(
-        api_id=settings.TELETHON_API_ID,
-        api_hash=settings.TELETHON_API_HASH
-        )
-        cs, cs_is_created = ClientSession.objects.update_or_create(
-            name="default",
-        )
-        telegram_client = TelegramClient(
-            DjangoSession(client_session=cs), 
-            app.api_id, 
-            app.api_hash
-        )
-        await telegram_client.connect()
-
         while True:
             # Регулярное обновление страницы для избежания ошибки "Aw, Snap!" 
             step += 1
@@ -71,15 +77,17 @@ class DexScreener():
                     pairs = link.attributes[-1].split("/")[-1]
                     token_checker = TokenChecker(pairs)
 
-                    if link in transactions_list:
-                        continue
-                    
                     is_transaction = await self._check_transaction(token_checker.token_address)
                     if is_transaction:
                         black_list.append(link)
                         continue
                     
                     if not token_checker.check_age():
+                        black_list.append(link)
+                        continue
+                    
+                    pairs_count = get_pairs_count(token_checker.token_address)
+                    if pairs_count != 1:
                         black_list.append(link)
                         continue
     
@@ -97,95 +105,169 @@ class DexScreener():
                         continue
   
                     await dex_page.wait(2)
+                    #total_transfers = None
+                    
                     total_transfers = await self.get_total_transfers(token_checker.token_address)
-                    if not token_checker.check_transfers(total_transfers):
-                        black_list.append(link)
-                        continue
+                    # if not token_checker.check_transfers(total_transfers):
+                    #     black_list.append(link)
+                    #     continue
                         
                     snipers_data, top_traders_data = await self.get_transactions_info(pairs)
-                    
-                    twitter_data, telegram_data = await self.get_social_info(
-                        token_checker.token_data.get("info"),
-                        telegram_client
-                    )
+
+                    if token_checker.token_data.get("info"):
+                        socials_data = token_checker.token_data.get("info").get("socials")
+                        if socials_data:
+                            twitter_data, telegram_data = await self.get_social_data(
+                                socials_data,
+                            )
+                    # twitter_data, telegram_data = await self.get_social_info_from_token_data(
+                    #     token_checker.token_data.get("info"),
+                    # )
 
                     token_buyer = TokenBuyer(
                         pairs, 
                         total_transfers, 
                         is_mutable_metadata
                     )
-                    mode = Mode.DATA_COLLECTION
+
                     await sync_to_async(token_buyer.buy_token)(
-                        mode,
+                        Mode.DATA_COLLECTION,
                         snipers_data,
                         top_traders_data,
                         twitter_data,
                         telegram_data,
                     )
-                     
-                    transactions_list.append(link)
                     
             await self.browser.wait(10)
+            
+    async def monitoring_boosted_tokens(self):
+        dex_page = await self.browser.get(
+            "https://dexscreener.com/solana/raydium"
+        )
+        
+        await self.telegram_client.connect()
+        
+        black_list = []
+        BOOSTED_TOKENS = {}
+        
+        while True:
+            boosted_tokens_data = get_latest_boosted_tokens()
+
+            for token in boosted_tokens_data[:6]:
+                if token["chainId"] != "solana":
+                    continue
+
+                token_address = token["url"].split("/")[-1]
+                
+                if token_address in black_list:
+                    continue
+                
+                token_data = get_token_data(token_address)[0]
+                if not token_data.get("liquidity"):
+                    black_list.append(token_address)
+                    continue
+                
+                if not BOOSTED_TOKENS.get(token_address):
+                    rugcheck = await self.rugcheck(token["tokenAddress"])
+                    risk_level = rugcheck["risk_level"]
+                    is_mutable_metadata = rugcheck["is_mutable_metadata"]
+                    logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
+
+                    if risk_level != "Good":
+                        black_list.append(token_address)
+                        continue
+                
+                    BOOSTED_TOKENS[token_address] = {"current_amount": token["totalAmount"], "boosts_count": 0}
+                    
+                if (BOOSTED_TOKENS[token_address]["current_amount"] < token["totalAmount"]
+                    and token["amount"] == 500
+                ):
+                    BOOSTED_TOKENS[token_address]["current_amount"] += token["amount"]
+                    BOOSTED_TOKENS[token_address]["boosts_count"] += 1
+                    logger.debug(f"Обновление данных о boosted токенах: {BOOSTED_TOKENS}")
+                    
+
+                if BOOSTED_TOKENS[token_address]["boosts_count"] >= 3:
+                    total_transfers = None
+                    is_mutable_metadata = False
+                    snipers_data, top_traders_data = None, None
+                    total_transfers = await self.get_total_transfers(token["tokenAddress"])
+                        
+                    snipers_data, top_traders_data = await self.get_transactions_info(token_data.get("pairAddress"))
+                    
+                    twitter_data, telegram_data = await self.get_social_data(token.get("links"))
+
+                    token_buyer = TokenBuyer(
+                        token_data.get("pairAddress"), 
+                        total_transfers, 
+                        is_mutable_metadata
+                    )
+
+                    await sync_to_async(token_buyer.buy_token)(
+                        Mode.BOOSTED,
+                        snipers_data,
+                        top_traders_data,
+                        twitter_data,
+                        telegram_data,
+                    )
+                    
+                    BOOSTED_TOKENS[token_address]["boosts_count"] = 0
             
     async def get_transactions_info(self, pairs: str) -> tuple:
         """
         Открывает страницу токена и сохраняет информацию о транзакциях
         снайперов и топ трейдеров.
         """
-        
+
         page = await self.browser.get(
             "https://dexscreener.com/solana/" + pairs, 
             new_tab=True
         )
-        
-        time.sleep(5)
 
+        time.sleep(5)
+        await page.wait(10)
         try:  
             snipers_button = await page.find("Snipers")
-            time.sleep(3)
             await snipers_button.click()  
             time.sleep(3)                            
             snipers_data = await self.get_snipers(page)
         except:
-            await page.close()
             snipers_data = None
 
+        time.sleep(5)
         try:  
             top_traders_button = await page.find("Top Traders")
-            time.sleep(3)
             await top_traders_button.click()
             time.sleep(3)
             top_traders_data = await self.get_top_traders(page)
         except:
-            await page.close()
             top_traders_data = None
 
         await page.close()
         
         return (snipers_data, top_traders_data)
     
-    async def get_social_info(
-        self, 
-        socials_info: dict,
-        telegram_client: TelegramClient
-    ) -> tuple:
+    async def get_social_data(self, socials_data: dict) -> tuple:
         """
         Возвращает данные о телеграме и твиттере токена.
         """
         
+        
         twitter_data, telegram_data = None, None
-        if socials_info:
-            socials_data = socials_info.get("socials")
-            if socials_data:
-                for data in socials_data:
-                    if data.get("type") == "twitter":
-                        twitter_name = data.get("url").split("/")[-1]
-                        twitter_data = await self.get_twitter_data(twitter_name)
-                    elif data.get("type") == "telegram":
-                        channel_name = data.get("url").split("/")[-1]
-                        telegram_data = await self.get_telegram_data(telegram_client, channel_name)
+        # if socials_info:
+        #     socials_data = socials_info.get("socials")
+        #     if socials_data:
+        if socials_data:
+            for data in socials_data:
+                if data.get("type") == "twitter":
+                    twitter_name = data.get("url").split("/")[-1]
+                    twitter_data = await self.get_twitter_data(twitter_name)
+                elif data.get("type") == "telegram":
+                    channel_name = data.get("url").split("/")[-1]
+                    telegram_data = await self.get_telegram_data(channel_name)
                         
         return (twitter_data, telegram_data)
+
         
     async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
         """
@@ -420,8 +502,17 @@ class DexScreener():
         await getmoni_page
         
         time.sleep(8)
-        
         twitter_data = {}
+        
+        try:
+            not_found = await getmoni_page.find("Not found")
+        except:
+            not_found = False
+            
+        if not_found:
+            twitter_data["is_twitter_error"] = True
+            return twitter_data
+        
         try:
             page_src = await getmoni_page.query_selector(
                 "main > div > div"
@@ -429,6 +520,30 @@ class DexScreener():
             await page_src
             page_html = await page_src.get_html()
             soup = BeautifulSoup(page_html, "html.parser")
+            
+            followers_element = (
+                soup
+                .find("div")
+                .find_all("section")[1]
+                .find_all("article")[0]
+                .find("div")
+                .find_all("div")[1]
+            )
+            twitter_data["twitter_followers"] = (
+                followers_element
+                .find_all("div")[3]
+                .find_all("span")[0]
+                .text
+            )
+            twitter_data["twitter_followers"] = await self._clear_number(twitter_data["twitter_followers"])
+            twitter_data["twitter_smart_followers"] = (
+                followers_element
+                .find_all("div")[6]
+                .find_all("span")[1]
+                .text
+            )
+            twitter_data["twitter_smart_followers"] = await self._clear_number(twitter_data["twitter_smart_followers"])
+            twitter_data["is_twitter_error"] = False
             
             info_element = (
                 soup
@@ -455,38 +570,14 @@ class DexScreener():
             else:
                 twitter_data["twitter_tweets"] = await self._clear_number(twitter_data["twitter_tweets"])
             
-            followers_element = (
-                soup
-                .find("div")
-                .find_all("section")[1]
-                .find_all("article")[0]
-                .find("div")
-                .find_all("div")[1]
-            )
-            twitter_data["twitter_followers"] = (
-                followers_element
-                .find_all("div")[3]
-                .find_all("span")[0]
-                .text
-            )
-            twitter_data["twitter_followers"] = await self._clear_number(twitter_data["twitter_followers"])
-            twitter_data["twitter_smart_followers"] = (
-                followers_element
-                .find_all("div")[6]
-                .find_all("span")[1]
-                .text
-            )
-            twitter_data["twitter_smart_followers"] = await self._clear_number(twitter_data["twitter_smart_followers"])
-            twitter_data["is_twitter_error"] = False
         except:
-            if not twitter_data:
-                twitter_data["is_twitter_error"] = True
+            pass
         
         await getmoni_page.close()
 
         return twitter_data    
 
-    async def get_telegram_data(self, telegram_client, raw_channel_name: str) -> dict:
+    async def get_telegram_data(self, raw_channel_name: str) -> dict:
         """
         Получает данные о телеграм-канале токена: количестве подписчиков, 
         возрасте первого чата и наличии отметки 'скам'.
@@ -501,8 +592,8 @@ class DexScreener():
 
         telegram_data = {}
         try:
-            channel_connect = await telegram_client.get_entity(channel_name)
-            channel_full_info = await telegram_client(GetFullChannelRequest(channel=channel_connect))
+            channel_connect = await self.telegram_client.get_entity(channel_name)
+            channel_full_info = await self.telegram_client(GetFullChannelRequest(channel=channel_connect))
             telegram_data["telegram_members"] = int(channel_full_info.full_chat.participants_count)
             telegram_data["is_telegram_error"] = False
         except:
@@ -651,6 +742,18 @@ async def run_dexscreener_watcher(filter):
     browser = await uc.start(config=config)
     dexscreener = DexScreener(browser)
     await dexscreener.monitor_tokens(filter)
+    
+
+async def run_dexscreener_boosted_watcher():  
+    """
+    Инициализирует браузер и запускает парсинг топов кошельков DesScreener.
+    """  
+    
+    config = Config()
+   # config.add_extension("./extensions/captcha_solver")
+    browser = await uc.start(config=config, sandbox=False)
+    boosted_worker = DexScreener(browser)
+    await boosted_worker.monitoring_boosted_tokens()
 
 
 async def run_dexscreener_parser(filter, pages):  

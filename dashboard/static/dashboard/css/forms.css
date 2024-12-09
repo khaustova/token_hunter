@@ -738,9 +738,11 @@ button[type=submit].check-token__button {
 }
 
 .parsing-buttons_wrapper {
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    /* display: grid;
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 5px;
+    column-gap: 5px; */
 }
 
 button[type=submit].watcher-stop__button {

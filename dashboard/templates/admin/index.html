@@ -26,22 +26,41 @@
           {% endfor %}
           <div class="parsing-buttons_wrapper">
             {% get_watcher_tasks_id as watcher_tasks_ids %}
-            {% if watcher_tasks_ids.parsing_task_id != None %}
-              <button class="watcher__button watcher-stop__button" id="stop-parsing-button" type="submit" name="_stop_parsing">Стоп ⛔</button>
-              <p class="loading">Выполняется парсинг топа кошельков на Dexscreener</p>
-            {% elif watcher_tasks_ids.parsing_task_id == None %}
-              <button 
-              class="watcher__button" id="watch-dex-button" type="submit" name="_parsing" 
-              {% if watcher_tasks_ids.watching_task_id %} disabled="true"{% endif %}>Обновить топ кошельков 📈</button>
-            {% endif %}
             {% if watcher_tasks_ids.watching_task_id != None %}
-              <button class="watcher__button watcher-stop__button" id="stop-monitoring-button" type="submit" name="_stop_monitoring">Стоп ⛔</button>
-              <p class="loading">Выполняется мониторинг Dexscreener</p>
+              <button class="watcher__button watcher-stop__button" id="stop-monitoring-button" type="submit" name="_stop_monitoring">Остановить мониторинг Dexscreener ⛔</button>
             {% elif watcher_tasks_ids.watching_task_id == None %}
               <button 
               class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring" 
               {% if watcher_tasks_ids.parsing_task_id %} disabled="true"{% endif %}>Мониторинг Dexscreener 👀</button>
             {% endif %}
+
+            {% get_watcher_tasks_id as watcher_tasks_ids %}
+            {% if watcher_tasks_ids.boosted_task_id != None %}
+            <button class="watcher__button watcher-stop__button" id="stop-boosted-monitoring-button" type="submit" name="_stop_boosted_monitoring">Остановить мониторинг boosted токенов ⛔</button>
+            {% elif watcher_tasks_ids.boosted_task_id == None %}
+            <button 
+            class="watcher__button" id="watch-dex-button" type="submit" name="_boosted_monitoring" 
+            {% if watcher_tasks_ids.parsing_task_id and watcher_tasks_ids.watching_task_id %} disabled="true"{% endif %}>Мониторинг boosted токенов ⚡</button>
+            {% endif %}
+
+            {% get_watcher_tasks_id as watcher_tasks_ids %}
+            {% if watcher_tasks_ids.parsing_task_id != None %}
+              <button class="watcher__button watcher-stop__button" id="stop-parsing-button" type="submit" name="_stop_parsing">Остановить парсинг топа кошельков ⛔</button>
+            {% elif watcher_tasks_ids.parsing_task_id == None %}
+              <button 
+              class="watcher__button" id="watch-dex-button" type="submit" name="_parsing" 
+              {% if watcher_tasks_ids.watching_task_id %} disabled="true"{% endif %}>Обновить топ кошельков 📈</button>
+            {% endif %}
+
+            {% get_watcher_tasks_id as watcher_tasks_ids %}
+            {% if watcher_tasks_ids.boosted_task_id != None %}
+              <p class="loading">Выполняется мониторинг boosted токенов на Dexscreener</p>
+            {% elif watcher_tasks_ids.watching_task_id != None %}
+              <p class="loading">Выполняется мониторинг Dexscreener</p>
+            {% elif watcher_tasks_ids.parsing_task_id != None %}
+              <p class="loading">Выполняется парсинг топа кошельков на Dexscreener</p>
+            {% endif %}
+
           </div>
         </form>
       </div>

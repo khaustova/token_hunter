@@ -3,7 +3,11 @@ import logging
 from celery.contrib.abortable import AbortableTask
 from core.celery import app
 from asgiref.sync import async_to_sync
-from .screener import run_dexscreener_watcher, run_dexscreener_parser
+from .screener import (
+    run_dexscreener_watcher, 
+    run_dexscreener_boosted_watcher,
+    run_dexscreener_parser, 
+)
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +21,18 @@ def watching_dexscreener_task(self, filter: str) -> str:
     async_to_sync(run_dexscreener_watcher)(filter)
     
     return f"Мониторинг Dexscreener завершён"
+
+
+@app.task(bind=True, base=AbortableTask)
+def watching_boosted_tokens_task(self) -> str:
+    """
+    Обёртывает функцией синхронизации асинхронную функцию мониторинга boosts  
+    токенов на DexScreener.
+    """
+    
+    async_to_sync(run_dexscreener_boosted_watcher)()
+
+    return "Мониторинг boosts токенов на Dexscreener закончен"
 
 
 @app.task(bind=True, base=AbortableTask)

@@ -3,7 +3,7 @@ import time
 import httpx
 import logging
 from httpx._config import Timeout
-from ..utils import get_token_age, get_token_data
+from ..utils.tokens_data import get_pairs_data, get_token_age
 from ...models import Settings
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class TokenChecker:
     def __init__(self, pair):
-        self.token_data = get_token_data(pair)[0]
+        self.token_data = get_pairs_data(pair)[0]
         self.token_address = self.token_data["baseToken"]["address"]
         self.token_name = self.token_data["baseToken"]["name"]
         self.settings = Settings.objects.all().first()
