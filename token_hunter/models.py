@@ -348,6 +348,12 @@ class Transaction(models.Model):
         default=Status.OPEN,
         verbose_name="Статус"
     )
+    price_change_check = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Изменение цены"
+    )
+    
     # Настройки режима:
     mode = models.CharField(
         max_length=64,

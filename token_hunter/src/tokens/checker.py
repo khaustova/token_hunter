@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class TokenChecker:
-    def __init__(self, pair):
+    def __init__(self, pair: str):
         self.token_data = get_pairs_data(pair)[0]
         self.token_address = self.token_data["baseToken"]["address"]
         self.token_name = self.token_data["baseToken"]["name"]
@@ -155,7 +155,7 @@ class TokenChecker:
                         
         return False
     
-    def get_socials_info(self, data) -> dict:
+    def get_socials_info(self, data: dict) -> dict:
         """
         Возвращает словарь, в котором определено наличие сайта, Твиттера 
         и Телеграма для токена token_address.

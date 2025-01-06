@@ -1,31 +1,38 @@
 import logging
-from django.conf import settings
-from django_telethon.sessions import DjangoSession
-from django_telethon.models import App, ClientSession
 from telethon import TelegramClient
+import time
 from .tasks import track_tokens
 from .checker import TokenChecker
-from ..solana.parser import SolanaParser
 from ..utils.tasks_data import get_active_tasks
 from ..utils.tokens_data import (
     get_pairs_data, 
-    get_token_data,
     get_token_age, 
     get_socials_info
 )
-from ...models import Status, Transaction, Mode, Settings
+from ...models import Status, Transaction, Mode
 
 logger = logging.getLogger(__name__)
 
 
 class TokenBuyer:
     
-    def __init__(self, pair, total_transfers=None, is_mutable_metadata=True):
+    def __init__(
+        self, 
+        pair: str, 
+        telegram_client: TelegramClient, 
+        total_transfers: int | None=None, 
+        is_mutable_metadata: bool=True
+    ):
         self.pair = pair
         self.total_transfers = total_transfers
         self.is_mutable_metadata = is_mutable_metadata
+        self.telegram_client = telegram_client
         
-    def check_token(self):
+    def check_token(self) -> bool:
+        """
+        Базовая проверка токена.
+        """
+        
         token_checker = TokenChecker(self.pair)
         if (token_checker.check_price() and 
             token_checker.check_age() and
@@ -41,13 +48,22 @@ class TokenBuyer:
         
         return False
 
-    def buy_token(self, mode, snipers_data=None, top_traders_data=None, twitter_data=None, telegram_data=None):
+    def buy_token(
+        self, 
+        mode: Mode, 
+        snipers_data: dict | None=None, 
+        top_traders_data: dict | None=None, 
+        twitter_data: dict | None=None, 
+        telegram_data: dict | None=None,
+        price_change_data: float | None=None
+    ):
         """
-        Покупка токена.
+        Покупает токен и запускает задачу отслеживания стоимости токенов, если 
+        она не запущена.
         """
 
         token_data = get_pairs_data(self.pair)[0]
-
+        
         socials_info = get_socials_info(token_data.get("info"))
         token_age = get_token_age(token_data["pairCreatedAt"])
         
@@ -84,6 +100,7 @@ class TokenBuyer:
             is_telegram=socials_info["is_telegram"],
             is_twitter=socials_info["is_twitter"],
             is_website=socials_info["is_website"],
+            price_change_check=price_change_data,
             status=Status.OPEN,
             mode=mode
         )
@@ -132,18 +149,17 @@ class TokenBuyer:
         if not is_update_process:
             track_tokens.delay()
         
-    async def real_buy_token(self, telegram_client):    
-        # app, is_created = App.objects.update_or_create(
-        # api_id=settings.TELETHON_API_ID,
-        # api_hash=settings.TELETHON_API_HASH
-        # )
-        # cs, cs_is_created = ClientSession.objects.update_or_create(
-        #     name="default",
-        # )
-        # telegram_client = TelegramClient(DjangoSession(client_session=cs), app.api_id, app.api_hash)
+    async def real_buy_token(self) -> None:
+        """
+        Покупка токена через бот Maestro
+        """  
         
-        # await telegram_client.connect()
-                
-        await telegram_client.send_message("@maestro", self.token_address)
+        await self.telegram_client.connect()
 
-        logger.info(f"Покупка токена {self.token_name} через Maestro Bot") 
+        token_data = get_pairs_data(self.pair)[0]
+        token_address = token_data["baseToken"]["address"]
+        await self.telegram_client.send_message("@maestro", token_address)
+        
+        await self.telegram_client.disconnect()
+
+        logger.info(f"Покупка токена {token_address} через Maestro Bot")

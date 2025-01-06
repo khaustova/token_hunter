@@ -16,6 +16,7 @@ from telethon.tl.functions.channels import GetFullChannelRequest
 from ..tokens.buyer import TokenBuyer
 from ..tokens.checker import TokenChecker
 from ..utils.tokens_data import (
+    get_pairs_data,
     get_pairs_count, 
     get_latest_boosted_tokens, 
     get_token_data
@@ -114,20 +115,18 @@ class DexScreener():
                         
                     snipers_data, top_traders_data = await self.get_transactions_info(pairs)
 
+                    twitter_data, telegram_data = None, None
                     if token_checker.token_data.get("info"):
                         socials_data = token_checker.token_data.get("info").get("socials")
                         if socials_data:
                             twitter_data, telegram_data = await self.get_social_data(
                                 socials_data,
                             )
-                    # twitter_data, telegram_data = await self.get_social_info_from_token_data(
-                    #     token_checker.token_data.get("info"),
-                    # )
-
+                            
                     token_buyer = TokenBuyer(
                         pairs, 
                         total_transfers, 
-                        is_mutable_metadata
+                        is_mutable_metadata,
                     )
 
                     await sync_to_async(token_buyer.buy_token)(
@@ -140,26 +139,27 @@ class DexScreener():
                     
             await self.browser.wait(10)
             
-    async def monitoring_boosted_tokens(self):
-        dex_page = await self.browser.get(
-            "https://dexscreener.com/solana/raydium"
-        )
-        
-        await self.telegram_client.connect()
+    async def monitoring_boosted_tokens(self) -> None:
+        await self.browser.get("https://dexscreener.com/solana/raydium")
+        await self.browser.get("https://solscan.io/", new_tab=True)
         
         black_list = []
         BOOSTED_TOKENS = {}
         
         while True:
+            time.sleep(2)
+            logger.debug(f"Получение новых данных по boosted токенам")
             boosted_tokens_data = get_latest_boosted_tokens()
-
-            for token in boosted_tokens_data[:6]:
+            for token in boosted_tokens_data:
                 if token["chainId"] != "solana":
                     continue
 
                 token_address = token["url"].split("/")[-1]
                 
                 if token_address in black_list:
+                    continue
+                
+                if token["amount"] < 500:
                     continue
                 
                 token_data = get_token_data(token_address)[0]
@@ -172,46 +172,58 @@ class DexScreener():
                     risk_level = rugcheck["risk_level"]
                     is_mutable_metadata = rugcheck["is_mutable_metadata"]
                     logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
-
+  
+                    if risk_level == None:
+                        continue
                     if risk_level != "Good":
                         black_list.append(token_address)
                         continue
-                
-                    BOOSTED_TOKENS[token_address] = {"current_amount": token["totalAmount"], "boosts_count": 0}
-                    
-                if (BOOSTED_TOKENS[token_address]["current_amount"] < token["totalAmount"]
-                    and token["amount"] == 500
-                ):
-                    BOOSTED_TOKENS[token_address]["current_amount"] += token["amount"]
-                    BOOSTED_TOKENS[token_address]["boosts_count"] += 1
-                    logger.debug(f"Обновление данных о boosted токенах: {BOOSTED_TOKENS}")
-                    
 
-                if BOOSTED_TOKENS[token_address]["boosts_count"] >= 3:
+                if token["amount"] >= 500:
                     total_transfers = None
                     is_mutable_metadata = False
                     snipers_data, top_traders_data = None, None
                     total_transfers = await self.get_total_transfers(token["tokenAddress"])
                         
                     snipers_data, top_traders_data = await self.get_transactions_info(token_data.get("pairAddress"))
-                    
-                    twitter_data, telegram_data = await self.get_social_data(token.get("links"))
 
+                    twitter_data, telegram_data = await self.get_social_data(token.get("links"))
+                    
                     token_buyer = TokenBuyer(
                         token_data.get("pairAddress"), 
+                        self.telegram_client,
                         total_transfers, 
-                        is_mutable_metadata
+                        is_mutable_metadata,
                     )
-
+                    
+                    # token_data_3 = get_token_data(token_address)[0]
+                    
+                    # if (token_data_3["txns"]["m5"]["sells"] > 400 
+                    #     or token_data_3["txns"]["h1"]["sells"] > 1000
+                    #     or not token_data_3.get("boosts")
+                    #     or token_data_3.get("boosts").get("active") != 500
+                    #     or not snipers_data
+                    #     or snipers_data["held_all"] < 40 
+                    # ):
+                    #     black_list.append(token_address)
+                    #     continue
+                    
+                    time.sleep(30)
+                    price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
+                    price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
+                    
+                    
                     await sync_to_async(token_buyer.buy_token)(
                         Mode.BOOSTED,
                         snipers_data,
                         top_traders_data,
                         twitter_data,
                         telegram_data,
+                        price_change,
                     )
+                    black_list.append(token_address)
+                    #del BOOSTED_TOKENS[token_address]
                     
-                    BOOSTED_TOKENS[token_address]["boosts_count"] = 0
             
     async def get_transactions_info(self, pairs: str) -> tuple:
         """
@@ -252,11 +264,7 @@ class DexScreener():
         Возвращает данные о телеграме и твиттере токена.
         """
         
-        
         twitter_data, telegram_data = None, None
-        # if socials_info:
-        #     socials_data = socials_info.get("socials")
-        #     if socials_data:
         if socials_data:
             for data in socials_data:
                 if data.get("type") == "twitter":
@@ -568,7 +576,10 @@ class DexScreener():
             if twitter_data["twitter_tweets"] == "—":
                 twitter_data["twitter_tweets"] = 0
             else:
-                twitter_data["twitter_tweets"] = await self._clear_number(twitter_data["twitter_tweets"])
+                try:
+                    twitter_data["twitter_tweets"] = await self._clear_number(twitter_data["twitter_tweets"])
+                except:
+                    twitter_data["twitter_tweets"] = -1
             
         except:
             pass
@@ -591,13 +602,18 @@ class DexScreener():
                 break
 
         telegram_data = {}
-        try:
+        
+        await self.telegram_client.connect()
+        
+        try:       
             channel_connect = await self.telegram_client.get_entity(channel_name)
             channel_full_info = await self.telegram_client(GetFullChannelRequest(channel=channel_connect))
             telegram_data["telegram_members"] = int(channel_full_info.full_chat.participants_count)
             telegram_data["is_telegram_error"] = False
         except:
             telegram_data["is_telegram_error"] = True
+        
+        await self.telegram_client.disconnect()
         
         return telegram_data
                     
@@ -749,7 +765,7 @@ async def run_dexscreener_boosted_watcher():
     Инициализирует браузер и запускает парсинг топов кошельков DesScreener.
     """  
     
-    config = Config()
+    config = Config(headless=False)
    # config.add_extension("./extensions/captcha_solver")
     browser = await uc.start(config=config, sandbox=False)
     boosted_worker = DexScreener(browser)
