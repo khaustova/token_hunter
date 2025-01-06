@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=http://127.0.0.1:8000/token_hunter/transaction/export/?
+HostUrl=http://127.0.0.1:8000/token_hunter/transaction/export/?
