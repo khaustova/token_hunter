@@ -53,6 +53,7 @@ def get_latest_boosted_tokens() -> dict:
         try:
             boosted_tokens_data = requests.get(boosts_tokens_url).json()
         except:
+            logger.debug(f"Не удалось получить данные через API. Повтор попытки")
             time.sleep(1)
             continue
     
