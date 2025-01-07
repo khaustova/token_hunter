@@ -11,6 +11,7 @@ from .src.dex.tasks import (
     watching_boosted_tokens_task,
     parsing_dexscreener_task,
 )
+from .src.tokens.tasks import track_tokens
 from .src.utils.tokens_data import get_pairs_data
 from .src.utils.tasks_data import get_dexscreener_worker_tasks_ids
 
@@ -56,8 +57,10 @@ def watch_dexscreener(request: HttpRequest):
             logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
             
         elif "_boosted_monitoring" in request.POST:
-            process = watching_boosted_tokens_task.delay()
-            logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {process.id}")
+            monitoring = watching_boosted_tokens_task.delay()
+            tracking_price = track_tokens.delay()
+            logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
+            logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id}")
             
         elif "_stop_monitoring" in request.POST:
             tasks_ids = get_dexscreener_worker_tasks_ids()
