@@ -24,6 +24,27 @@ def get_pairs_data(pairs: str | list[str]) -> dict:
     return token_data
 
 
+def get_pairs_data_for_30_more_tokens(buying_prices: dict) -> list:
+    if len(buying_prices.keys()) < 30:
+        tokens_str = ",".join(buying_prices.keys())
+        tokens_data = get_pairs_data(tokens_str)
+    else:
+        tokens_amount = len(buying_prices.keys())
+        tokens_data = []
+        for i in range(29, tokens_amount + 1, 29):
+            tokens = list(buying_prices.keys())[i-29:i]
+            tokens_str = ",".join(tokens)
+            tokens_data += get_pairs_data(tokens_str)
+            last_step = i
+            
+        if last_step < tokens_amount:
+            tokens = list(buying_prices.keys())[last_step:tokens_amount]
+            tokens_str = ",".join(tokens)
+            tokens_data += get_pairs_data(tokens_str)
+            
+    return tokens_data
+
+
 def get_token_data(token_address: str | list[str]) -> dict:
     """
     Возвращает данные о токена или списке токенов с DexScreener по адресу.

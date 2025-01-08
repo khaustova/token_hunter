@@ -136,18 +136,7 @@ class TokenBuyer:
             transaction.save()
 
         logger.info(f"Покупка токена {token_data["baseToken"]["name"]} за {token_data["priceUsd"]} USD") 
-        # is_update_process = False
-        # try:
-        #     active_tasks = get_active_tasks()
-        #     for task in active_tasks:
-        #         if task["name"] == "token_hunter.src.tokens.tasks.track_tokens":
-        #             is_update_process = True
-        #             break
-        # except:   
-        #     is_update_process = False
-            
-        # if not is_update_process:
-        #     track_tokens.delay()
+
         
     async def real_buy_token(self) -> None:
         """

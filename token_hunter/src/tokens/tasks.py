@@ -28,27 +28,14 @@ def track_tokens() -> str:
 
     while True:
         open_transactions = Transaction.objects.filter(status=Status.OPEN)
-        buying_prices = {}
-        for transaction in open_transactions:
-            buying_prices[transaction.pair] = float(transaction.price_b)
-        
         if open_transactions:
-            if len(buying_prices.keys()) < 30:
-                tokens_str = ",".join(buying_prices.keys())
-                tokens_data = get_pairs_data(tokens_str)
-            else:
-                tokens_amount = len(buying_prices.keys())
-                tokens_data = []
-                for i in range(29, tokens_amount + 1, 29):
-                    tokens = list(buying_prices.keys())[i-29:i]
-                    tokens_str = ",".join(tokens)
-                    tokens_data += get_pairs_data(tokens_str)
-                    last_step = i
-                    
-                if last_step < tokens_amount:
-                    tokens = list(buying_prices.keys())[last_step:tokens_amount]
-                    tokens_str = ",".join(tokens)
-                    tokens_data += get_pairs_data(tokens_str)
+            buying_prices = {transaction.pair: transaction.price_b for transaction in open_transactions}
+            # for transaction in open_transactions:
+            #     buying_prices[transaction.pair] = float(transaction.price_b)
+        
+        
+            tokens_data = get_pairs_data(",".join(buying_prices.keys()))
+
             
             for token_data in tokens_data:
                 token_address = token_data["baseToken"]["address"]
