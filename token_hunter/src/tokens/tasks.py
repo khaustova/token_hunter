@@ -28,7 +28,13 @@ def track_tokens(TOKENS_DATA={}) -> str:
     
     step = 0
     while True:
-        open_transactions = Transaction.objects.filter(status=Status.OPEN)
+        try:
+            open_transactions = Transaction.objects.filter(status=Status.OPEN)
+        except:
+            time.sleep(1)
+            logger.error("Ошибка обращения к базе данных")
+            continue
+        
         if open_transactions:
             step += 1
             
@@ -95,5 +101,11 @@ def track_tokens(TOKENS_DATA={}) -> str:
                 track_tokens.delay()
                 logger.error(f"Что-то пошло не так. Перезагрузка задачи track_tockens()") 
                 return 
+            
+        else:
+            if step % 10 == 0:
+                logger.debug("Нет отслеживаемых токенов")
         
         time.sleep(1)
+        if step == 60:
+            step = 0
