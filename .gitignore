@@ -9,3 +9,4 @@ transactions
 page_sources
 .venv
 .env
+logs

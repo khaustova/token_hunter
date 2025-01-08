@@ -194,6 +194,18 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Logger
 
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+LOG_FILE = "/token_hunter.log"
+LOG_PATH = LOG_DIR + LOG_FILE
+
+if not os.path.exists(LOG_DIR):
+    os.mkdir(LOG_DIR)
+
+if not os.path.exists(LOG_PATH):
+    f = open(LOG_PATH, "a").close()
+else:
+    f = open(LOG_PATH, "w").close()
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -215,6 +227,12 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "simple"
         },
+        "file": {
+            "filename": LOG_PATH,
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "formatter": "simple",
+        },
     },
     "loggers": {
         "django": {
@@ -223,7 +241,7 @@ LOGGING = {
             "level": "INFO",
         },
         "token_hunter": {
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "level": "DEBUG",
         }
     }

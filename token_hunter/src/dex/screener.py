@@ -145,10 +145,15 @@ class DexScreener():
         
         black_list = []
         BOOSTED_TOKENS = {}
-        
+        step = 0
         while True:
             time.sleep(2)
-            logger.debug(f"Получение новых данных по boosted токенам")
+            
+            step += 1
+            if step == 120:
+                logger.debug(f"Получение новых данных по boosted токенам")
+                step = 0
+                
             boosted_tokens_data = get_latest_boosted_tokens()
             for token in boosted_tokens_data:
                 if token["chainId"] != "solana":
@@ -179,22 +184,23 @@ class DexScreener():
                         black_list.append(token_address)
                         continue
 
-                if token["amount"] >= 500:
-                    total_transfers = None
-                    is_mutable_metadata = False
-                    snipers_data, top_traders_data = None, None
-                    total_transfers = await self.get_total_transfers(token["tokenAddress"])
-                        
-                    snipers_data, top_traders_data = await self.get_transactions_info(token_data.get("pairAddress"))
-
-                    twitter_data, telegram_data = await self.get_social_data(token.get("links"))
+                total_transfers = None
+                is_mutable_metadata = False
+                snipers_data, top_traders_data = None, None
+                twitter_data, telegram_data = None, None
+                price_change = None
+                total_transfers = await self.get_total_transfers(token["tokenAddress"])
                     
-                    token_buyer = TokenBuyer(
-                        token_data.get("pairAddress"), 
-                        self.telegram_client,
-                        total_transfers, 
-                        is_mutable_metadata,
-                    )
+                snipers_data, top_traders_data = await self.get_transactions_info(token_data.get("pairAddress"))
+
+                twitter_data, telegram_data = await self.get_social_data(token.get("links"))
+                
+                token_buyer = TokenBuyer(
+                    token_data.get("pairAddress"), 
+                    self.telegram_client,
+                    total_transfers, 
+                    is_mutable_metadata,
+                )
                     
                     # token_data_3 = get_token_data(token_address)[0]
                     
@@ -208,21 +214,22 @@ class DexScreener():
                     #     black_list.append(token_address)
                     #     continue
                     
-                    time.sleep(30)
-                    price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
-                    price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
-                    
-                    
-                    await sync_to_async(token_buyer.buy_token)(
-                        Mode.BOOSTED,
-                        snipers_data,
-                        top_traders_data,
-                        twitter_data,
-                        telegram_data,
-                        price_change,
-                    )
-                    black_list.append(token_address)
+                time.sleep(30)
+                price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
+                price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
+                
+                
+                await sync_to_async(token_buyer.buy_token)(
+                    Mode.BOOSTED,
+                    snipers_data,
+                    top_traders_data,
+                    twitter_data,
+                    telegram_data,
+                    price_change,
+                )
+                black_list.append(token_address)
                     #del BOOSTED_TOKENS[token_address]
+                    
                     
             
     async def get_transactions_info(self, pairs: str) -> tuple:
