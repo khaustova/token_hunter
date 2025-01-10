@@ -5,7 +5,6 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-connect_timeout, read_timeout = 5.0, 30.0
 CONNECT_TIMEOUT = 5.0
 READ_TIMEOUT = 30.0
 
