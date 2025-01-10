@@ -5,6 +5,9 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+connect_timeout, read_timeout = 5.0, 30.0
+CONNECT_TIMEOUT = 5.0
+READ_TIMEOUT = 30.0
 
 def get_pairs_data(pairs: str | list[str]) -> dict:
     """
@@ -15,7 +18,7 @@ def get_pairs_data(pairs: str | list[str]) -> dict:
     token_data = None
     while not token_data:
         try:
-            token_data = requests.get(token_data_url).json()["pairs"]
+            token_data = requests.get(token_data_url, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT)).json()["pairs"]
         except:
             logger.debug(f"Не удалось получить данные через API. Повтор попытки")
             time.sleep(1)
@@ -54,7 +57,7 @@ def get_token_data(token_address: str | list[str]) -> dict:
     token_data = None
     while not token_data:
         try:
-            token_data = requests.get(token_data_url).json()["pairs"]
+            token_data = requests.get(token_data_url, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT)).json()["pairs"]
         except:
             logger.debug(f"Не удалось получить данные через API. Повтор попытки")
             time.sleep(1)
@@ -72,7 +75,7 @@ def get_latest_boosted_tokens() -> dict:
     boosted_tokens_data = None
     while not boosted_tokens_data:
         try:
-            boosted_tokens_data = requests.get(boosts_tokens_url).json()
+            boosted_tokens_data = requests.get(boosts_tokens_url, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT)).json()
         except:
             logger.debug(f"Не удалось получить данные через API. Повтор попытки")
             time.sleep(1)
