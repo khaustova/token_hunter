@@ -47,7 +47,7 @@ def track_tokens(TOKENS_DATA={}) -> str:
                 buying_price = buying_prices[pair.lower()]
                 current_price = float(token_data["priceUsd"])
                 pnl = ((current_price - buying_price) / buying_price) * 100 
-                if step == 60:
+                if step == 120:
                     logger.debug(f"PNL токена {token_data["baseToken"]["name"]}: {pnl}")
 
                 TOKENS_DATA.setdefault(
@@ -98,9 +98,9 @@ def track_tokens(TOKENS_DATA={}) -> str:
                     logger.info(f"Продажа токена {token_address} за {current_price} USD") 
             
         else:
-            if step % 10 == 0:
+            if step == 120:
                 logger.debug("Нет отслеживаемых токенов")
         
         time.sleep(1)
-        if step == 60:
+        if step == 120:
             step = 0
