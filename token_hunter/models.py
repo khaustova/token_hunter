@@ -342,6 +342,16 @@ class Transaction(models.Model):
         null=True,
         verbose_name="PNL 50 %"
     )
+    PNL_loss_5 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL -10 %"
+    )
+    PNL_loss_10 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL -10 %"
+    )
     status = models.CharField(
         max_length=64,
         choices=Status.choices,

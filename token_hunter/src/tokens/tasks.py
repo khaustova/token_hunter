@@ -57,9 +57,16 @@ def track_tokens(TOKENS_DATA={}) -> str:
                         "is_20": None, 
                         "is_30": None, 
                         "is_40": None, 
-                        "is_50": None
+                        "is_50": None,
+                        "is_loss_5": None,
+                        "is_loss_10": None
                     }
                 )
+                if pnl <= -5 and not TOKENS_DATA[pair]["is_loss_5"]:
+                    TOKENS_DATA[pair]["is_loss_5"] = True
+                    
+                if pnl <= -10 and not TOKENS_DATA[pair]["is_loss_10"]:
+                    TOKENS_DATA[pair]["is_loss_10"] = True
                 
                 if pnl >= 10 and not TOKENS_DATA[pair]["is_10"]:
                     TOKENS_DATA[pair]["is_10"] = True
@@ -89,6 +96,8 @@ def track_tokens(TOKENS_DATA={}) -> str:
                         PNL_30=TOKENS_DATA[pair]["is_30"],
                         PNL_40=TOKENS_DATA[pair]["is_40"],
                         PNL_50=TOKENS_DATA[pair]["is_50"],
+                        PNL_loss_5=TOKENS_DATA[pair]["is_loss_5"],
+                        PNL_loss_10=TOKENS_DATA[pair]["is_loss_10"],
                         status=Status.CLOSED
                         
                     )
