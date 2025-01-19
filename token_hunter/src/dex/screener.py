@@ -140,6 +140,11 @@ class DexScreener():
             await self.browser.wait(10)
             
     async def monitoring_boosted_tokens(self) -> None:
+        """
+        Мониторит DexScreener на появление новых boodted токенов Solana.
+        Если токен прошёл проверку, то покупает его.
+        """
+        
         await self.browser.get("https://dexscreener.com/solana/raydium")
         await self.browser.get("https://solscan.io/", new_tab=True)
         
@@ -189,11 +194,11 @@ class DexScreener():
                 snipers_data, top_traders_data = None, None
                 twitter_data, telegram_data = None, None
                 price_change = None
-                total_transfers = await self.get_total_transfers(token["tokenAddress"])
+                #total_transfers = await self.get_total_transfers(token["tokenAddress"])
                     
                 snipers_data, top_traders_data = await self.get_transactions_info(token_data.get("pairAddress"))
 
-                twitter_data, telegram_data = await self.get_social_data(token.get("links"))
+                #twitter_data, telegram_data = await self.get_social_data(token.get("links"))
                 
                 token_buyer = TokenBuyer(
                     token_data.get("pairAddress"), 
@@ -201,26 +206,33 @@ class DexScreener():
                     total_transfers, 
                     is_mutable_metadata,
                 )
+                
+                mode = Mode.BOOSTED
+                
+                upd_token_data =  get_pairs_data(token_data.get("pairAddress"))[0]
+                
+                if snipers_data and top_traders_data:
+                    sns_pnl_loss = self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
+                    tt_pnl_loss = self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
+                
+                    if (upd_token_data["txns"]["m5"]["sells"] < 400 
+                        and upd_token_data["txns"]["h1"]["sells"] < 1000
+                        and upd_token_data["marketCap"] < 500000
+                        and upd_token_data["boosts"].get("active") == 500
+                        and upd_token_data["priceChange"]["m5"] <= 60
+                        and upd_token_data["priceChange"]["m5"] >= -60
+                        and sns_pnl_loss <= 20
+                        and tt_pnl_loss <= 20   
+                    ):
+                        mode = Mode.REAL
                     
-                    # token_data_3 = get_token_data(token_address)[0]
-                    
-                    # if (token_data_3["txns"]["m5"]["sells"] > 400 
-                    #     or token_data_3["txns"]["h1"]["sells"] > 1000
-                    #     or not token_data_3.get("boosts")
-                    #     or token_data_3.get("boosts").get("active") != 500
-                    #     or not snipers_data
-                    #     or snipers_data["held_all"] < 40 
-                    # ):
-                    #     black_list.append(token_address)
-                    #     continue
-                    
-                time.sleep(30)
-                price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
-                price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
+                # time.sleep(30)
+                # price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
+                # price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
                 
                 
                 await sync_to_async(token_buyer.buy_token)(
-                    Mode.BOOSTED,
+                    mode,
                     snipers_data,
                     top_traders_data,
                     twitter_data,
@@ -228,7 +240,6 @@ class DexScreener():
                     price_change,
                 )
                 black_list.append(token_address)
-                    #del BOOSTED_TOKENS[token_address]
                     
                     
             
@@ -265,6 +276,21 @@ class DexScreener():
         await page.close()
         
         return (snipers_data, top_traders_data)
+    
+    async def count_pnl_loss(self, bought_str: str, sold_str: str) -> int:
+        """
+        Возвращает количество отрицательных PNL.
+        """
+        try:
+            bought_lst = [float(x) for x in bought_str.split(" ")]
+            sold_lst = [float(x) for x in sold_str.split(" ")]
+            pnl_lst = [sold - bought if sold else 0 for bought, sold in zip(bought_lst, sold_lst)]
+            
+            pnl_loss = sum(i < 0 for i in pnl_lst)
+            
+            return pnl_loss
+        except:
+            return 100
     
     async def get_social_data(self, socials_data: dict) -> tuple:
         """
