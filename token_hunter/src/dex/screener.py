@@ -212,8 +212,8 @@ class DexScreener():
                 upd_token_data =  get_pairs_data(token_data.get("pairAddress"))[0]
                 
                 if snipers_data and top_traders_data:
-                    sns_pnl_loss = self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
-                    tt_pnl_loss = self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
+                    sns_pnl_loss = await self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
+                    tt_pnl_loss = await self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
                 
                     if (upd_token_data["txns"]["m5"]["sells"] < 400 
                         and upd_token_data["txns"]["h1"]["sells"] < 1000
