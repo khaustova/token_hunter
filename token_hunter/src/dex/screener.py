@@ -177,20 +177,20 @@ class DexScreener():
                     black_list.append(token_address)
                     continue
                 
-                if not BOOSTED_TOKENS.get(token_address):
-                    rugcheck = await self.rugcheck(token["tokenAddress"])
-                    risk_level = rugcheck["risk_level"]
-                    is_mutable_metadata = rugcheck["is_mutable_metadata"]
-                    logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
-  
-                    if risk_level == None:
-                        continue
-                    if risk_level != "Good":
-                        black_list.append(token_address)
-                        continue
+                #if not BOOSTED_TOKENS.get(token_address):
+                rugcheck = await self.rugcheck(token["tokenAddress"])
+                risk_level = rugcheck["risk_level"]
+                is_mutable_metadata = rugcheck["is_mutable_metadata"]
+                logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
+
+                if risk_level == None:
+                    continue
+                if risk_level != "Good":
+                    black_list.append(token_address)
+                    continue
 
                 total_transfers = None
-                is_mutable_metadata = False
+                #is_mutable_metadata = False
                 snipers_data, top_traders_data = None, None
                 twitter_data, telegram_data = None, None
                 price_change = None
@@ -215,10 +215,13 @@ class DexScreener():
                     sns_pnl_loss = await self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
                     tt_pnl_loss = await self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
                 
-                    if (upd_token_data["txns"]["m5"]["sells"] < 400 
+                    if (upd_token_data.get("txns", {}).get("m5", {}).get("sells", {})
+                        and upd_token_data["txns"]["m5"]["sells"] < 400 
+                        and upd_token_data.get("txns", {}).get("h1", {}).get("sells", {})
                         and upd_token_data["txns"]["h1"]["sells"] < 1000
-                        and upd_token_data["marketCap"] < 500000
+                        and upd_token_data.get("marketCap", 5000000) < 500000
                         and upd_token_data["boosts"].get("active") == 500
+                        and upd_token_data.get("priceChange", {}).get("m5", {})
                         and upd_token_data["priceChange"]["m5"] <= 60
                         and upd_token_data["priceChange"]["m5"] >= -60
                         and sns_pnl_loss <= 20
@@ -226,9 +229,9 @@ class DexScreener():
                     ):
                         mode = Mode.REAL
                     
-                # time.sleep(30)
-                # price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
-                # price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
+                time.sleep(30)
+                price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
+                price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
                 
                 
                 await sync_to_async(token_buyer.buy_token)(
