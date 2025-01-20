@@ -215,13 +215,13 @@ class DexScreener():
                     sns_pnl_loss = await self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
                     tt_pnl_loss = await self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
                 
-                    if (upd_token_data.get("txns", {}).get("m5", {}).get("sells", {})
+                    if (upd_token_data.get("txns", {}).get("m5", {}).get("sells")
                         and upd_token_data["txns"]["m5"]["sells"] < 400 
-                        and upd_token_data.get("txns", {}).get("h1", {}).get("sells", {})
+                        and upd_token_data.get("txns", {}).get("h1", {}).get("sells")
                         and upd_token_data["txns"]["h1"]["sells"] < 1000
                         and upd_token_data.get("marketCap", 5000000) < 500000
                         and upd_token_data["boosts"].get("active") == 500
-                        and upd_token_data.get("priceChange", {}).get("m5", {})
+                        and upd_token_data.get("priceChange", {}).get("m5")
                         and upd_token_data["priceChange"]["m5"] <= 60
                         and upd_token_data["priceChange"]["m5"] >= -60
                         and sns_pnl_loss <= 20

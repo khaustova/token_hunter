@@ -69,6 +69,10 @@ class TokenBuyer:
         
         if token_data.get("info"):
             socials_info = get_socials_info(token_data.get("info"))
+        
+        if not token_data["priceChange"].get("m5"):
+            logger.error("Нет данных об изменении цены за 5 минут")
+            return
             
         transaction, created = Transaction.objects.get_or_create(
             pair=self.pair.lower(),
