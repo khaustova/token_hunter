@@ -19,7 +19,8 @@ from ..utils.tokens_data import (
     get_pairs_data,
     get_pairs_count, 
     get_latest_boosted_tokens, 
-    get_token_data
+    get_token_data,
+    get_token_age
 )
 from ...models import TopTrader, Transaction, Mode
 
@@ -211,9 +212,13 @@ class DexScreener():
                 
                 upd_token_data =  get_pairs_data(token_data.get("pairAddress"))[0]
                 
+                token_age = get_token_age(upd_token_data["pairCreatedAt"])
+                
                 if snipers_data and top_traders_data:
                     sns_pnl_loss = await self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
                     tt_pnl_loss = await self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
+                    tt_no_bought = await self.count_zero(top_traders_data["bought"])
+                    tt_bought_sum = await self.get_sum(top_traders_data["bought"])
                 
                     if (upd_token_data.get("txns", {}).get("m5", {}).get("sells")
                         and upd_token_data["txns"]["m5"]["sells"] < 400 
@@ -221,12 +226,17 @@ class DexScreener():
                         and upd_token_data["txns"]["h1"]["sells"] < 1000
                         and upd_token_data.get("marketCap", 5000000) < 500000
                         and upd_token_data["boosts"].get("active") == 500
+                        and token_age >= 10
+                        and token_age <= 120
+                        and sns_pnl_loss <= 20
+                        and tt_no_bought <= 50
+                        and tt_pnl_loss <= 20 
+                        and tt_bought_sum <= 40000
                         and upd_token_data.get("priceChange", {}).get("m5")
                         and upd_token_data["priceChange"]["m5"] <= 60
                         and upd_token_data["priceChange"]["m5"] >= -60
-                        and sns_pnl_loss <= 20
-                        and tt_pnl_loss <= 20   
                     ):
+
                         mode = Mode.REAL
                     
                 time.sleep(30)
@@ -294,6 +304,32 @@ class DexScreener():
             return pnl_loss
         except:
             return 100
+        
+    async def get_sum(self, num_str: str) -> float:
+        """
+        Возвращает сумму покупок или продаж
+        """
+        
+        try:
+            num_lst = [float(x) for x in num_str.split(" ")]
+            num_sum = sum(num_lst)
+            
+            return num_sum
+        except:
+            return 1000000
+        
+    async def count_zero(self, num_str: str) -> int:
+        """
+        Возвращает количество нулей в строке.
+        """
+        try:
+            num_lst = [float(x) for x in num_str.split(" ")]
+            count_zero = num_lst.count(0)
+            
+            return count_zero
+        except:
+            return 1000000
+        
     
     async def get_social_data(self, socials_data: dict) -> tuple:
         """
