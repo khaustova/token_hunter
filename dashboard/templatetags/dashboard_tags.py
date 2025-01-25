@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from copy import deepcopy
 from django import template
 from django.apps import apps
-from django.db.models import Count
+from django.db.models import Count, QuerySet
 from django.urls import reverse
 from django.http import HttpRequest
 from django.utils.html import escape, format_html
@@ -235,6 +235,38 @@ def get_top_traders(context: template.Context) -> str:
     context["top_traders"] = page_obj
     
     return "Топ кошельков"
+
+
+@register.simple_tag()
+def get_open_transactions() -> dict:
+    """
+    Возвращает данные об открытых транзакциях.
+    """
+    
+    open_transactions_qs = Transaction.objects.filter(status=Status.OPEN)
+    open_transactions = {}
+    
+    if open_transactions_qs:
+        buying_prices = {transaction.pair: transaction.price_b for transaction in open_transactions_qs}
+        
+        open_transactions_pairs = [transaction.pair for transaction in open_transactions_qs]
+        tokens_data = get_pairs_data(",".join(open_transactions_pairs))
+        
+        current_pnl = {}
+        for token_data in tokens_data:
+            pair = token_data["pairAddress"]
+            buying_price = buying_prices[pair.lower()]
+            current_price = float(token_data["priceUsd"])
+            pnl = ((current_price - buying_price) / buying_price) * 100
+            current_pnl[pair.lower()] = pnl
+            
+        for transaction in open_transactions_qs:
+            open_transactions[transaction.pair] = {}
+            open_transactions[transaction.pair]["token_name"] = transaction.token_name
+            open_transactions[transaction.pair]["opening_date"] = transaction.opening_date
+            open_transactions[transaction.pair]["current_pnl"] = round(current_pnl[transaction.pair.lower()], 2)
+    
+    return open_transactions
 
 
 @register.simple_tag

@@ -225,8 +225,11 @@ footer {
     gap: 10px;
 }
 
-.content-history {
+.content-other {
+    display: flex;
+    flex-direction: column;
     width: 49.5%;
+    gap: 10px;
 }
 
 .content-change-list-with-filter {

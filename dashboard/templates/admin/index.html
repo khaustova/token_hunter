@@ -139,7 +139,40 @@
       {% endblock %}
     </div>
     
-    <div class="content-history">
+    <div class="content-other">
+
+      <div class="content-card">
+        <h4 class="content-card__title">Открытые позиции</h4>
+          <div>
+            {% get_open_transactions as open_transactions %}
+            {% if open_transactions %}
+            <table class="table">
+              <tbody>
+                <th>Токен</th>
+                <th>Дата покупки</th>
+                <th>Текущий PNL</th>
+                {% for pair, data in open_transactions.items %}
+                  <tr>
+                    <td>
+                      <a href="https://dexscreener.com/solana/{{ pair }}">{{ data.token_name }}</a>
+                    </td>
+                    <td>
+                      {{ data.opening_date }}
+                    </td>
+                    <td>
+                      {{ data.current_pnl }} %
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            {% else %}
+             Открытых транзакций нет
+            {% endif %}
+          </div>
+      </div>
+
       <div class="content-card" id="recent-actions-module">
         <h4 class="content-card__title">{% trans 'Recent actions' %}</h4>
         {% load log %}
