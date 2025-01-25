@@ -345,7 +345,7 @@ class Transaction(models.Model):
     PNL_loss_5 = models.BooleanField(
         blank=True,
         null=True,
-        verbose_name="PNL -10 %"
+        verbose_name="PNL -5 %"
     )
     PNL_loss_10 = models.BooleanField(
         blank=True,
@@ -379,7 +379,36 @@ class Transaction(models.Model):
     def __str__(self):
         return self.pair
 
+class MonitoringRule(models.TextChoices):
+    """
+    Модель правила мониторинга токенов.
+    """
+    BOOSTED = "boosted", "Boosted",
+    FILTER = "filter", "Фильтр"
+
+
 class Settings(models.Model):
+    """
+    Настройки покупки токенов.
+    """
+    name = models.CharField(
+        max_length=512,
+        verbose_name="Название"
+    )
+    
+    # Основные настройки:
+    monitoring_rule = models.CharField(
+        max_length=64,
+        choices=MonitoringRule.choices,
+        default=MonitoringRule.BOOSTED,
+        verbose_name="Правильно мониторинга токенов"
+    )
+    mode = models.CharField(
+        max_length=64,
+        choices=Mode.choices,
+        default=Mode.BOOSTED,
+        verbose_name="Режим"
+    )
     filter = models.CharField(
         blank=True,
         null=True,
@@ -387,6 +416,8 @@ class Settings(models.Model):
         default="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
         verbose_name="Фильтр по умолчанию"
     )
+    
+    # Цена токена
     price_min = models.FloatField(
         blank=True, 
         null=True, 
@@ -397,6 +428,8 @@ class Settings(models.Model):
         null=True, 
         verbose_name="Максимальная стоимость"
     )
+    
+    # Возраст токена:
     token_age_min = models.FloatField(
         blank=True, 
         null=True, 
@@ -408,46 +441,90 @@ class Settings(models.Model):
         default=5,
         verbose_name="Максимальный возраст"
     )
-    transactions_buys_h1_min = models.IntegerField(
+    
+    # Количество покупок и продаж:
+    buys_m5_min = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное количество покупок (5 минут)"
+    )
+    buys_m5_max = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное количество покупок (5 минут)"
+    )
+    sells_m5_min = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное количество продаж (5 минут)"
+    )
+    sells_m5_max = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное количество продаж (5 минут)"
+    )
+    buys_h1_min = models.IntegerField(
         blank=True, 
         null=True, 
         verbose_name="Минимальное количество покупок (1 час)"
     )
-    transactions_buys_h1_max = models.IntegerField(
+    buys_h1_max = models.IntegerField(
         blank=True, 
         null=True, 
         verbose_name="Максимальное количество покупок (1 час)"
     )
-    transactions_sells_h1_min = models.IntegerField(
+    sells_h1_min = models.IntegerField(
         blank=True, 
         null=True, 
         verbose_name="Минимальное количество продаж (1 час)"
     )
-    transactions_sells_h1_max = models.IntegerField(
+    sells_h1_max = models.IntegerField(
         blank=True, 
         null=True, 
         verbose_name="Максимальное количество продаж (1 час)"
     )
-    total_transfers_min = models.IntegerField(
+    buys_h6_min = models.IntegerField(
         blank=True, 
         null=True, 
-        verbose_name="Минимальное количество трансферов"
+        verbose_name="Минимальное количество покупок (6 часов)"
     )
-    total_transfers_max = models.IntegerField(
+    buys_h6_max = models.IntegerField(
         blank=True, 
         null=True, 
-        verbose_name="Максимальное количество трансферов"
+        verbose_name="Максимальное количество покупок (6 часов)"
     )
-    total_transactions_min = models.IntegerField(
+    sells_h6_min = models.IntegerField(
         blank=True, 
         null=True, 
-        verbose_name="Минимальное количество транзакций"
+        verbose_name="Минимальное количество продаж (6 часов)"
     )
-    total_transactions_max = models.IntegerField(
+    sells_h6_max = models.IntegerField(
         blank=True, 
         null=True, 
-        verbose_name="Максимальное количество транзакций"
+        verbose_name="Максимальное количество продаж (6 часов)"
     )
+    buys_h24_min = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное количество покупок (24 часа)"
+    )
+    buys_h24_max = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное количество покупок (24 часа)"
+    )
+    sells_h24_min = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное количество продаж (24 часа)"
+    )
+    sells_h24_max = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное количество продаж (24 часа)"
+    )
+    
+    # Объём:
     volume_m5_min = models.FloatField(
         blank=True, 
         null=True, 
@@ -458,6 +535,38 @@ class Settings(models.Model):
         null=True, 
         verbose_name="Максимальный объём торгов (5 минут)"
     )
+    volume_h1_min = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальный объём торгов (1 час)"
+    )
+    volume_h1_max = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальный объём торгов (1 час)"
+    )
+    volume_h6_min = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальный объём торгов (6 часов)"
+    )
+    volume_h6_max = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальный объём торгов (6 часов)"
+    )
+    volume_h24_min = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальный объём торгов (24 часа)"
+    )
+    volume_h24_max = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальный объём торгов (24 часа)"
+    )
+    
+    # Изменение цены:
     price_change_m5_min = models.FloatField(
         blank=True, 
         null=True, 
@@ -468,17 +577,51 @@ class Settings(models.Model):
         null=True, 
         verbose_name="Максимальное изменение цены (5 минут)"
     )
+    price_change_h1_min = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное изменение цены (1 час)"
+    )
+    price_change_h1_max = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное изменение цены (1 час)"
+    )
+    price_change_h6_min = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное изменение цены (6 часов)"
+    )
+    price_change_h6_max = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное изменение цены (6 часов)"
+    )
+    price_change_h24_min = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Минимальное изменение цены (24 часа)"
+    )
+    price_change_h24_max = models.FloatField(
+        blank=True, 
+        null=True, 
+        verbose_name="Максимальное изменение цены (24 часа)"
+    )
+    
+    # Ликвидность:
     liquidity_min = models.FloatField(
         blank=True, 
         null=True, 
         default=1000,
-        verbose_name="Минимальная ликвидность (5 минут)"
+        verbose_name="Минимальная ликвидность"
     )
     liquidity_max = models.FloatField(
         blank=True, 
         null=True, 
-        verbose_name="Максимальная ликвидность (5 минут)"
+        verbose_name="Максимальная ликвидность"
     )
+    
+    # FDV:
     fdv_min = models.FloatField(
         blank=True, 
         null=True, 
@@ -489,6 +632,8 @@ class Settings(models.Model):
         null=True, 
         verbose_name="Максимальная FDV"
     )
+    
+    # Рыночная капитализация
     market_cap_min = models.FloatField(
         blank=True, 
         null=True, 
@@ -499,6 +644,8 @@ class Settings(models.Model):
         null=True, 
         verbose_name="Максимальная рыночная капитализация"
     )
+    
+    # Социальные сети:
     is_socio = models.BooleanField(
         default=False,
         verbose_name="Наличие хотя бы одной социальной сети или сайта"
@@ -515,6 +662,136 @@ class Settings(models.Model):
         default=False,
         verbose_name="Наличие сайта"
     )
+    
+    # Снайперы с токенами:
+    sns_held_all_min = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество снайперов, которые держат"
+    )
+    sns_held_all_max = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество снайперов, которые держат"
+    )
+    sns_sold_some_min = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество снайперов, продавших часть"
+    )
+    sns_sold_some_max = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество снайперов, продавших часть"
+    )
+    sns_sold_all_min = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество снайперов, продавших всё"
+    )
+    sns_sold_all_max = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество снайперов, продавших всё"
+    )
+    
+    # Сумма покупок снайперов:
+    sns_bought_sum_min = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальная сумма покупок снайперов"
+    )
+    sns_bought_sum_max = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальная сумма покупок снайперов"
+    )
+    
+    # Сумма продаж снайперов:
+    sns_sold_sum_min = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальная сумма продаж снайперов"
+    )
+    sns_sold_sum_max = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальная сумма продаж снайперов"
+    )
+    
+    # Количество отрицательных PNL у снайперов:
+    sns_pnl_loss_min = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество отрицательных PNL у снайперов"
+    )
+    sns_pnl_loss_max = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество отрицательных PNL у снайперов"
+    )
+    
+    # Снайперы без продажи или без покупки:
+    sns_no_bought = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество снайперов без покупки"
+    )
+    sns_no_sold = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество снайперов без продажи"
+    )
+    
+    # Сумма покупок топов:
+    tt_bought_sum_min = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальная сумма покупок топов"
+    )
+    tt_bought_sum_max = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальная сумма покупок топов"
+    )
+    
+    # Сумма продаж топов:
+    tt_sold_sum_min = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальная сумма продаж топов"
+    )
+    tt_sold_sum_max = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальная сумма продаж топов"
+    )
+    
+    # Количество отрицательных PNL у топов:
+    tt_pnl_loss_max = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество отрицательных PNL у топов"
+    )
+    tt_pnl_loss_max = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество отрицательных PNL у топов"
+    )
+    
+    # Топы без продажи или без покупки:
+    tt_no_bought = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Минимальное количество снайперов без покупки"
+    )
+    tt_no_sold = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Максимальное количество снайперов без продажи"
+    )
+    
+    # Риски:
     take_profit = models.FloatField(
         default=60,
         verbose_name="Take Profit"
@@ -523,16 +800,11 @@ class Settings(models.Model):
         default=-20,
         verbose_name="Stop Loss"
     )
-    mode = models.CharField(
-        max_length=64,
-        choices=Mode.choices,
-        default=Mode.DATA_COLLECTION,
-        verbose_name="Режим"
-    )
     
     class Meta:
         verbose_name = "Настройки"
         verbose_name_plural = "Настройки"
+        ordering = ['name']
 
     def __str__(self):
-        return "Настройки"
+        return self.name

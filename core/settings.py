@@ -24,6 +24,7 @@ INTERNAL_IPS = env("INTERNAL_IPS").split(" ")
 INSTALLED_APPS = [
     "dashboard",
     "django.contrib.admin",
+    "django_select2",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -269,3 +270,22 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 # Export
 
 EXPORT_FORMATS = [XLSX]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "select2": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+SELECT2_CACHE_BACKEND = "select2"

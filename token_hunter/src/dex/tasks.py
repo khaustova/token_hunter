@@ -24,13 +24,13 @@ def watching_dexscreener_task(self, filter: str) -> str:
 
 
 @app.task(bind=True, base=AbortableTask)
-def watching_boosted_tokens_task(self) -> str:
+def watching_boosted_tokens_task(self, settings_ids) -> str:
     """
     Обёртывает функцией синхронизации асинхронную функцию мониторинга boosts  
     токенов на DexScreener.
     """
     
-    async_to_sync(run_dexscreener_boosted_watcher)()
+    async_to_sync(run_dexscreener_boosted_watcher)(settings_ids)
 
     return "Мониторинг boosts токенов на Dexscreener закончен"
 

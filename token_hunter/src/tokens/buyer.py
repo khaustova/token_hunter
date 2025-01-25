@@ -2,7 +2,7 @@ import logging
 from telethon import TelegramClient
 import time
 from .tasks import track_tokens
-from .checker import TokenChecker
+from .checks import TokenChecker
 from ..utils.tasks_data import get_active_tasks
 from ..utils.tokens_data import (
     get_pairs_data, 

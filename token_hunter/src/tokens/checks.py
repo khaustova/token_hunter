@@ -3,8 +3,15 @@ import time
 import httpx
 import logging
 from httpx._config import Timeout
-from ..utils.tokens_data import get_pairs_data, get_token_age
 from ...models import Settings
+from ..utils.tokens_data import (
+    get_pairs_data, 
+    get_token_age,
+    get_sum,
+    count_pnl_loss,
+    count_zero,
+    
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +22,27 @@ class TokenChecker:
         self.token_address = self.token_data["baseToken"]["address"]
         self.token_name = self.token_data["baseToken"]["name"]
         self.settings = Settings.objects.all().first()
+        self.check_functions = []
+        
+    def get_checks(self):
+        if self.settings.price_max:
+            self.check_functions.append(self.check_max_price)
+            print("Новая функция добавлена")
+            
+    def check_token(self):
+        for check in self.check_functions:
+            if not check():
+                print("Проверка не пройдена")
+                return
+        print("Проверка пройдена")
+        
+    
+    def check_max_price(self):
+        if 10 > self.settings.price_max:
+            return False
+        
+        return True  
+        
 
     def check_price(self) -> bool:
         """

@@ -14,7 +14,7 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.admin.templatetags.admin_list import result_list
 from django.contrib.admin.templatetags.base import InclusionAdminNode
 from django.core.paginator import Paginator
-from token_hunter.forms import DexscreenerForm, CheckTokenForm
+from token_hunter.forms import SettingsForm, CheckTokenForm
 from token_hunter.models import TopTrader, Transaction, Status
 from token_hunter.src.utils.tasks_data import get_dexscreener_worker_tasks_ids
 from token_hunter.src.utils.tokens_data import get_pairs_data
@@ -247,13 +247,13 @@ def get_wallet_link(address: str) -> str:
 
 
 @register.simple_tag(takes_context=True)
-def get_dexscreener_form(context: template.Context) -> str:
+def get_settings_form(context: template.Context) -> str:
     """
     Добавляет в контекст форму для мониторинга или парсинга DexScreener.
     """
     
-    dexscreener_form = DexscreenerForm()
-    context["dexscreener_form"] = dexscreener_form
+    settings_form = SettingsForm()
+    context["settings_form"] = settings_form
     
     return "Dexscreener"
 
@@ -277,8 +277,8 @@ def get_watcher_tasks_id() -> str:
     """
     
     worker_tasks_ids = get_dexscreener_worker_tasks_ids()
-    
-    return worker_tasks_ids
+    is_tasks = any(worker_tasks_ids.values())
+    return is_tasks
 
 
 @register.tag(name="transactions_result_list")

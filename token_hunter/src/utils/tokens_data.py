@@ -131,3 +131,47 @@ def get_socials_info(data) -> dict:
                 socials_info["is_telegram"] = True
                 
     return socials_info
+
+
+def count_pnl_loss(bought_str: str, sold_str: str) -> int:
+    """
+    Возвращает количество отрицательных PNL.
+    """
+    try:
+        bought_lst = [float(x) for x in bought_str.split(" ")]
+        sold_lst = [float(x) for x in sold_str.split(" ")]
+        pnl_lst = [sold - bought if sold else 0 for bought, sold in zip(bought_lst, sold_lst)]
+        
+        pnl_loss = sum(i < 0 for i in pnl_lst)
+        
+        return pnl_loss
+    except:
+        return 
+        
+
+def get_sum(num_str: str) -> float:
+    """
+    Вовзращает сумму чисел в строке.
+    """
+    
+    try:
+        num_lst = [float(x) for x in num_str.split(" ")]
+        num_sum = sum(num_lst)
+        
+        return num_sum
+    except:
+        return
+
+
+def count_zero(num_str: str) -> int:
+    """
+    Возвращает количество нулей в строке.
+    """
+    
+    try:
+        num_lst = [float(x) for x in num_str.split(" ")]
+        count_zero = num_lst.count(0)
+        
+        return count_zero
+    except:
+        return

@@ -14,13 +14,16 @@ from nodriver.core.config import Config
 from telethon import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
 from ..tokens.buyer import TokenBuyer
-from ..tokens.checker import TokenChecker
+from ..tokens.checks import TokenChecker
 from ..utils.tokens_data import (
     get_pairs_data,
     get_pairs_count, 
     get_latest_boosted_tokens, 
     get_token_data,
-    get_token_age
+    get_token_age,
+    get_sum,
+    count_pnl_loss,
+    count_zero
 )
 from ...models import TopTrader, Transaction, Mode
 
@@ -114,7 +117,7 @@ class DexScreener():
                     #     black_list.append(link)
                     #     continue
                         
-                    snipers_data, top_traders_data = await self.get_transactions_info(pairs)
+                    snipers_data, top_traders_data = await self.get_transactions_data(pairs)
 
                     twitter_data, telegram_data = None, None
                     if token_checker.token_data.get("info"):
@@ -178,26 +181,30 @@ class DexScreener():
                     black_list.append(token_address)
                     continue
                 
+                token_checker = TokenChecker(token_data.get("pairAddress"))
+                token_checker.get_checks()
+                
+                
                 #if not BOOSTED_TOKENS.get(token_address):
-                rugcheck = await self.rugcheck(token["tokenAddress"])
-                risk_level = rugcheck["risk_level"]
-                is_mutable_metadata = rugcheck["is_mutable_metadata"]
-                logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
+                # rugcheck = await self.rugcheck(token["tokenAddress"])
+                # risk_level = rugcheck["risk_level"]
+                # is_mutable_metadata = rugcheck["is_mutable_metadata"]
+                # logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
 
-                if risk_level == None:
-                    continue
-                if risk_level != "Good":
-                    black_list.append(token_address)
-                    continue
+                # if risk_level == None:
+                #     continue
+                # if risk_level != "Good":
+                #     black_list.append(token_address)
+                #     continue
 
                 total_transfers = None
-                #is_mutable_metadata = False
+                is_mutable_metadata = False
                 snipers_data, top_traders_data = None, None
                 twitter_data, telegram_data = None, None
                 price_change = None
                 #total_transfers = await self.get_total_transfers(token["tokenAddress"])
                     
-                snipers_data, top_traders_data = await self.get_transactions_info(token_data.get("pairAddress"))
+                snipers_data, top_traders_data = await self.get_transactions_data(token_data.get("pairAddress"))
 
                 #twitter_data, telegram_data = await self.get_social_data(token.get("links"))
                 
@@ -215,10 +222,10 @@ class DexScreener():
                 token_age = get_token_age(upd_token_data["pairCreatedAt"])
                 
                 if snipers_data and top_traders_data:
-                    sns_pnl_loss = await self.count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
-                    tt_pnl_loss = await self.count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
-                    tt_no_bought = await self.count_zero(top_traders_data["bought"])
-                    tt_bought_sum = await self.get_sum(top_traders_data["bought"])
+                    sns_pnl_loss = await count_pnl_loss(snipers_data["bought"], snipers_data["sold"])
+                    tt_pnl_loss = await count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"])
+                    tt_no_bought = await count_zero(top_traders_data["bought"])
+                    tt_bought_sum = await get_sum(top_traders_data["bought"])
                 
                     if (upd_token_data.get("txns", {}).get("m5", {}).get("sells")
                         and upd_token_data["txns"]["m5"]["sells"] < 400 
@@ -239,7 +246,7 @@ class DexScreener():
 
                         mode = Mode.REAL
                     
-                time.sleep(30)
+                time.sleep(20)
                 price_30s = float(get_pairs_data(token_data.get("pairAddress"))[0]["priceUsd"])
                 price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
                 
@@ -256,10 +263,10 @@ class DexScreener():
                     
                     
             
-    async def get_transactions_info(self, pairs: str) -> tuple:
+    async def get_transactions_data(self, pairs: str) -> tuple:
         """
-        Открывает страницу токена и сохраняет информацию о транзакциях
-        снайперов и топ трейдеров.
+        Открывает страницу токена на DexScreener и сохраняет данные 
+        о транзакциях снайперов и топ трейдеров.
         """
 
         page = await self.browser.get(
@@ -290,47 +297,7 @@ class DexScreener():
         
         return (snipers_data, top_traders_data)
     
-    async def count_pnl_loss(self, bought_str: str, sold_str: str) -> int:
-        """
-        Возвращает количество отрицательных PNL.
-        """
-        try:
-            bought_lst = [float(x) for x in bought_str.split(" ")]
-            sold_lst = [float(x) for x in sold_str.split(" ")]
-            pnl_lst = [sold - bought if sold else 0 for bought, sold in zip(bought_lst, sold_lst)]
-            
-            pnl_loss = sum(i < 0 for i in pnl_lst)
-            
-            return pnl_loss
-        except:
-            return 100
-        
-    async def get_sum(self, num_str: str) -> float:
-        """
-        Возвращает сумму покупок или продаж
-        """
-        
-        try:
-            num_lst = [float(x) for x in num_str.split(" ")]
-            num_sum = sum(num_lst)
-            
-            return num_sum
-        except:
-            return 1000000
-        
-    async def count_zero(self, num_str: str) -> int:
-        """
-        Возвращает количество нулей в строке.
-        """
-        try:
-            num_lst = [float(x) for x in num_str.split(" ")]
-            count_zero = num_lst.count(0)
-            
-            return count_zero
-        except:
-            return 1000000
-        
-    
+
     async def get_social_data(self, socials_data: dict) -> tuple:
         """
         Возвращает данные о телеграме и твиттере токена.
@@ -437,7 +404,6 @@ class DexScreener():
             snipers_spans = divs.find_all("span")
             bought = await self._get_list_element_by_index(snipers_spans, 5)
             sold = "-"
-            pnl = 0
             
             operation = await self._get_list_element_by_index(snipers_spans, 2)
             if operation == "Held all":
@@ -457,12 +423,10 @@ class DexScreener():
                         
                     if sold != "-":
                         sold = await self._clear_number(sold)
-                        pnl = sold - bought
                 else:
                     sold = await self._get_list_element_by_index(snipers_spans, 6)
                     if sold != "-":
                         sold = await self._clear_number(sold)
-                        pnl = sold
   
             if bought != "-":
                 bought_lst.append(bought)
@@ -832,13 +796,15 @@ async def run_dexscreener_watcher(filter):
     await dexscreener.monitor_tokens(filter)
     
 
-async def run_dexscreener_boosted_watcher():  
+async def run_dexscreener_boosted_watcher(settings_ids):  
     """
     Инициализирует браузер и запускает парсинг топов кошельков DesScreener.
     """  
     
     config = Config(headless=False)
    # config.add_extension("./extensions/captcha_solver")
+    for s in settings_ids:
+        print(s)
     browser = await uc.start(config=config, sandbox=False)
     boosted_worker = DexScreener(browser)
     await boosted_worker.monitoring_boosted_tokens()

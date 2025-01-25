@@ -4,6 +4,12 @@
 
 {% block title %}{{ customization.title }}{% endblock %}
 
+{% block extrahead %}
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css">
+<script src="{% static 'django_select2/django_select2.js' %}"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+{% endblock %}
+
 {% block content %}
   {% get_apps as apps %}
   {% if apps %}
@@ -14,33 +20,27 @@
       {% block content-apps %}
 
       <div class="content-card">
-        <h4 class="content-card__title">{% get_dexscreener_form %}</h4>
+        <h4 class="content-card__title">{% get_settings_form %}</h4>
         <form class="parsing__form" action="{% url 'token_hunter:watch_dexscreener' %}" method="POST">
           {% csrf_token %}
-          {% for field in dexscreener_form %}
+          <div class="settings_wrapper">
+          {% for field in settings_form %}
             {{ field.label_tag }}
             {{ field }}
             {% if field.errors %}
               <div class="error">{{ field.errors }}</div>
             {% endif %}
           {% endfor %}
+          </div>
+            
           <div class="parsing-buttons_wrapper">
             {% get_watcher_tasks_id as watcher_tasks_ids %}
-            {% if watcher_tasks_ids.watching_task_id != None %}
+            {% if watcher_tasks_ids %}
               <button class="watcher__button watcher-stop__button" id="stop-monitoring-button" type="submit" name="_stop_monitoring">Остановить мониторинг Dexscreener ⛔</button>
-            {% elif watcher_tasks_ids.watching_task_id == None %}
+            {% else %}
               <button 
               class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring" 
               {% if watcher_tasks_ids.parsing_task_id %} disabled="true"{% endif %}>Мониторинг Dexscreener 👀</button>
-            {% endif %}
-
-            {% get_watcher_tasks_id as watcher_tasks_ids %}
-            {% if watcher_tasks_ids.boosted_task_id != None %}
-            <button class="watcher__button watcher-stop__button" id="stop-boosted-monitoring-button" type="submit" name="_stop_boosted_monitoring">Остановить мониторинг boosted токенов ⛔</button>
-            {% elif watcher_tasks_ids.boosted_task_id == None %}
-            <button 
-            class="watcher__button" id="watch-dex-button" type="submit" name="_boosted_monitoring" 
-            {% if watcher_tasks_ids.parsing_task_id and watcher_tasks_ids.watching_task_id %} disabled="true"{% endif %}>Мониторинг boosted токенов ⚡</button>
             {% endif %}
 
             {% get_watcher_tasks_id as watcher_tasks_ids %}

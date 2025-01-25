@@ -4,8 +4,8 @@ from core.celery import app
 from datetime import datetime
 from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
 from django.views.decorators.http import require_POST
-from .forms import DexscreenerForm
-from .models import Transaction, Status, Settings
+from .forms import SettingsForm
+from .models import Transaction, Status, Settings, MonitoringRule
 from .src.dex.tasks import (
     watching_dexscreener_task, 
     watching_boosted_tokens_task,
@@ -31,7 +31,7 @@ def watch_dexscreener(request: HttpRequest):
     или мониторинга DexScreener для поиска и покупки токенов.
     """
     
-    form = DexscreenerForm(request.POST)
+    form = SettingsForm(request.POST)
     if form.is_valid():
         
         if "_parsing" in request.POST:
@@ -48,34 +48,41 @@ def watch_dexscreener(request: HttpRequest):
             logger.info(f"Запущена задача парсинга топа кошельков на DexScreener {process.id}")
                 
         elif "_monitoring" in request.POST:
-            if form.cleaned_data["filter"]:
-                filter = form.cleaned_data["filter"]  
+            if form.cleaned_data["settings"]: 
+                settings_qs = form.cleaned_data["settings"]
+                monitoring_rule = form.cleaned_data["monitoring_rule"]
             else:
-                filter = FILTER
+                settings_qs = Settings.objects.all()
+                monitoring_rule = MonitoringRule.BOOSTED
                 
-            process = watching_dexscreener_task.delay(filter)
-            logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
-            
-        elif "_boosted_monitoring" in request.POST:
-            monitoring = watching_boosted_tokens_task.delay()
+            settings_ids= []
+            for settings in settings_qs:
+                    settings_ids.append(settings.id)
+          
+            if monitoring_rule == MonitoringRule.BOOSTED:
+                monitoring = watching_boosted_tokens_task.delay(settings_ids=settings_ids)
+                logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
+                
+            elif monitoring_rule == MonitoringRule.FILTER:
+                process = watching_dexscreener_task.delay(FILTER)
+                logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
+                
             tracking_price = track_tokens.delay()
-            logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
             logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id}")
             
         elif "_stop_monitoring" in request.POST:
             tasks_ids = get_dexscreener_worker_tasks_ids()
-            task_id = tasks_ids["watching_task_id"]
-                
-            app.control.revoke(task_id, terminate=True)
-            logger.info(f"Выполнение задачи {task_id}  мониторинга DexScreener остановлено")
             
-        elif "_stop_boosted_monitoring" in request.POST:
-            tasks_ids = get_dexscreener_worker_tasks_ids()
-            task_id = tasks_ids["boosted_task_id"]
-                
-            app.control.revoke(task_id, terminate=True)
-            logger.info(f"Выполнение задачи {task_id} мониторинга boosted токенов на DexScreener остановлено")
+            watching_task_id = tasks_ids.get("watching_task_id")
+            if watching_task_id:      
+                app.control.revoke(watching_task_id, terminate=True)
+                logger.info(f"Остановлена задача {watching_task_id}  мониторинга DexScreener")
             
+            boosted_task_id = tasks_ids.get("boosted_task_id")
+            if boosted_task_id:
+                app.control.revoke(boosted_task_id, terminate=True)
+                logger.info(f"Остановлена задача {boosted_task_id} мониторинга boosted токенов на DexScreener")
+                
         elif "_stop_parsing" in request.POST:
             tasks_ids = get_dexscreener_worker_tasks_ids()
             task_id = tasks_ids["parsing_task_id"]

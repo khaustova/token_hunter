@@ -25,10 +25,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'dashboard/img/icons/favicon-16x16.png' %}">
   <link rel="manifest" href="{% static 'dashboard/img/icons/site.webmanifest' %}">
 
+  <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
   {% block extrastyle %}{% endblock %}
   {% block extrahead %}{% endblock %}
-
-  <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
 </head>
 
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %} {% sidebar_status request %}" data-admin-utc-offset="{% now "Z" %}">
@@ -75,13 +74,6 @@
                   light_mode
                 </span>
               </button>
-            </div>
-            <div>
-              {% if site_url %}
-                <a href="{{ site_url }}" target="_blank">
-                  {% translate 'View site' %}
-                </a>&nbsp;/&nbsp;
-              {% endif %}
             </div>
             <div class="user">
               <span class="user__welcome">{% trans 'Welcome,' %}</span>

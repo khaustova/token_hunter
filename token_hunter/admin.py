@@ -46,13 +46,14 @@ class TransactionAdmin(ImportExportModelAdmin):
 
 @admin.register(Settings)
 class SettingsAdmin(admin.ModelAdmin):
+    list_display = ("name",)
 
-    def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        first_obj = self.model.objects.first()
-        if first_obj is not None:
-            return redirect(reverse('admin:token_hunter_settings_change', args=(first_obj.pk,)))
-        return redirect(reverse('admin:token_hunter_settings_add'))
+    # def changelist_view(self, request, extra_context=None):
+    #     extra_context = extra_context or {}
+    #     first_obj = self.model.objects.first()
+    #     if first_obj is not None:
+    #         return redirect(reverse('admin:token_hunter_settings_change', args=(first_obj.pk,)))
+    #     return redirect(reverse('admin:token_hunter_settings_add'))
     
 
 

@@ -8,10 +8,11 @@ from django_telethon.urls import django_telethon_urls
 admin.autodiscover()
 
 urlpatterns = [
+    path("__debug__/", include(debug_toolbar.urls)),
+    path("select2/", include("django_select2.urls")),
     path("", include("token_hunter.urls")),
     path("", admin.site.urls),
     path('telegram/', django_telethon_urls()),
-    path("__debug__/", include(debug_toolbar.urls)),
 ]
 
 if bool(settings.DEBUG):
