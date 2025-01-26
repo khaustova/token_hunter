@@ -3,34 +3,6 @@ from django.urls import reverse_lazy
 from django_select2.forms import ModelSelect2TagWidget, Select2Widget
 from .models import Settings, MonitoringRule        
 
-# class DexscreenerForm(forms.Form):
-#     """
-#     Форма с параметрами для парсинга и мониторинга DexScreener.
-#     """
-    
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.label_suffix = ""
-        
-#     filter = forms.CharField(
-#         required=False,
-#         widget=forms.TextInput(
-#             attrs={
-#                 'placeholder': 'По умолчанию парсится по рейтингу трендов за 6 часов'
-#             }
-#         ),
-#         label="Введите фильтр для поиска токена:",
-#     )
-#     pages = forms.CharField(
-#         required=False, 
-#         widget=forms.NumberInput(
-#             attrs={
-#                 'placeholder': 'По умолчанию парсится первая страница'
-#                 }
-#             ),
-#         label="Введите количество страниц:",
-#     )
-#     monitoring_rule = forms.ChoiceField
 
 class SettingsSelect2TagWidget(ModelSelect2TagWidget):
     queryset = Settings.objects.all()
