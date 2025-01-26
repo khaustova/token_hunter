@@ -133,6 +133,10 @@ def sell_token(request: HttpRequest, transaction_id: int):
 
 
 class PNLCountAPI(APIView):
+    """
+    API для получения данных по PNL для построения графика.
+    """
+    
     serializer_class = TransactionSerializer
 
     def get(self, request):
