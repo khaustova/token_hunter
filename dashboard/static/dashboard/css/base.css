@@ -866,3 +866,74 @@ to {
     width: 1.25em;    
 }
 }
+
+.tabs { 
+    width: 100%; 
+    min-height: 250px;
+    padding: 0px; 
+    margin: 0 auto; 
+    position: relative; 
+  } 
+
+
+input.pnl__input { 
+    display: none; 
+} 
+
+label.pnl__label { 
+    display: block; 
+    width: 170px; 
+    padding: 5px; 
+    color: var(--color-accent); 
+    background: transparent; 
+    cursor: pointer; 
+} 
+
+label.pnl__label[for="pnlRealTab"] { 
+    margin-top: 30px;
+} 
+
+input.pnl__input:checked + label.pnl__label { 
+    color: var(--color-text); 
+    background: transparent; 
+} 
+
+.pnl__pie {
+    height: 250px;
+}
+
+#pnlRealTab:checked ~ #pnlRealContent, 
+#pnlEmulationTab:checked ~ #pnlEmulationContent, 
+#pnlCollectionTab:checked ~ #pnlCollectionContent,
+#pnlBoostedTab:checked ~ #pnlBoostedContent { 
+    display: block; 
+} 
+
+section.pnl__section { 
+    display: none;  
+    padding: 5px; 
+    background: transparent; 
+    position: absolute; 
+    top: 0; 
+    left: 100px; 
+    margin: 0 auto;
+    width: calc(100% - 100px);
+    animation: scale 0.7s ease-in-out; 
+} 
+
+@keyframes scale { 
+    0% { 
+        transform: scale(0.9); 
+        opacity: 0; 
+    } 
+    50% { 
+        transform: scale(1.005); 
+        opacity: 0.5; 
+    } 
+    100% { 
+        transform: scale(1); 
+        opacity: 1; 
+    } 
+}
+
+

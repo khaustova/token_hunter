@@ -4,8 +4,11 @@ from core.celery import app
 from datetime import datetime
 from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
 from django.views.decorators.http import require_POST
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from .forms import SettingsForm
-from .models import Transaction, Status, Settings, MonitoringRule
+from .models import Transaction, Status, Settings, MonitoringRule, Mode
+from .serializers import TransactionSerializer
 from .src.dex.tasks import (
     watching_dexscreener_task, 
     watching_boosted_tokens_task,
@@ -127,3 +130,16 @@ def sell_token(request: HttpRequest, transaction_id: int):
     transaction.save()
 
     return HttpResponseRedirect("/token_hunter/transaction")
+
+
+class PNLCountAPI(APIView):
+    serializer_class = TransactionSerializer
+
+    def get(self, request):
+        pnl_counts = {}
+        for mode in Mode:
+            pnl_profit = Transaction.objects.filter(mode=mode, PNL__gte=60).count()
+            pnl_loss = Transaction.objects.filter(mode=mode, PNL__lt=60).count()
+            pnl_counts[mode] = [pnl_profit, pnl_loss]
+            
+        return Response(pnl_counts)

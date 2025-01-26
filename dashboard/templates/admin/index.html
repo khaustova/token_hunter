@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css">
 <script src="{% static 'django_select2/django_select2.js' %}"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+<script src="{% static "dashboard/js/transaction_chart.js" %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script> 
 {% endblock %}
 
 {% block content %}
@@ -173,7 +175,42 @@
           </div>
       </div>
 
-      <div class="content-card" id="recent-actions-module">
+      <div class="content-card">
+        <h4 class="content-card__title">Статистика</h4>
+
+        <div class="tabs views"> 
+          <input class="pnl__input" id="pnlRealTab" type="radio" name="pnl" checked> 
+          <label class="pnl__label" for="pnlRealTab">Реальная покупка</label> 
+          <input class="pnl__input" id="pnlEmulationTab" type="radio" name="pnl"> 
+          <label class="pnl__label" for="pnlEmulationTab">Эмуляция</label> 
+          <input class="pnl__input" id="pnlCollectionTab" type="radio" name="pnl"> 
+          <label class="pnl__label" for="pnlCollectionTab">Сбор данных</label>
+          <input class="pnl__input" id="pnlBoostedTab" type="radio" name="pnl"> 
+          <label class="pnl__label" for="pnlBoostedTab">Boosted</label> 
+          <section class="pnl__section" id="pnlRealContent"> 
+            <div class="pnl__pie">
+              <canvas id="realPNL"></canvas>
+            </div>
+          </section>   
+          <section class="pnl__section" id="pnlEmulationContent"> 
+            <div class="pnl__pie">
+              <canvas id="emulationPNL"></canvas>
+            </div>
+          </section>
+          <section class="pnl__section" id="pnlCollectionContent"> 
+            <div class="pnl__pie">
+              <canvas id="dataCollectionPNL"></canvas>
+            </div>
+          </section> 
+          <section class="pnl__section" id="pnlBoostedContent"> 
+            <div class="pnl__pie">
+              <canvas id="boostedPNL"></canvas>
+            </div>
+          </section> 
+        </div> 
+      </div>
+
+      {% comment %} <div class="content-card" id="recent-actions-module">
         <h4 class="content-card__title">{% trans 'Recent actions' %}</h4>
         {% load log %}
         {% get_admin_log 10 as admin_log for_user user %}
@@ -236,7 +273,7 @@
             {% endfor %}
           </div>
         {% endif %}
-      </div>
+      </div> {% endcomment %}
     </div>
   </div>
 

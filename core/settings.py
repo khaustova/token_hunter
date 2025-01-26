@@ -24,6 +24,7 @@ INTERNAL_IPS = env("INTERNAL_IPS").split(" ")
 INSTALLED_APPS = [
     "dashboard",
     "django.contrib.admin",
+    "rest_framework",
     "django_select2",
     "django.contrib.auth",
     "django.contrib.contenttypes",
