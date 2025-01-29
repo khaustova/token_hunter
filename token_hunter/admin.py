@@ -47,6 +47,8 @@ class TransactionAdmin(ImportExportModelAdmin):
 @admin.register(Settings)
 class SettingsAdmin(admin.ModelAdmin):
     list_display = ("name",)
+    
+    change_form_template = 'dashboard/settings.html'
 
     # def changelist_view(self, request, extra_context=None):
     #     extra_context = extra_context or {}

@@ -1,0 +1,1122 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+  <script src="{% url 'admin:jsi18n' %}"></script>
+  {{ media }}
+  <link rel="stylesheet" href="{% static "dashboard/css/spoiler.css" %}">
+  <script src="{% static "dashboard/js/spoiler.js" %}"></script>
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+{% if not is_popup %}
+  {% block breadcrumbs %}
+    <div class="breadcrumbs">
+      <a href="{% url 'admin:index' %}">
+        <span class="material-symbols-outlined breadcrumbs-icon">
+          home
+        </span>
+      </a>
+      &nbsp;&#47;&nbsp;<a href="{% url 'admin:app_list' app_label=opts.app_label %}">
+      {{ opts.app_config.verbose_name }}
+      </a>
+      &nbsp;&#47;&nbsp; 
+      {% if has_view_permission %}
+        <a href="{% url opts|admin_urlname:'changelist' %}">
+          {{ opts.verbose_name_plural|capfirst }}
+        </a>
+      {% else %}
+        {{ opts.verbose_name_plural|capfirst }}
+      {% endif %}&nbsp;&#47;
+      {% if add %}
+        {% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}
+      {% else %}
+        {{ original|truncatewords:"18" }}
+      {% endif %}
+    </div>
+  {% endblock %}
+{% endif %}
+{% block content %}
+  <div id="content-main">
+    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+      <div {% if not is_popup %} class="content_wrapper"{% endif %}>
+        <div class="content-change-form content-card">
+          {% block object-tools %}
+            {% if change and not is_popup %}
+              <ul class="object-tools">
+                {% block object-tools-items %}
+                  {% change_form_object_tools %}
+                {% endblock %}
+              </ul>
+            {% endif %}
+          {% endblock %}
+          {% if is_popup %}
+            <input type="hidden" name="{{ is_popup_var }}" value="1">
+          {% endif %}
+          {% if to_field %}
+            <input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">
+          {% endif %}
+          {% if save_on_top %}
+            {% block submit_buttons_top %}{% submit_row %}{% endblock %}
+          {% endif %}
+          {% if errors %}
+            <div class="errornote">
+              {% if errors|length == 1 %}
+                {% trans "Please correct the error below." %}
+              {% else %}
+                {% trans "Please correct the errors below." %}
+              {% endif %}
+            </div>
+            {{ adminform.form.non_field_errors }}
+          {% endif %}
+          {% block field_sets %}
+          <fieldset class="module aligned settings-form">
+            <h2>Настройки мониторинга</h2>
+            <div class="form-row field-name">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_name">Название:</label>
+                  <input type="text" name="name" value="Настройки 0.1" class="vTextField" maxlength="512" required
+                    id="id_name">
+                </div>
+              </div>
+            </div>
+            <div class="form-row field-monitoring_rule">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_monitoring_rule">Правильно мониторинга токенов:</label>
+                  <select name="monitoring_rule" id="id_monitoring_rule">
+                    <option value="boosted" selected>Boosted</option>
+                    <option value="filter">Фильтр</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row field-mode">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_mode">Режим:</label>
+                  <select name="mode" id="id_mode">
+                    <option value="data_collection" selected>Сбор данных</option>
+                    <option value="emulation">Эмуляция</option>
+                    <option value="boosted">Boosted</option>
+                    <option value="real">Реальная покупка</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-row field-filter">
+              <div>
+                <div class="flex-container">
+                  <label for="id_filter">Фильтр по умолчанию:</label>
+                  <input type="text" name="filter" class="vTextField" maxlength="1024" id="id_filter">
+                </div>
+              </div>
+            </div>
+
+            <h2>Данные о токене</h2>
+            <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Возраст токена</div>
+              
+              <div class="spoiler-content" style="display:none">
+                <div class="settings-form_max-min">
+                  <div class="form-row field-price_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_price_min">Минимальная стоимость:</label>
+                        <input type="number" name="price_min" step="any" id="id_price_min">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-price_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_price_max">Максимальная стоимость:</label>
+                        <input type="number" name="price_max" step="any" id="id_price_max">
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+              </div>
+            </div>
+
+            <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Стоимость токена</div>
+              
+              <div class="spoiler-content" style="display:none">
+                <div class="settings-form_max-min">
+                  <div class="form-row field-token_age_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_token_age_min">Минимальный возраст:</label>
+                        <input type="number" name="token_age_min" step="any" id="id_token_age_min">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-token_age_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_token_age_max">Максимальный возраст:</label>
+                        <input type="number" name="token_age_max" step="any" id="id_token_age_max">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Количество покупок</div>
+              
+              <div class="spoiler-content" style="display:none">
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_m5_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_m5_min">Минимальное количество покупок (5 минут):</label>
+                        <input type="number" name="buys_m5_min" class="vIntegerField" id="id_buys_m5_min">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_m5_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_m5_max">Максимальное количество покупок (5 минут):</label>
+                        <input type="number" name="buys_m5_max" class="vIntegerField" id="id_buys_m5_max">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_h1_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h1_min">Минимальное количество покупок (1 час):</label>
+                        <input type="number" name="buys_h1_min" class="vIntegerField" id="id_buys_h1_min">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_h1_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h1_max">Максимальное количество покупок (1 час):</label>
+                        <input type="number" name="buys_h1_max" class="vIntegerField" id="id_buys_h1_max">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_h6_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h6_min">Минимальное количество покупок (6 часов):</label>
+                        <input type="number" name="buys_h6_min" class="vIntegerField" id="id_buys_h6_min">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_h6_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h6_max">Максимальное количество покупок (6 часов):</label>
+                        <input type="number" name="buys_h6_max" class="vIntegerField" id="id_buys_h6_max">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_h24_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h24_min">Минимальное количество покупок (24 часа):</label>
+                        <input type="number" name="buys_h24_min" class="vIntegerField" id="id_buys_h24_min">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_h24_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h24_max">Максимальное количество покупок (24 часа):</label>
+                        <input type="number" name="buys_h24_max" class="vIntegerField" id="id_buys_h24_max">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Количество продаж</div>
+              
+              <div class="spoiler-content" style="display:none">
+              
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_m5_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_m5_min">Минимальное количество продаж (5 минут):</label>
+                  <input type="number" name="sells_m5_min" class="vIntegerField" id="id_sells_m5_min">
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_m5_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_m5_max">Максимальное количество продаж (5 минут):</label>
+                  <input type="number" name="sells_m5_max" class="vIntegerField" id="id_sells_m5_max">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_h1_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h1_min">Минимальное количество продаж (1 час):</label>
+                  <input type="number" name="sells_h1_min" class="vIntegerField" id="id_sells_h1_min">
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_h1_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h1_max">Максимальное количество продаж (1 час):</label>
+                  <input type="number" name="sells_h1_max" class="vIntegerField" id="id_sells_h1_max">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_h6_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h6_min">Минимальное количество продаж (6 часов):</label>
+                  <input type="number" name="sells_h6_min" class="vIntegerField" id="id_sells_h6_min">
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_h6_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h6_max">Максимальное количество продаж (6 часов):</label>
+                  <input type="number" name="sells_h6_max" class="vIntegerField" id="id_sells_h6_max">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_h24_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h24_min">Минимальное количество продаж (24 часа):</label>
+                  <input type="number" name="sells_h24_min" class="vIntegerField" id="id_sells_h24_min">
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_h24_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h24_max">Максимальное количество продаж (24 часа):</label>
+                  <input type="number" name="sells_h24_max" class="vIntegerField" id="id_sells_h24_max">
+                </div>
+              </div>
+            </div>
+          </div>
+              </div>
+            </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Объём торгов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_m5_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_m5_min">Минимальный объём торгов (5 минут):</label>
+                      <input type="number" name="volume_m5_min" step="any" id="id_volume_m5_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_m5_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_m5_max">Максимальный объём торгов (5 минут):</label>
+                      <input type="number" name="volume_m5_max" step="any" id="id_volume_m5_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_h1_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h1_min">Минимальный объём торгов (1 час):</label>
+                      <input type="number" name="volume_h1_min" step="any" id="id_volume_h1_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_h1_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h1_max">Максимальный объём торгов (1 час):</label>
+                      <input type="number" name="volume_h1_max" step="any" id="id_volume_h1_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_h6_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h6_min">Минимальный объём торгов (6 часов):</label>
+                      <input type="number" name="volume_h6_min" step="any" id="id_volume_h6_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_h6_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h6_max">Максимальный объём торгов (6 часов):</label>
+                      <input type="number" name="volume_h6_max" step="any" id="id_volume_h6_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_h24_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h24_min">Минимальный объём торгов (24 часа):</label>
+                      <input type="number" name="volume_h24_min" step="any" id="id_volume_h24_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_h24_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h24_max">Максимальный объём торгов (24 часа):</label>
+                      <input type="number" name="volume_h24_max" step="any" id="id_volume_h24_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Изменение цены</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">  
+                <div class="form-row field-price_change_m5_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_m5_min">Минимальное изменение цены (5 минут):</label>
+                      <input type="number" name="price_change_m5_min" step="any" id="id_price_change_m5_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_m5_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_m5_max">Максимальное изменение цены (5 минут):</label>
+                      <input type="number" name="price_change_m5_max" step="any" id="id_price_change_m5_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-price_change_h1_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h1_min">Минимальное изменение цены (1 час):</label>
+                      <input type="number" name="price_change_h1_min" step="any" id="id_price_change_h1_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_h1_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h1_max">Максимальное изменение цены (1 час):</label>
+                      <input type="number" name="price_change_h1_max" step="any" id="id_price_change_h1_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-price_change_h6_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h6_min">Минимальное изменение цены (6 часов):</label>
+                      <input type="number" name="price_change_h6_min" step="any" id="id_price_change_h6_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_h6_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h6_max">Максимальное изменение цены (6 часов):</label>
+                      <input type="number" name="price_change_h6_max" step="any" id="id_price_change_h6_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-price_change_h24_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h24_min">Минимальное изменение цены (24 часа):</label>
+                      <input type="number" name="price_change_h24_min" step="any" id="id_price_change_h24_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_h24_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h24_max">Максимальное изменение цены (24 часа):</label>
+                      <input type="number" name="price_change_h24_max" step="any" id="id_price_change_h24_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Ликвидность</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-liquidity_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_liquidity_min">Минимальная ликвидность:</label>
+                      <input type="number" name="liquidity_min" step="any" id="id_liquidity_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-liquidity_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_liquidity_max">Максимальная ликвидность:</label>
+                      <input type="number" name="liquidity_max" step="any" id="id_liquidity_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            FDV</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-fdv_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_fdv_min">Минимальная FDV:</label>
+                      <input type="number" name="fdv_min" step="any" id="id_fdv_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-fdv_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_fdv_max">Максимальная FDV:</label>
+                      <input type="number" name="fdv_max" step="any" id="id_fdv_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Рыночная капитализация</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-market_cap_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_market_cap_min">Минимальная рыночная капитализация:</label>
+                      <input type="number" name="market_cap_min" step="any" id="id_market_cap_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-market_cap_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_market_cap_max">Максимальная рыночная капитализация:</label>
+                      <input type="number" name="market_cap_max" step="any" id="id_market_cap_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Сайт и социальные сети</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="form-row field-is_socio">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    <input type="checkbox" name="is_socio" id="id_is_socio"><label class="vCheckboxLabel"
+                      for="id_is_socio">Наличие хотя бы одной социальной сети или сайта</label>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="form-row field-is_telegram">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    <input type="checkbox" name="is_telegram" id="id_is_telegram"><label class="vCheckboxLabel"
+                      for="id_is_telegram">Наличие Телеграма</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row field-is_twitter">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    <input type="checkbox" name="is_twitter" id="id_is_twitter"><label class="vCheckboxLabel"
+                      for="id_is_twitter">Наличие Твиттера</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row field-is_website">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    <input type="checkbox" name="is_website" id="id_is_website"><label class="vCheckboxLabel"
+                      for="id_is_website">Наличие сайта</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <h2>Данные о снайперах</div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Количество токенов у снайперов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_held_all_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_held_all_min">Минимальное количество снайперов, которые держат:</label>
+                      <input type="number" name="sns_held_all_min" class="vIntegerField" id="id_sns_held_all_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_held_all_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_held_all_max">Максимальное количество снайперов, которые держат:</label>
+                      <input type="number" name="sns_held_all_max" class="vIntegerField" id="id_sns_held_all_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_sold_some_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_sold_some_min">Минимальное количество снайперов, продавших часть:</label>
+                      <input type="number" name="sns_sold_some_min" class="vIntegerField" id="id_sns_sold_some_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_sold_some_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_sold_some_max">Максимальное количество снайперов, продавших часть:</label>
+                      <input type="number" name="sns_sold_some_max" class="vIntegerField" id="id_sns_sold_some_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_sold_all_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_sold_all_min">Минимальное количество снайперов, продавших всё:</label>
+                      <input type="number" name="sns_sold_all_min" class="vIntegerField" id="id_sns_sold_all_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_sold_all_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_sold_all_max">Максимальное количество снайперов, продавших всё:</label>
+                      <input type="number" name="sns_sold_all_max" class="vIntegerField" id="id_sns_sold_all_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Сумма покупок снайперов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_bought_sum_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_bought_sum_min">Минимальная сумма покупок снайперов:</label>
+                      <input type="number" name="sns_bought_sum_min" step="any" id="id_sns_bought_sum_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_bought_sum_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_bought_sum_max">Максимальная сумма покупок снайперов:</label>
+                      <input type="number" name="sns_bought_sum_max" step="any" id="id_sns_bought_sum_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Сумма продаж снайперов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_sold_sum_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_sold_sum_min">Минимальная сумма продаж снайперов:</label>
+                      <input type="number" name="sns_sold_sum_min" step="any" id="id_sns_sold_sum_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_sold_sum_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_sold_sum_max">Максимальная сумма продаж снайперов:</label>
+                      <input type="number" name="sns_sold_sum_max" step="any" id="id_sns_sold_sum_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            PNL снайперов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_pnl_loss_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_pnl_loss_min">Минимальное количество отрицательных PNL у снайперов:</label>
+                      <input type="number" name="sns_pnl_loss_min" class="vIntegerField" id="id_sns_pnl_loss_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_pnl_loss_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_pnl_loss_max">Максимальное количество отрицательных PNL у снайперов:</label>
+                      <input type="number" name="sns_pnl_loss_max" class="vIntegerField" id="id_sns_pnl_loss_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Снайперы без покупки</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_no_bought_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_no_bought_min">Минимальное количество снайперов без покупки:</label>
+                      <input type="number" name="sns_no_bought_min" class="vIntegerField" id="id_sns_no_bought_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_no_bought_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_no_bought_max">Максимальное количество снайперов без покупки:</label>
+                      <input type="number" name="sns_no_bought_max" class="vIntegerField" id="id_sns_no_bought_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Снайперы без продажи</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-sns_no_sold_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_no_sold_min">Минимальное количество снайперов без продажи:</label>
+                      <input type="number" name="sns_no_sold_min" class="vIntegerField" id="id_sns_no_sold_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-sns_no_sold_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_sns_no_sold_max">Максимальное количество снайперов без продажи:</label>
+                      <input type="number" name="sns_no_sold_max" class="vIntegerField" id="id_sns_no_sold_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h2>Данные о топах</h2>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Сумма покупок топов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_bought_sum_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_bought_sum_min">Минимальная сумма покупок топов:</label>
+                      <input type="number" name="tt_bought_sum_min" step="any" id="id_tt_bought_sum_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_bought_sum_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_bought_sum_max">Максимальная сумма покупок топов:</label>
+                      <input type="number" name="tt_bought_sum_max" step="any" id="id_tt_bought_sum_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Сумма продаж топов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_sold_sum_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_sold_sum_min">Максимальная сумма продаж топов:</label>
+                      <input type="number" name="tt_sold_sum_min" step="any" id="id_tt_sold_sum_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_sold_sum_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_sold_sum_max">Максимальная сумма продаж топов:</label>
+                      <input type="number" name="tt_sold_sum_max" step="any" id="id_tt_sold_sum_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            PNL топов</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_pnl_loss_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_pnl_loss_min">Максимальное количество отрицательных PNL у топов:</label>
+                      <input type="number" name="tt_pnl_loss_min" class="vIntegerField" id="id_tt_pnl_loss_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_pnl_loss_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_pnl_loss_max">Максимальное количество отрицательных PNL у топов:</label>
+                      <input type="number" name="tt_pnl_loss_max" class="vIntegerField" id="id_tt_pnl_loss_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Топы без покупки</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_no_bought_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_no_bought_min">Минимальное количество снайперов без покупки:</label>
+                      <input type="number" name="tt_no_bought_min" class="vIntegerField" id="id_tt_no_bought_min">
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_no_bought_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_no_bought_max">Максимальное количество снайперов без покупки:</label>
+                      <input type="number" name="tt_no_bought_max" class="vIntegerField" id="id_tt_no_bought_max">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Топы без продажи</div>
+            
+            <div class="spoiler-content" style="display:none">
+            
+          <div class="settings-form_max-min">
+            <div class="form-row field-tt_no_sold_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_tt_no_sold_min">Минимальное количество снайперов без продажи:</label>
+                  <input type="number" name="tt_no_sold_min" class="vIntegerField" id="id_tt_no_sold_min">
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-tt_no_sold_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_tt_no_sold_max">Максимальное количество снайперов без продажи:</label>
+                  <input type="number" name="tt_no_sold_max" class="vIntegerField" id="id_tt_no_sold_max">
+                </div>
+              </div>
+            </div>
+          </div>
+            </div>
+          </div>
+
+          <h2>Настройки прибыли</h2>
+            <div class="form-row field-take_profit">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_take_profit">Take Profit:</label>
+                  <input type="number" name="take_profit" value="60.0" step="any" required id="id_take_profit">
+                </div>
+              </div>
+            </div>
+            <div class="form-row field-stop_loss">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_stop_loss">Stop Loss:</label>
+                  <input type="number" name="stop_loss" value="-20.0" step="any" required id="id_stop_loss">
+                </div>
+              </div>
+            </div>
+          </fieldset>
+          {% endblock %}
+          {% block after_field_sets %}{% endblock %}
+          {% block inline_field_sets %}
+            {% for inline_admin_formset in inline_admin_formsets %}
+              {% include inline_admin_formset.opts.template %}
+            {% endfor %}
+          {% endblock %}
+          {% block after_related_objects %}{% endblock %}
+        </div>
+        {% block submit_buttons_bottom %}
+          <div class="content-submit-form">
+            {% submit_row %}
+          </div>
+        {% endblock %}
+        {% block admin_change_form_document_ready %}
+          <script id="django-admin-form-add-constants" src="{% static 'admin/js/change_form.js' %}"
+            {% if adminform and add %}
+              data-model-name="{{ opts.model_name }}"
+            {% endif %} async>
+          </script>
+        {% endblock %}
+      {# JavaScript for prepopulated fields #}
+      {% prepopulated_fields_js %}
+    </form>
+  </div>
+  <script type="text/javascript" src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+{% endblock %}
