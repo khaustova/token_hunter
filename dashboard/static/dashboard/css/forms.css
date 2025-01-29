@@ -112,7 +112,7 @@ a.deletelink {
 
 .form-row {
     overflow: hidden;
-    padding: 10px;
+    padding: 5px;
     font-size: 1.6rem;
 }
 
@@ -877,4 +877,45 @@ input.sell-button {
 input.sell-button:hover {
     background-color: #815a5a;
     cursor: pointer;
+}
+
+.settings-form label {
+    width: 100%;
+}
+
+.settings-form .flex-container {
+    flex-direction: column;
+}
+
+.settings-form .form-row,
+.settings-form .form-row .vTextField, 
+.settings-form .form-row .vLargeTextField, 
+.settings-form .form-row.vURLField, 
+.settings-form .form-row .vBigIntegerField, 
+.settings-form .form-row input[type="text"], 
+.settings-form .form-row input[type="email"], 
+.settings-form .form-row input[type="number"], 
+.settings-form .form-row input[type="password"], 
+.settings-form .form-row select {
+    width: 100%;
+}
+
+.settings-form_max-min {
+    display: flex;
+}
+
+.settings-form_dash {
+    display: flex;
+    align-self: end;
+    margin-bottom: 15px;
+}
+
+.settings-form .checkbox-row {
+    flex-direction: row;
+}
+
+.settings-form h2 {
+    background-color: transparent;
+    margin: 15px 0 5px 0;
+    font-size: 16px;
 }
