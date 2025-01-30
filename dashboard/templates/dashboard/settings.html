@@ -113,14 +113,14 @@
             <div class="spoiler">
               <div class="spoiler-title">
               <div class="show-icon spoiler-toggle">&nbsp;</div>
-              Возраст токена</div>
+              Цена токена</div>
               
               <div class="spoiler-content" style="display:none">
                 <div class="settings-form_max-min">
                   <div class="form-row field-price_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_price_min">Минимальная стоимость:</label>
+                        <label for="id_price_min">Минимальная цена:</label>
                         {{ adminform.form.price_min }}
                       </div>
                     </div>
@@ -131,7 +131,7 @@
                   <div class="form-row field-price_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_price_max">Максимальная стоимость:</label>
+                        <label for="id_price_max">Максимальная цена:</label>
                         {{ adminform.form.price_max }}
                       </div>
                     </div>
@@ -143,7 +143,7 @@
             <div class="spoiler">
               <div class="spoiler-title">
               <div class="show-icon spoiler-toggle">&nbsp;</div>
-              Стоимость токена</div>
+              Возраст токена</div>
               
               <div class="spoiler-content" style="display:none">
                 <div class="settings-form_max-min">
@@ -650,6 +650,36 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Boost</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-boost_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_boost_min">Минимальный boost:</label>
+                      {{ adminform.form.boost_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-boost_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_boost_max">Максимальный boost:</label>
+                      {{ adminform.form.boost_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
             Сайт и социальные сети</div>
             
             <div class="spoiler-content" style="display:none">
@@ -987,7 +1017,7 @@
                 <div class="form-row field-tt_pnl_loss_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_pnl_loss_min">Максимальное количество отрицательных PNL у топов:</label>
+                      <label for="id_tt_pnl_loss_min">Минимальное количество отрицательных PNL у топов:</label>
                       {{ adminform.form.tt_pnl_loss_min }}
                     </div>
                   </div>
