@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 5.0
 READ_TIMEOUT = 30.0
 
+
 def get_pairs_data(pairs: str | list[str]) -> dict:
     """
     Возвращает данные о токена или списке токенов с DexScreener по pairs.
@@ -110,27 +111,34 @@ def get_pairs_count(token_address: str) -> int:
     return count
 
 
-def get_socials_info(data) -> dict:
+def get_socials_data(token_data) -> dict:
     """
     Возвращает словарь, в котором определено наличие сайта, Твиттера 
     и Телеграма для токена token_address.
     """
     
-    socials_info = {"is_telegram": False, "is_twitter": False, "is_website": False}
+    socials_data= {
+        "is_telegram": False, 
+        "is_twitter": False, 
+        "is_website": False
+    }
     
-    if not data:
-        return socials_info
+    info = token_data.get("info", None)
     
-    if data.get("websites"):
-        socials_info["is_website"] = True
-    if data.get("socials"):
-        for socio in data.get("socials"):
+    if not info:
+        return socials_data
+    
+    if info.get("websites"):
+        socials_data["is_website"] = True
+        
+    if info.get("socials"):
+        for socio in info.get("socials"):
             if socio.get("type") == "twitter":
-                socials_info["is_twitter"] = True
+                socials_data["is_twitter"] = True
             elif socio.get("type") == "telegram":
-                socials_info["is_telegram"] = True
+                socials_data["is_telegram"] = True
                 
-    return socials_info
+    return socials_data
 
 
 def count_pnl_loss(bought_str: str, sold_str: str) -> int:

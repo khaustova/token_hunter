@@ -65,7 +65,7 @@ def watch_dexscreener(request: HttpRequest):
             if monitoring_rule == MonitoringRule.BOOSTED:
                 monitoring = watching_boosted_tokens_task.delay(settings_ids=settings_ids)
                 logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
-                
+                   
             elif monitoring_rule == MonitoringRule.FILTER:
                 process = watching_dexscreener_task.delay(FILTER)
                 logger.info(f"Запущена задача мониторинга DexScreener {process.id}")

@@ -7,9 +7,9 @@ from ..utils.tasks_data import get_active_tasks
 from ..utils.tokens_data import (
     get_pairs_data, 
     get_token_age, 
-    get_socials_info
+    get_socials_data
 )
-from ...models import Status, Transaction, Mode
+from ...models import Status, Settings, Transaction, Mode
 
 logger = logging.getLogger(__name__)
 
@@ -55,20 +55,20 @@ class TokenBuyer:
         top_traders_data: dict | None=None, 
         twitter_data: dict | None=None, 
         telegram_data: dict | None=None,
-        price_change_data: float | None=None
+        price_change_data: float | None=None,
+        settings_id: int | None=None,
     ):
         """
         Покупает токен и запускает задачу отслеживания стоимости токенов, если 
         она не запущена.
         """
+        
 
         token_data = get_pairs_data(self.pair)[0]
-        
-        socials_info = get_socials_info(token_data.get("info"))
         token_age = get_token_age(token_data["pairCreatedAt"])
         
         if token_data.get("info"):
-            socials_info = get_socials_info(token_data.get("info"))
+            socials_info = get_socials_data(token_data.get("info"))
         
         if not token_data["priceChange"].get("m5"):
             logger.error("Нет данных об изменении цены за 5 минут")
@@ -137,11 +137,14 @@ class TokenBuyer:
             
         if token_data.get("boosts"):
             transaction.boosts = token_data["boosts"].get("active")
-            transaction.save()
-
+           
+        if settings_id:
+            transaction.settings = Settings.objects.get(id=settings_id)
+            
+        transaction.save()
+            
         logger.info(f"Покупка токена {token_data["baseToken"]["name"]} за {token_data["priceUsd"]} USD") 
 
-        
     async def real_buy_token(self) -> None:
         """
         Покупка токена через бот Maestro

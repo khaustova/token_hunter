@@ -1,226 +1,503 @@
 import logging
-import time
-import httpx
 import logging
-from httpx._config import Timeout
-from ...models import Settings
 from ..utils.tokens_data import (
-    get_pairs_data, 
+    get_pairs_data,
+    get_socials_data,
     get_token_age,
     get_sum,
     count_pnl_loss,
     count_zero,
     
 )
+from ...models import Settings
 
 logger = logging.getLogger(__name__)
 
 
 class TokenChecker:
-    def __init__(self, pair: str):
-        self.token_data = get_pairs_data(pair)[0]
-        self.token_address = self.token_data["baseToken"]["address"]
-        self.token_name = self.token_data["baseToken"]["name"]
-        self.settings = Settings.objects.all().first()
-        self.check_functions = []
-        
-    def get_checks(self):
-        if self.settings.price_max:
-            self.check_functions.append(self.check_max_price)
-            print("Новая функция добавлена")
-            
-    def check_token(self):
-        for check in self.check_functions:
-            if not check():
-                print("Проверка не пройдена")
-                return
-        print("Проверка пройдена")
-        
+    def __init__(self, pair: str, check_settings: dict):
+        self.pair = pair
+        self.check_settings = check_settings
     
-    def check_max_price(self):
-        if 10 > self.settings.price_max:
-            return False
-        
-        return True  
-        
 
-    def check_price(self) -> bool:
-        """
-        Проверяет диапазон значений цены токена.
-        """
-        
-        if (self.settings.price_max and self.token_data["priceUsd"] > self.settings.price_max) or (
-            self.settings.price_min and self.token_data["priceUsd"] < self.settings.price_min
-        ):
-            return False
-        
-        return True
+    def check_token(self, snipers_data: dict, top_traders_data: dict):
+        token_data = get_pairs_data(self.pair)[0]
 
-    def check_age(self) -> bool:
-        """
-        Проверяет диапазон значений возраста токена.
-        """
-        
-        token_age = get_token_age(self.token_data["pairCreatedAt"])
-        
-        if (self.settings.token_age_max and token_age > self.settings.token_age_max) or (
-            self.settings.token_age_min and token_age < self.settings.price_min
-        ):
-            return False
-        
-        return True
-    
-    def check_transactions(self) -> bool:
-        """
-        Проверяет диапазон значений количества транзакций.
-        """
-        
-        if (self.settings.transactions_buys_h1_max and self.token_data["txns"]["h1"]["buys"] > self.settings.transactions_buys_h1_max) or (
-            self.settings.transactions_buys_h1_min and self.token_data["txns"]["h1"]["buys"]  < self.settings.transactions_buys_h1_min) or (
-            self.settings.transactions_sells_h1_max and self.token_data["txns"]["h1"]["sells"] > self.settings.transactions_sells_h1_max) or (
-            self.settings.transactions_sells_h1_min and self.token_data["txns"]["h1"]["sells"] > self.settings.transactions_sells_h1_min
-        ):
-            return False
-        
-        total_transactions = self.token_data["txns"]["h1"]["buys"] + self.token_data["txns"]["h1"]["sells"]
-        
-        if (self.settings.total_transactions_max and total_transactions > self.settings.total_transactions_max) or (
-            self.settings.total_transactions_min and total_transactions < self.settings.total_transactions_min
-        ):
-            return False
-        
-        return True
-    
-    def check_transfers(self, total_transfers=None) -> bool:
-        """
-        Проверяет диапазон значений общего количества трансферов.
-        """
-        
-        if (not total_transfers) or (
-            self.settings.total_transfers_max and total_transfers > self.settings.total_transfers_max) or (
-            self.settings.total_transfers_min and total_transfers < self.settings.total_transfers_min
-        ):
-            return False
-        
-        return True
-    
-    def check_volume(self) -> bool:
-        """
-        Проверяет диапазон значений объёма за 5 минут.
-        """
-        
-        if (self.settings.volume_m5_max and self.token_data["volume"]["m5"] > self.settings.volume_m5_max) or (
-            self.settings.volume_m5_min and self.token_data["volume"]["m5"] < self.settings.volume_m5_min
-        ):
-            return False
-        
-        return True
-    
-    def check_price_change(self) -> bool:
-        """
-        Проверяет диапазон значений изменения цены токена за 5 минут.
-        """
-        
-        if (self.settings.price_change_m5_max and self.token_data["priceChange"]["m5"] > self.settings.price_change_m5_max) or (
-            self.settings.price_change_m5_min and self.token_data["priceChange"]["m5"] < self.settings.price_change_m5_min
-        ):
-            return False
-        
-        return True
-    
-    def check_liquidity(self) -> bool:
-        """
-        Проверяет диапазон значений ликвидности.
-        """
-        
-        if (self.settings.liquidity_max and self.token_data["liquidity"]["usd"] > self.settings.liquidity_max) or (
-            self.settings.liquidity_min and self.token_data["liquidity"]["usd"] < self.settings.liquidity_min
-        ):
-            return False
-        
-        return True
-    
-    def check_fdv(self) -> bool:
-        """
-        Проверяет диапазон значений FDV.
-        """
-        
-        if (self.settings.fdv_max and self.token_data["fdv"] > self.settings.fdv_max) or (
-            self.settings.fdv_min and self.token_data["fdv"] < self.settings.fdv_min
-        ):
-            return False
-        
-        return True
-    
-    def check_market_cap(self) -> bool:
-        """
-        Проверяет диапазон значений рыночной капитализации.
-        """
-        
-        if (self.settings.market_cap_max and self.token_data["marketCap"] > self.settings.market_cap_max) or (
-            self.settings.market_cap_min and self.token_data["marketCap"] < self.settings.market_cap_min
-        ):
-            return False
-        
-        return True
-        
-    def check_socials(self) -> bool:
-        """
-        Проверяет наличие сайта, Телеграма и Твиттера.
-        """
-        
-        data = self.token_data.get("info", None)
-        if data and self.settings.is_socio:
-            return True
-        
-        socials_info = self.get_socials_info(data)
-                        
-        if (self.settings.is_telegram == socials_info["is_telegram"] and 
-            self.settings.is_twitter == socials_info["is_twitter"] and 
-            self.settings.is_website == socials_info["is_website"]
-        ):
-            return True   
-                        
-        return False
-    
-    def get_socials_info(self, data: dict) -> dict:
-        """
-        Возвращает словарь, в котором определено наличие сайта, Твиттера 
-        и Телеграма для токена token_address.
-        """
-        
-        socials_info = {"is_telegram": False, "is_twitter": False, "is_website": False}
-        
-        if not data:
-            return socials_info
-        
-        if data.get("websites"):
-            socials_info["is_website"] = True
-        if data.get("socials"):
-            for socio in data.get("socials"):
-                if socio.get("type") == "twitter":
-                    socials_info["is_twitter"] = True
-                elif socio.get("type") == "telegram":
-                    socials_info["is_telegram"] = True
+        is_check = True
+        try:
+            for settings_id, check in self.check_settings.items():
+                
+                for data_type, functions in check.items():
                     
-        return socials_info
-    
-    def check_token_pairs(self) -> bool:
-        """
-        Проверяет наличие на бирже количество торговых пар с токеном token_address.
-        """
-        
-        tokens_url = f"https://api.dexscreener.com/latest/dex/tokens/{self.token_address}"
-        num_tokens = None
-        while not num_tokens:
-            time.sleep(1)
-            try:
-                num_tokens = httpx.get(tokens_url, timeout=Timeout(timeout=30.0)).json()["pairs"]
-            except:
-                continue
+                    if not is_check:
+                        break
+                    
+                    if data_type == "token_data":
+                        check_data = token_data
+                    elif data_type == "snipers_data":
+                        check_data = snipers_data
+                    else:
+                        check_data = top_traders_data
+                        
+                    for function in functions:
+                        data = function["get_data_value"](check_data)
+                        is_check = function["check_data"](data)
+                        
+                        if not is_check:
+                            break
+                        
+                if is_check:
+                    return settings_id
+                    
+                is_check = True
+        except Exception as e:
+            logger.error(f"{e}")
+                
+        return None
             
-        if len(num_tokens) != 1:
-            logger.debug(f"⨉ На бирже обнаружены другие токены с адресом {self.token_address}") 
-            return False
+
+class CheckSettings:
+    def __init__(self, settings_id):
+        self.settings = Settings.objects.get(id=settings_id)
         
-        return True
+    def get_check_functions(self):
+        check_functions = {
+            "token_data": self.get_check_token_data(),
+            "snipers_data": self.get_check_snipers_data(),
+            "top_traders_data": self.get_check_top_traders_data()
+        }
+        
+        return check_functions
+           
+    def get_check_token_data(self):
+        check_token_data = [
+            # Цена токена: 
+            {
+                "check_data": lambda data_value: data_value >= self.settings.price_min,
+                "get_data_value": lambda token_data: float(token_data["priceUsd"]),
+                "settings_value": self.settings.price_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.price_max,
+                "get_data_value": lambda token_data: float(token_data["priceUsd"]),
+                "settings_value": self.settings.price_max
+            },
+            
+            # Возраст токена:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.token_age_min,
+                "get_data_value": lambda token_data: get_token_age(token_data["pairCreatedAt"]),
+                "settings_value": self.settings.token_age_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.token_age_max,
+                "get_data_value": lambda token_data: get_token_age(token_data["pairCreatedAt"]),
+                "settings_value": self.settings.token_age_max
+            },
+            
+            # Количество покупок и продаж:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.buys_m5_min,
+                "get_data_value": lambda token_data: token_data["txns"]["m5"]["buys"],
+                "settings_value": self.settings.buys_m5_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.buys_m5_max,             
+                "get_data_value": lambda token_data: token_data["txns"]["m5"]["buys"],
+                "settings_value": self.settings.buys_m5_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sells_m5_min,
+                "get_data_value": lambda token_data: token_data["txns"]["m5"]["sells"],
+                "settings_value": self.settings.sells_m5_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sells_m5_max,
+                "get_data_value": lambda token_data: token_data["txns"]["m5"]["sells"],
+                "settings_value": self.settings.sells_m5_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.buys_h1_min,
+                "get_data_value": lambda token_data: token_data["txns"]["h1"]["buys"],
+                "settings_value": self.settings.buys_h1_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.buys_h1_max,             
+                "get_data_value": lambda token_data: token_data["txns"]["h1"]["buys"],
+                "settings_value": self.settings.buys_h1_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sells_h1_min,
+                "get_data_value": lambda token_data: token_data["txns"]["h1"]["sells"],
+                "settings_value": self.settings.sells_h1_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sells_h1_max,
+                "get_data_value": lambda token_data: token_data["txns"]["h1"]["sells"],
+                "settings_value": self.settings.sells_h1_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.buys_h6_min,
+                "get_data_value": lambda token_data: token_data["txns"]["h6"]["buys"],
+                "settings_value": self.settings.buys_h6_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.buys_h6_max,             
+                "get_data_value": lambda token_data: token_data["txns"]["h6"]["buys"],
+                "settings_value": self.settings.buys_h6_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sells_h6_min,
+                "get_data_value": lambda token_data: token_data["txns"]["h6"]["sells"],
+                "settings_value": self.settings.sells_h6_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sells_h6_max,
+                "get_data_value": lambda token_data: token_data["txns"]["h6"]["sells"],
+                "settings_value": self.settings.sells_h6_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.buys_h24_min,
+                "get_data_value": lambda token_data: token_data["txns"]["h24"]["buys"],
+                "settings_value": self.settings.buys_h24_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.buys_h24_max,             
+                "get_data_value": lambda token_data: token_data["txns"]["h24"]["buys"],
+                "settings_value": self.settings.buys_h24_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sells_h24_min,
+                "get_data_value": lambda token_data: token_data["txns"]["h24"]["sells"],
+                "settings_value": self.settings.sells_h24_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sells_h24_max,
+                "get_data_value": lambda token_data: token_data["txns"]["h24"]["sells"],
+                "settings_value": self.settings.sells_h24_max
+            },
+            
+            # Объём:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.volume_m5_min,
+                "get_data_value": lambda token_data: token_data["volume"]["m5"],
+                "settings_value": self.settings.volume_m5_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.volume_m5_max,            
+                "get_data_value": lambda token_data: token_data["volume"]["m5"],
+                "settings_value": self.settings.volume_m5_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.volume_h1_min,
+                "get_data_value": lambda token_data: token_data["volume"]["h1"],
+                "settings_value": self.settings.volume_h1_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.volume_h1_max,            
+                "get_data_value": lambda token_data: token_data["volume"]["h1"],
+                "settings_value": self.settings.volume_h1_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.volume_h6_min,
+                "get_data_value": lambda token_data: token_data["volume"]["h6"],
+                "settings_value": self.settings.volume_h6_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.volume_h6_max,            
+                "get_data_value": lambda token_data: token_data["volume"]["h6"],
+                "settings_value": self.settings.volume_h6_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.volume_h24_min,
+                "get_data_value": lambda token_data: token_data["volume"]["h24"],
+                "settings_value": self.settings.volume_h24_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.volume_h24_max,            
+                "get_data_value": lambda token_data: token_data["volume"]["h24"],
+                "settings_value": self.settings.volume_h24_max
+            },
+            
+            # Изменение цены:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.price_change_m5_min,
+                "get_data_value": lambda token_data: token_data["priceChange"]["m5"],
+                "settings_value": self.settings.price_change_m5_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.price_change_m5_min,                
+                "get_data_value": lambda token_data: token_data["priceChange"]["m5"],
+                "settings_value": self.settings.price_change_m5_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.price_change_h1_min, 
+                "get_data_value": lambda token_data: token_data["priceChange"]["h1"],
+                "settings_value": self.settings.price_change_h1_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.price_change_h1_max,                
+                "get_data_value": lambda token_data: token_data["priceChange"]["h1"],
+                "settings_value": self.settings.price_change_h1_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.price_change_h6_min,
+                "get_data_value": lambda token_data: token_data["priceChange"]["h6"],
+                "settings_value": self.settings.price_change_h6_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.price_change_h6_max,                
+                "get_data_value": lambda token_data: token_data["priceChange"]["h6"],
+                "settings_value": self.settings.price_change_h6_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.price_change_h24_min,
+                "get_data_value": lambda token_data: token_data["priceChange"]["h24"],
+                "settings_value": self.settings.price_change_h24_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.price_change_h24_max,                
+                "get_data_value": lambda token_data: token_data["priceChange"]["h24"],
+                "settings_value": self.settings.price_change_h24_max
+            },
+            
+            # Ликвидность:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.liquidity_min,               
+                "get_data_value": lambda token_data: token_data["liquidity"]["usd"],
+                "settings_value": self.settings.liquidity_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.liquidity_max,                
+                "get_data_value": lambda token_data: token_data["liquidity"]["usd"],
+                "settings_value": self.settings.liquidity_max
+            },
+            
+            # FDV:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.fdv_min,                
+                "get_data_value": lambda token_data: token_data["fdv"],
+                "settings_value": self.settings.fdv_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.fdv_max,            
+                "get_data_value": lambda token_data: token_data["fdv"],
+                "settings_value": self.settings.fdv_max
+            },
+            
+            # Рыночная капитализация:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.market_cap_min,                
+                "get_data_value": lambda token_data: token_data["marketCap"],
+                "settings_value": self.settings.market_cap_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.market_cap_max,                
+                "get_data_value": lambda token_data: token_data["marketCap"],
+                "settings_value": self.settings.market_cap_max
+            },
+            
+            # Boost:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.boost_min,                
+                "get_data_value": lambda token_data: token_data["boosts"].get("active"),
+                "settings_value": self.settings.boost_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.boost_max,                
+                "get_data_value": lambda token_data: token_data["boosts"].get("active"),
+                "settings_value": self.settings.boost_max
+            },
+            
+            # Социальные сети:
+            {
+                "check_data": lambda socials_data: any(socials_data.values()),                
+                "get_data_value": get_socials_data,
+                "settings_value": self.settings.is_socio
+            },
+            {
+                "check_data": lambda socials_data: socials_data["is_telegram"],                
+                "get_data_value": get_socials_data,
+                "settings_value": self.settings.is_telegram
+            },
+            {
+                "check_data": lambda socials_data: socials_data["is_twitter"],                
+                "get_data_value": get_socials_data,
+                "settings_value": self.settings.is_twitter
+            },
+            {
+                "check_data": lambda socials_data: socials_data["is_website"],                
+                "get_data_value": get_socials_data,
+                "settings_value": self.settings.is_website
+            },
+   
+        ]
+        
+        return self.get_check_data(check_token_data)
+    
+    def get_check_snipers_data(self):
+        check_snipers_data = [
+            # Количество токенов у снайперов: 
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_held_all_min,
+                "get_data_value": lambda snipers_data: snipers_data["held_all"],
+                "settings_value": self.settings.sns_held_all_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_held_all_max,
+                "get_data_value": lambda snipers_data: snipers_data["held_all"],
+                "settings_value": self.settings.sns_held_all_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_sold_some_min,
+                "get_data_value": lambda snipers_data: snipers_data["sold_some"],
+                "settings_value": self.settings.sns_sold_some_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_sold_some_max,
+                "get_data_value": lambda snipers_data: snipers_data["sold_some"],
+                "settings_value": self.settings.sns_sold_some_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_sold_all_min,
+                "get_data_value": lambda snipers_data: snipers_data["sold_all"],
+                "settings_value": self.settings.sns_sold_all_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_sold_all_max,
+                "get_data_value": lambda snipers_data: snipers_data["sold_all"],
+                "settings_value": self.settings.sns_sold_all_max
+            },
+            
+            # Сумма покупок снайперов:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_bought_sum_min,
+                "get_data_value": lambda snipers_data: get_sum(snipers_data["bought"]),
+                "settings_value": self.settings.sns_bought_sum_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_bought_sum_max,
+                "get_data_value": lambda snipers_data: get_sum(snipers_data["bought"]),
+                "settings_value": self.settings.sns_bought_sum_max
+            },
+            
+            # Сумма продаж снайперов:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_sold_sum_min,
+                "get_data_value": lambda snipers_data: get_sum(snipers_data["sold"]),
+                "settings_value": self.settings.sns_sold_sum_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_sold_sum_max,
+                "get_data_value": lambda snipers_data: get_sum(snipers_data["sold"]),
+                "settings_value": self.settings.sns_sold_sum_max
+            },
+            
+            # Количество отрицательных PNL у снайперов:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_pnl_loss_min,
+                "get_data_value": lambda snipers_data: count_pnl_loss(snipers_data["bought"], snipers_data["sold"]),
+                "settings_value": self.settings.sns_pnl_loss_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_pnl_loss_max,
+                "get_data_value": lambda snipers_data: count_pnl_loss(snipers_data["bought"], snipers_data["sold"]),
+                "settings_value": self.settings.sns_pnl_loss_max
+            },
+            
+            # Снайперы без продажи или без покупки:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_no_bought_min,
+                "get_data_value": lambda snipers_data: count_zero(snipers_data["bought"]),
+                "settings_value": self.settings.sns_no_bought_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_no_bought_max,
+                "get_data_value": lambda snipers_data: count_zero(snipers_data["bought"]),
+                "settings_value": self.settings.sns_no_bought_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.sns_no_sold_min,
+                "get_data_value": lambda snipers_data: count_zero(snipers_data["sold"]),
+                "settings_value": self.settings.sns_no_sold_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.sns_no_sold_max,
+                "get_data_value": lambda snipers_data: count_zero(snipers_data["sold"]),
+                "settings_value": self.settings.sns_no_sold_max
+            },
+        ]
+        
+        return self.get_check_data(check_snipers_data)
+    
+    def get_check_top_traders_data(self):
+        check_top_traders_data = [
+            # Сумма покупок топов:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.tt_bought_sum_min,
+                "get_data_value": lambda top_traders_data: get_sum(top_traders_data["bought"]),
+                "settings_value": self.settings.tt_bought_sum_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.tt_bought_sum_max,
+                "get_data_value": lambda top_traders_data: get_sum(top_traders_data["bought"]),
+                "settings_value": self.settings.tt_bought_sum_max
+            },
+            
+            # Сумма продаж топов:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.tt_sold_sum_min,
+                "get_data_value": lambda top_traders_data: get_sum(top_traders_data["sold"]),
+                "settings_value": self.settings.tt_sold_sum_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.tt_sold_sum_max,
+                "get_data_value": lambda top_traders_data: get_sum(top_traders_data["sold"]),
+                "settings_value": self.settings.tt_sold_sum_max
+            },
+            
+            # Количество отрицательных PNL у снайперов:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.tt_pnl_loss_min,
+                "get_data_value": lambda top_traders_data: count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"]),
+                "settings_value": self.settings.tt_pnl_loss_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.tt_pnl_loss_max,
+                "get_data_value": lambda top_traders_data: count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"]),
+                "settings_value": self.settings.tt_pnl_loss_max
+            },
+            
+            # Снайперы без продажи или без покупки:
+            {
+                "check_data": lambda data_value: data_value >= self.settings.tt_no_bought_min,
+                "get_data_value": lambda top_traders_data: count_zero(top_traders_data["bought"]),
+                "settings_value": self.settings.tt_no_bought_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.tt_no_bought_max,
+                "get_data_value": lambda top_traders_data: count_zero(top_traders_data["bought"]),
+                "settings_value": self.settings.tt_no_bought_max
+            },
+            {
+                "check_data": lambda data_value: data_value >= self.settings.tt_no_sold_min,
+                "get_data_value": lambda top_traders_data: count_zero(top_traders_data["sold"]),
+                "settings_value": self.settings.tt_no_sold_min
+            },
+            {
+                "check_data": lambda data_value: data_value <= self.settings.tt_no_sold_max,
+                "get_data_value": lambda top_traders_data: count_zero(top_traders_data["sold"]),
+                "settings_value": self.settings.tt_no_sold_max
+            },
+        ]
+        
+        return self.get_check_data(check_top_traders_data)
+    
+    
+    def get_check_data(self, check_settings):
+        check_functions = []  
+        for check in check_settings:
+            if check["settings_value"]:
+                check_functions.append(check)
+        
+        return check_functions

@@ -23,7 +23,8 @@ class TransactionResource(resources.ModelResource):
 class TransactionAdmin(ImportExportModelAdmin):
     list_display = ("token_name", "price_b", "price_s", "PNL", "PNL_20", "link", "mode", "sell")
     list_per_page = 30
-    list_filter = ("status", "mode")
+    list_filter = ("status", "mode", "settings")
+    
     resource_classes = [TransactionResource]
     
     change_list_template = 'dashboard/transactions.html'
@@ -49,13 +50,4 @@ class SettingsAdmin(admin.ModelAdmin):
     list_display = ("name",)
     
     change_form_template = 'dashboard/settings.html'
-
-    # def changelist_view(self, request, extra_context=None):
-    #     extra_context = extra_context or {}
-    #     first_obj = self.model.objects.first()
-    #     if first_obj is not None:
-    #         return redirect(reverse('admin:token_hunter_settings_change', args=(first_obj.pk,)))
-    #     return redirect(reverse('admin:token_hunter_settings_add'))
-    
-
-
+  
