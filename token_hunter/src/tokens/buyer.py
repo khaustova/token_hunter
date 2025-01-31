@@ -67,8 +67,7 @@ class TokenBuyer:
         token_data = get_pairs_data(self.pair)[0]
         token_age = get_token_age(token_data["pairCreatedAt"])
         
-        if token_data.get("info"):
-            socials_info = get_socials_data(token_data.get("info"))
+        socials_data = get_socials_data(token_data.get("info"))
         
         if not token_data["priceChange"].get("m5"):
             logger.error("Нет данных об изменении цены за 5 минут")
@@ -101,9 +100,9 @@ class TokenBuyer:
             fdv=token_data["fdv"],
             market_cap=token_data["marketCap"],
             is_mutable_metadata = self.is_mutable_metadata,
-            is_telegram=socials_info["is_telegram"],
-            is_twitter=socials_info["is_twitter"],
-            is_website=socials_info["is_website"],
+            is_telegram=socials_data["is_telegram"],
+            is_twitter=socials_data["is_twitter"],
+            is_website=socials_data["is_website"],
             price_change_check=price_change_data,
             status=Status.OPEN,
             mode=mode
