@@ -149,7 +149,7 @@ class DexScreener():
         Мониторит DexScreener на появление новых boodted токенов Solana.
         Если токен прошёл проверку, то покупает его.
         """
-        time.sleep(30)
+        # time.sleep(30)
         await self.browser.get("https://dexscreener.com/solana/raydium")
         await self.browser.get("https://solscan.io/", new_tab=True)
         
@@ -806,7 +806,7 @@ async def run_dexscreener_boosted_watcher(settings_ids):
     
     config = Config(headless=False)
    # config.add_extension("./extensions/captcha_solver")
-    config.add_extension("./extensions/vpn")
+    # config.add_extension("./extensions/vpn")
     check_settings = {}
     for settings_id in settings_ids:
         check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
