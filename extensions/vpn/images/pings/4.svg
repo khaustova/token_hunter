@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="23" height="12" viewBox="0 0 23 12">
+<style>
+rect {
+	fill: #ced8df;
+	width: 3px;
+	rx: 1;
+	ry: 1;
+	transform: scaleY(-1);
+	transform-origin: center;
+	y: 0px;
+}
+</style>
+
+<rect style="fill: #3b9946" height="4"/>
+<rect style="fill: #3b9946" x="5" height="6"/>
+<rect style="fill: #3b9946" x="10" height="8"/>
+<rect style="fill: #3b9946" x="15" height="10"/>
+<rect x="20" height="12"/>
+</svg>

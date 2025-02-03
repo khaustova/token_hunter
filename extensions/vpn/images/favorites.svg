@@ -1,0 +1,15 @@
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<g id="symbol">
+	<path d="M1107.43,274.073l-3.58-.329a0.616,0.616,0,0,1-.51-0.368l-1.28-3.02a0.622,0.622,0,0,0-1.14,0l-1.27,3.02a0.6,0.6,0,0,1-.51.368l-3.58.329a0.6,0.6,0,0,0-.35,1.047l2.7,2.3a0.594,0.594,0,0,1,.19.588l-0.81,3.228a0.614,0.614,0,0,0,.91.658l2.99-1.7a0.624,0.624,0,0,1,.62,0l2.99,1.7a0.612,0.612,0,0,0,.91-0.658l-0.8-3.228a0.594,0.594,0,0,1,.19-0.588l2.7-2.3A0.606,0.606,0,0,0,1107.43,274.073Z" transform="translate(-1095.0081787109375 -269.9828796386719)"/>
+</g>
+
+<use xlink:href="#symbol" width="13" height="12" x="0.5" y="0.6" fill="none" stroke="#D0D8DE" stroke-width="1" />
+<use xlink:href="#symbol" width="13" height="12" x="0.5" y="100.6" fill="none" stroke="#569650" stroke-width="1"/>
+<use xlink:href="#symbol" width="13" height="12" x="0.5" y="200.6" fill="#569650" stroke="#569650" stroke-width="1"/>
+
+<view id="base" width="14" height="13.2" viewBox="0 0 14 13.2"/>
+<view id="hover" width="14" height="13.2" viewBox="0 100 14 13.2"/>
+<view id="active" width="14" height="13.2" viewBox="0 200 14 13.2"/>
+
+</svg>

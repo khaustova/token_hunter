@@ -1,0 +1,1 @@
+[{"id":1,"priority":1,"action":{"type":"modifyHeaders","requestHeaders":[{"operation":"set","header":"X-Browsec-Installed","value":"1"}]},"condition":{"regexFilter":"^https://browsec\\.com/.*","resourceTypes":["main_frame","sub_frame","xmlhttprequest"]}}]

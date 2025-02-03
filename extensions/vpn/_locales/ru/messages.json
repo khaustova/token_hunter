@@ -1,0 +1,1726 @@
+{
+  "already_have_premium": {
+    "message": "Premium уже есть?",
+    "description": ""
+  },
+  "country_ad": {
+    "message": "Андорра",
+    "description": ""
+  },
+  "country_ae": {
+    "message": "Объединенные Арабские Эмираты",
+    "description": ""
+  },
+  "country_af": {
+    "message": "Афганистан",
+    "description": ""
+  },
+  "country_ag": {
+    "message": "Антигуа и Барбуда",
+    "description": ""
+  },
+  "country_ai": {
+    "message": "Ангилья",
+    "description": ""
+  },
+  "country_al": {
+    "message": "Албания",
+    "description": ""
+  },
+  "country_am": {
+    "message": "Армения",
+    "description": ""
+  },
+  "country_an": {
+    "message": "Нидерландские Антилы",
+    "description": ""
+  },
+  "country_ao": {
+    "message": "Ангола",
+    "description": ""
+  },
+  "country_aq": {
+    "message": "Антарктида",
+    "description": ""
+  },
+  "country_ar": {
+    "message": "Аргентина",
+    "description": ""
+  },
+  "country_as": {
+    "message": "Американское Самоа",
+    "description": ""
+  },
+  "country_at": {
+    "message": "Австрия",
+    "description": ""
+  },
+  "country_au": {
+    "message": "Австралия",
+    "description": ""
+  },
+  "country_aw": {
+    "message": "Аруба",
+    "description": ""
+  },
+  "country_az": {
+    "message": "Азербайджан",
+    "description": ""
+  },
+  "country_ba": {
+    "message": "Босния и Герцеговина",
+    "description": ""
+  },
+  "country_bb": {
+    "message": "Барбадос",
+    "description": ""
+  },
+  "country_bd": {
+    "message": "Бангладеш",
+    "description": ""
+  },
+  "country_be": {
+    "message": "Бельгия",
+    "description": ""
+  },
+  "country_bf": {
+    "message": "Буркина-Фасо",
+    "description": ""
+  },
+  "country_bg": {
+    "message": "Болгария",
+    "description": ""
+  },
+  "country_bh": {
+    "message": "Бахрейн",
+    "description": ""
+  },
+  "country_bi": {
+    "message": "Бурунди",
+    "description": ""
+  },
+  "country_bj": {
+    "message": "Бенин",
+    "description": ""
+  },
+  "country_bm": {
+    "message": "Бермуды",
+    "description": ""
+  },
+  "country_bn": {
+    "message": "Бруней-Даруссалам",
+    "description": ""
+  },
+  "country_bo": {
+    "message": "Боливия",
+    "description": ""
+  },
+  "country_br": {
+    "message": "Бразилия",
+    "description": ""
+  },
+  "country_bs": {
+    "message": "Багамы",
+    "description": ""
+  },
+  "country_bt": {
+    "message": "Бутан",
+    "description": ""
+  },
+  "country_bv": {
+    "message": "Остров Буве",
+    "description": ""
+  },
+  "country_bw": {
+    "message": "Ботсвана",
+    "description": ""
+  },
+  "country_by": {
+    "message": "Беларусь",
+    "description": ""
+  },
+  "country_bz": {
+    "message": "Белиз",
+    "description": ""
+  },
+  "country_ca": {
+    "message": "Канада",
+    "description": ""
+  },
+  "country_cc": {
+    "message": "Кокосовые (Килинг) острова",
+    "description": ""
+  },
+  "country_cd": {
+    "message": "Конго, Демократическая Республика",
+    "description": ""
+  },
+  "country_cf": {
+    "message": "Центрально-Африканская Республика",
+    "description": ""
+  },
+  "country_cg": {
+    "message": "Конго",
+    "description": ""
+  },
+  "country_ch": {
+    "message": "Швейцария",
+    "description": ""
+  },
+  "country_ci": {
+    "message": "Кот Д'Ивуар",
+    "description": ""
+  },
+  "country_ck": {
+    "message": "Острова Кука",
+    "description": ""
+  },
+  "country_cl": {
+    "message": "Чили",
+    "description": ""
+  },
+  "country_cm": {
+    "message": "Камерун",
+    "description": ""
+  },
+  "country_cn": {
+    "message": "Китай",
+    "description": ""
+  },
+  "country_co": {
+    "message": "Колумбия",
+    "description": ""
+  },
+  "country_cr": {
+    "message": "Коста-Рика",
+    "description": ""
+  },
+  "country_cu": {
+    "message": "Куба",
+    "description": ""
+  },
+  "country_cv": {
+    "message": "Кабо-Верде",
+    "description": ""
+  },
+  "country_cx": {
+    "message": "Остров Рождества",
+    "description": ""
+  },
+  "country_cy": {
+    "message": "Кипр",
+    "description": ""
+  },
+  "country_cz": {
+    "message": "Чехия",
+    "description": ""
+  },
+  "country_de": {
+    "message": "Германия",
+    "description": ""
+  },
+  "country_dj": {
+    "message": "Джибути",
+    "description": ""
+  },
+  "country_dk": {
+    "message": "Дания",
+    "description": ""
+  },
+  "country_dm": {
+    "message": "Доминика",
+    "description": ""
+  },
+  "country_do": {
+    "message": "Доминиканская Республика",
+    "description": ""
+  },
+  "country_dz": {
+    "message": "Алжир",
+    "description": ""
+  },
+  "country_ec": {
+    "message": "Эквадор",
+    "description": ""
+  },
+  "country_ee": {
+    "message": "Эстония",
+    "description": ""
+  },
+  "country_eg": {
+    "message": "Египет",
+    "description": ""
+  },
+  "country_eh": {
+    "message": "Западная Сахара",
+    "description": ""
+  },
+  "country_er": {
+    "message": "Эритрея",
+    "description": ""
+  },
+  "country_es": {
+    "message": "Испания",
+    "description": ""
+  },
+  "country_et": {
+    "message": "Эфиопия",
+    "description": ""
+  },
+  "country_fi": {
+    "message": "Финляндия",
+    "description": ""
+  },
+  "country_fj": {
+    "message": "Фиджи",
+    "description": ""
+  },
+  "country_fk": {
+    "message": "Фолклендские острова (Мальвинские)",
+    "description": ""
+  },
+  "country_fm": {
+    "message": "Микронезия",
+    "description": ""
+  },
+  "country_fo": {
+    "message": "Фарерские острова",
+    "description": ""
+  },
+  "country_fr": {
+    "message": "Франция",
+    "description": ""
+  },
+  "country_ga": {
+    "message": "Габон",
+    "description": ""
+  },
+  "country_gd": {
+    "message": "Гренада",
+    "description": ""
+  },
+  "country_ge": {
+    "message": "Грузия",
+    "description": ""
+  },
+  "country_gf": {
+    "message": "Французская Гвиана",
+    "description": ""
+  },
+  "country_gh": {
+    "message": "Гана",
+    "description": ""
+  },
+  "country_gi": {
+    "message": "Гибралтар",
+    "description": ""
+  },
+  "country_gl": {
+    "message": "Гренландия",
+    "description": ""
+  },
+  "country_gm": {
+    "message": "Гамбия",
+    "description": ""
+  },
+  "country_gn": {
+    "message": "Гвинея",
+    "description": ""
+  },
+  "country_gp": {
+    "message": "Гваделупа",
+    "description": ""
+  },
+  "country_gq": {
+    "message": "Экваториальная Гвинея",
+    "description": ""
+  },
+  "country_gr": {
+    "message": "Греция",
+    "description": ""
+  },
+  "country_gs": {
+    "message": "Южная Джорджия и Южные Сандвичевы острова",
+    "description": ""
+  },
+  "country_gt": {
+    "message": "Гватемала",
+    "description": ""
+  },
+  "country_gu": {
+    "message": "Гуам",
+    "description": ""
+  },
+  "country_gw": {
+    "message": "Гвинея-Бисау",
+    "description": ""
+  },
+  "country_gy": {
+    "message": "Гайана",
+    "description": ""
+  },
+  "country_hk": {
+    "message": "Гонконг",
+    "description": ""
+  },
+  "country_hm": {
+    "message": "Остров Херд и острова Макдональд",
+    "description": ""
+  },
+  "country_hn": {
+    "message": "Гондурас",
+    "description": ""
+  },
+  "country_hr": {
+    "message": "Хорватия",
+    "description": ""
+  },
+  "country_ht": {
+    "message": "Гаити",
+    "description": ""
+  },
+  "country_hu": {
+    "message": "Венгрия",
+    "description": ""
+  },
+  "country_id": {
+    "message": "Индонезия",
+    "description": ""
+  },
+  "country_ie": {
+    "message": "Ирландия",
+    "description": ""
+  },
+  "country_il": {
+    "message": "Израиль",
+    "description": ""
+  },
+  "country_im": {
+    "message": "Остров Мэн",
+    "description": ""
+  },
+  "country_in": {
+    "message": "Индия",
+    "description": ""
+  },
+  "country_io": {
+    "message": "Британская Территория в Индийском Океане",
+    "description": ""
+  },
+  "country_iq": {
+    "message": "Ирак",
+    "description": ""
+  },
+  "country_ir": {
+    "message": "Иран",
+    "description": ""
+  },
+  "country_is": {
+    "message": "Исландия",
+    "description": ""
+  },
+  "country_it": {
+    "message": "Италия",
+    "description": ""
+  },
+  "country_jm": {
+    "message": "Ямайка",
+    "description": ""
+  },
+  "country_jo": {
+    "message": "Иордания",
+    "description": ""
+  },
+  "country_jp": {
+    "message": "Япония",
+    "description": ""
+  },
+  "country_ke": {
+    "message": "Кения",
+    "description": ""
+  },
+  "country_kg": {
+    "message": "Киргизия",
+    "description": ""
+  },
+  "country_kh": {
+    "message": "Камбоджа",
+    "description": ""
+  },
+  "country_ki": {
+    "message": "Кирибати",
+    "description": ""
+  },
+  "country_km": {
+    "message": "Коморы",
+    "description": ""
+  },
+  "country_kn": {
+    "message": "Сент-Китс и Невис",
+    "description": ""
+  },
+  "country_kp": {
+    "message": "Корея, Народно-Демократическая Республика",
+    "description": ""
+  },
+  "country_kr": {
+    "message": "Южная Корея",
+    "description": ""
+  },
+  "country_kw": {
+    "message": "Кувейт",
+    "description": ""
+  },
+  "country_ky": {
+    "message": "Острова Кайман",
+    "description": ""
+  },
+  "country_kz": {
+    "message": "Казахстан",
+    "description": ""
+  },
+  "country_la": {
+    "message": "Лаосская Народно-Демократическая Республика",
+    "description": ""
+  },
+  "country_lb": {
+    "message": "Ливан",
+    "description": ""
+  },
+  "country_lc": {
+    "message": "Сент-Люсия",
+    "description": ""
+  },
+  "country_li": {
+    "message": "Лихтенштейн",
+    "description": ""
+  },
+  "country_lk": {
+    "message": "Шри-Ланка",
+    "description": ""
+  },
+  "country_lr": {
+    "message": "Либерия",
+    "description": ""
+  },
+  "country_ls": {
+    "message": "Лесото",
+    "description": ""
+  },
+  "country_lt": {
+    "message": "Литва",
+    "description": ""
+  },
+  "country_lu": {
+    "message": "Люксембург",
+    "description": ""
+  },
+  "country_lv": {
+    "message": "Латвия",
+    "description": ""
+  },
+  "country_ly": {
+    "message": "Ливийская Арабская Джамахирия",
+    "description": ""
+  },
+  "country_ma": {
+    "message": "Марокко",
+    "description": ""
+  },
+  "country_mc": {
+    "message": "Монако",
+    "description": ""
+  },
+  "country_md": {
+    "message": "Молдова",
+    "description": ""
+  },
+  "country_mg": {
+    "message": "Мадагаскар",
+    "description": ""
+  },
+  "country_mh": {
+    "message": "Маршалловы острова",
+    "description": ""
+  },
+  "country_mk": {
+    "message": "Македония",
+    "description": ""
+  },
+  "country_ml": {
+    "message": "Мали",
+    "description": ""
+  },
+  "country_mm": {
+    "message": "Мьянма",
+    "description": ""
+  },
+  "country_mn": {
+    "message": "Монголия",
+    "description": ""
+  },
+  "country_mp": {
+    "message": "Северные Марианские острова",
+    "description": ""
+  },
+  "country_mq": {
+    "message": "Мартиника",
+    "description": ""
+  },
+  "country_mr": {
+    "message": "Мавритания",
+    "description": ""
+  },
+  "country_ms": {
+    "message": "Монтсеррат",
+    "description": ""
+  },
+  "country_mt": {
+    "message": "Мальта",
+    "description": ""
+  },
+  "country_mu": {
+    "message": "Маврикий",
+    "description": ""
+  },
+  "country_mv": {
+    "message": "Мальдивы",
+    "description": ""
+  },
+  "country_mw": {
+    "message": "Малави",
+    "description": ""
+  },
+  "country_mx": {
+    "message": "Мексика",
+    "description": ""
+  },
+  "country_my": {
+    "message": "Малайзия",
+    "description": ""
+  },
+  "country_mz": {
+    "message": "Мозамбик",
+    "description": ""
+  },
+  "country_na": {
+    "message": "Намибия",
+    "description": ""
+  },
+  "country_nc": {
+    "message": "Новая Каледония",
+    "description": ""
+  },
+  "country_ne": {
+    "message": "Нигер",
+    "description": ""
+  },
+  "country_nf": {
+    "message": "Остров Норфолк",
+    "description": ""
+  },
+  "country_ng": {
+    "message": "Нигерия",
+    "description": ""
+  },
+  "country_ni": {
+    "message": "Никарагуа",
+    "description": ""
+  },
+  "country_nl": {
+    "message": "Нидерланды",
+    "description": ""
+  },
+  "country_no": {
+    "message": "Норвегия",
+    "description": ""
+  },
+  "country_np": {
+    "message": "Непал",
+    "description": ""
+  },
+  "country_nr": {
+    "message": "Науру",
+    "description": ""
+  },
+  "country_nu": {
+    "message": "Ниуэ",
+    "description": ""
+  },
+  "country_nz": {
+    "message": "Новая Зеландия",
+    "description": ""
+  },
+  "country_om": {
+    "message": "Оман",
+    "description": ""
+  },
+  "country_pa": {
+    "message": "Панама",
+    "description": ""
+  },
+  "country_pe": {
+    "message": "Перу",
+    "description": ""
+  },
+  "country_pf": {
+    "message": "Французская Полинезия",
+    "description": ""
+  },
+  "country_pg": {
+    "message": "Папуа-Новая Гвинея",
+    "description": ""
+  },
+  "country_ph": {
+    "message": "Филиппины",
+    "description": ""
+  },
+  "country_pk": {
+    "message": "Пакистан",
+    "description": ""
+  },
+  "country_pl": {
+    "message": "Польша",
+    "description": ""
+  },
+  "country_pm": {
+    "message": "Сен-Пьер и Микелон",
+    "description": ""
+  },
+  "country_pn": {
+    "message": "Питкерн",
+    "description": ""
+  },
+  "country_pr": {
+    "message": "Пуэрто-Рико",
+    "description": ""
+  },
+  "country_pt": {
+    "message": "Португалия",
+    "description": ""
+  },
+  "country_pw": {
+    "message": "Палау",
+    "description": ""
+  },
+  "country_py": {
+    "message": "Парагвай",
+    "description": ""
+  },
+  "country_qa": {
+    "message": "Катар",
+    "description": ""
+  },
+  "country_re": {
+    "message": "Реюньон",
+    "description": ""
+  },
+  "country_ro": {
+    "message": "Румыния",
+    "description": ""
+  },
+  "country_rs": {
+    "message": "Сербия",
+    "description": ""
+  },
+  "country_ru": {
+    "message": "Россия",
+    "description": ""
+  },
+  "country_rw": {
+    "message": "Руанда",
+    "description": ""
+  },
+  "country_sa": {
+    "message": "Саудовская Аравия",
+    "description": ""
+  },
+  "country_sb": {
+    "message": "Соломоновы острова",
+    "description": ""
+  },
+  "country_sc": {
+    "message": "Сейшелы",
+    "description": ""
+  },
+  "country_sd": {
+    "message": "Судан",
+    "description": ""
+  },
+  "country_se": {
+    "message": "Швеция",
+    "description": ""
+  },
+  "country_sg": {
+    "message": "Сингапур",
+    "description": ""
+  },
+  "country_sh": {
+    "message": "Святая Елена",
+    "description": ""
+  },
+  "country_si": {
+    "message": "Словения",
+    "description": ""
+  },
+  "country_sj": {
+    "message": "Шпицберген и Ян Майен",
+    "description": ""
+  },
+  "country_sk": {
+    "message": "Словакия",
+    "description": ""
+  },
+  "country_sl": {
+    "message": "Сьерра-Леоне",
+    "description": ""
+  },
+  "country_sm": {
+    "message": "Сан-Марино",
+    "description": ""
+  },
+  "country_sn": {
+    "message": "Сенегал",
+    "description": ""
+  },
+  "country_so": {
+    "message": "Сомали",
+    "description": ""
+  },
+  "country_sr": {
+    "message": "Суринам",
+    "description": ""
+  },
+  "country_st": {
+    "message": "Сан-Томе и Принсипи",
+    "description": ""
+  },
+  "country_sv": {
+    "message": "Сальвадор",
+    "description": ""
+  },
+  "country_sy": {
+    "message": "Сирийская Арабская Республика",
+    "description": ""
+  },
+  "country_sz": {
+    "message": "Свазиленд",
+    "description": ""
+  },
+  "country_tc": {
+    "message": "Острова Теркс и Кайкос",
+    "description": ""
+  },
+  "country_td": {
+    "message": "Чад",
+    "description": ""
+  },
+  "country_tf": {
+    "message": "Французские Южные Территории",
+    "description": ""
+  },
+  "country_tg": {
+    "message": "Того",
+    "description": ""
+  },
+  "country_th": {
+    "message": "Таиланд",
+    "description": ""
+  },
+  "country_tj": {
+    "message": "Таджикистан",
+    "description": ""
+  },
+  "country_tk": {
+    "message": "Токелау",
+    "description": ""
+  },
+  "country_tl": {
+    "message": "Тимор-Лесте",
+    "description": ""
+  },
+  "country_tm": {
+    "message": "Туркмения",
+    "description": ""
+  },
+  "country_tn": {
+    "message": "Тунис",
+    "description": ""
+  },
+  "country_to": {
+    "message": "Тонга",
+    "description": ""
+  },
+  "country_tr": {
+    "message": "Турция",
+    "description": ""
+  },
+  "country_tt": {
+    "message": "Тринидад и Тобаго",
+    "description": ""
+  },
+  "country_tv": {
+    "message": "Тувалу",
+    "description": ""
+  },
+  "country_tw": {
+    "message": "Тайвань",
+    "description": ""
+  },
+  "country_tz": {
+    "message": "Танзания",
+    "description": ""
+  },
+  "country_ua": {
+    "message": "Украина",
+    "description": ""
+  },
+  "country_ug": {
+    "message": "Уганда",
+    "description": ""
+  },
+  "country_uk": {
+    "message": "Великобритания",
+    "description": ""
+  },
+  "country_us": {
+    "message": "США",
+    "description": ""
+  },
+  "country_usw": {
+    "message": "США, запад",
+    "description": ""
+  },
+  "country_uy": {
+    "message": "Уругвай",
+    "description": ""
+  },
+  "country_uz": {
+    "message": "Узбекистан",
+    "description": ""
+  },
+  "country_va": {
+    "message": "Ватикан",
+    "description": ""
+  },
+  "country_vc": {
+    "message": "Сент-Винсент и Гренадины",
+    "description": ""
+  },
+  "country_ve": {
+    "message": "Венесуэла",
+    "description": ""
+  },
+  "country_vg": {
+    "message": "Виргинские острова, Британские",
+    "description": ""
+  },
+  "country_vi": {
+    "message": "Виргинские острова, США",
+    "description": ""
+  },
+  "country_vn": {
+    "message": "Вьетнам",
+    "description": ""
+  },
+  "country_vu": {
+    "message": "Вануату",
+    "description": ""
+  },
+  "country_wf": {
+    "message": "Уоллис и Футуна",
+    "description": ""
+  },
+  "country_ws": {
+    "message": "Самоа",
+    "description": ""
+  },
+  "country_ye": {
+    "message": "Йемен",
+    "description": ""
+  },
+  "country_yt": {
+    "message": "Майотта",
+    "description": ""
+  },
+  "country_za": {
+    "message": "Южная Африка",
+    "description": ""
+  },
+  "country_zm": {
+    "message": "Замбия",
+    "description": ""
+  },
+  "country_zw": {
+    "message": "Зимбабве",
+    "description": ""
+  },
+  "access_internet_via_premium_locations": {
+    "message": "Доступ в Интернет через дополнительные премиальные страны.",
+    "description": ""
+  },
+  "add_smart_setting_for_X": {
+    "message": "Добавить настройку для XXX",
+    "description": ""
+  },
+  "authentication_error_no_connection": {
+    "message": "Ошибка авторизации: невозможно подключиться к серверу Browsec",
+    "description": ""
+  },
+  "back": {
+    "message": "Назад",
+    "description": ""
+  },
+  "because_your_proxy_settings_are_blocked": {
+    "message": "Доступ к настройкам прокси блокируются другим расширением.",
+    "description": ""
+  },
+  "browsec_activated": {
+    "message": "Активация Browsec",
+    "description": ""
+  },
+  "browsec_has_been_installed": {
+    "message": "Browsec установлен!",
+    "description": ""
+  },
+  "browsec_is_enabled": {
+    "message": "Browsec снова работает",
+    "description": ""
+  },
+  "browsec_off": {
+    "message": "Выключать VPN",
+    "description": ""
+  },
+  "browsec_premium": {
+    "message": "Browsec Premium",
+    "description": ""
+  },
+  "browser_action_inactive_title": {
+    "message": "Browsec",
+    "description": ""
+  },
+  "cancel_subscription_at_any_time": {
+    "message": "Подписку всегда можно отменить",
+    "description": ""
+  },
+  "cant_authenticate_please_contact_browsec_support": {
+    "message": "Ошибка авторизации. Свяжитесь с поддержкой Browsec.",
+    "description": ""
+  },
+  "cant_setup_secure_connection": {
+    "message": "Browsec не может установить безопасное соединение в вашем браузере.",
+    "description": ""
+  },
+  "cant_start_because_your_proxy_settings_blocked": {
+    "message": "Browsec не может включить VPN. Настройки прокси блокируются другим расширением",
+    "description": ""
+  },
+  "change": {
+    "message": "Сменить",
+    "description": ""
+  },
+  "change_timezone_according_to_virtual_location": {
+    "message": "Менять часовой пояс браузера под текущий IP",
+    "description": ""
+  },
+  "change_timezone_text_1": {
+    "message": "Эта опция изменяет часовой пояс браузера в соответствии с вашим виртуальным местоположением.",
+    "description": ""
+  },
+  "change_timezone_text_2": {
+    "message": "Некоторые веб-сайты определяют часовой пояс браузера с помощью функций Javascript. Если часовые пояса браузера и IP-адреса отличаются, это может быть признаком использования VPN-сервиса или других методов анонимизации.",
+    "description": ""
+  },
+  "change_timezone_text_3": {
+    "message": "При включенной опции сайты не могут определить разницу в часовых поясах.",
+    "description": ""
+  },
+  "check_browsec_api": {
+    "message": "API Browsec",
+    "description": ""
+  },
+  "check_browsec_premium_plans": {
+    "message": "Посмотреть тарифы Browsec Premium",
+    "description": ""
+  },
+  "check_conflicts_with_other_extensions": {
+    "message": "Конфликты с другими расширениями",
+    "description": ""
+  },
+  "check_http_internet_connection": {
+    "message": "HTTP-соединение",
+    "description": ""
+  },
+  "check_http_internet_connection_with_browsec": {
+    "message": "HTTP-соединение с Browsec",
+    "description": ""
+  },
+  "check_https_internet_connection": {
+    "message": "HTTPS-соединение",
+    "description": ""
+  },
+  "check_https_internet_connection_with_browsec": {
+    "message": "HTTPS-соединение с Browsec",
+    "description": ""
+  },
+  "check_proxy_settings": {
+    "message": "Настройки прокси-сервера",
+    "description": ""
+  },
+  "click_and_then_1": {
+    "message": "Нажмите",
+    "description": ""
+  },
+  "click_and_then_2": {
+    "message": "и потом",
+    "description": ""
+  },
+  "click_here_to_start_vpn": {
+    "message": "Нажми здесь,<br/>чтобы включить VPN",
+    "description": ""
+  },
+  "click_here_to_agree_and_start": {
+    "message": "Чтобы использовать приложение<br/>Browsec VPN, нужно принять наши<br/>{DIVIDER} и<br/>{DIVIDER}",
+    "description": ""
+  },
+  "click_here_terms_conditions": {
+    "message": "Условия использования",
+    "description": ""
+  },
+  "click_here_privacy_policy": {
+    "message": "Политику конфиденциальности",
+    "description": ""
+  },
+  "click_accept_terms_and_conditions": {
+    "message": "Принять",
+    "description": ""
+  },
+  "click_icon_on_toolbar_and_turn_on_protection": {
+    "message": "Нажми на значок Browsec на панели расширений, включи VPN, и готово!",
+    "description": ""
+  },
+  "close_page": {
+    "message": "Закрыть страницу",
+    "description": ""
+  },
+  "completed": {
+    "message": "Завершено",
+    "description": ""
+  },
+  "congratulations_securing_your_browsing": {
+    "message": "Еще один шаг, и браузер будет полностью защищен.",
+    "description": ""
+  },
+  "contact_support": {
+    "message": "Написать в поддержку Browsec",
+    "description": ""
+  },
+  "contact_us": {
+    "message": "Свяжитесь с нами",
+    "description": ""
+  },
+  "continue_using_browsec_to_open_websites": {
+    "message": "Вы можете продолжить использование Browsec. Спасибо!",
+    "description": ""
+  },
+  "continue_using_premium": {
+    "message": "Продолжайте использовать Browsec Premium",
+    "description": ""
+  },
+  "copy_to_clipboard": {
+    "message": "Скопировать логи",
+    "description": ""
+  },
+  "dedicated_traffic_lanes": {
+    "message": "Пользователи Premium пользуются выделенными каналами",
+    "description": ""
+  },
+  "delete_smart_setting_for_X": {
+    "message": "Удалить настройку для XXX",
+    "description": ""
+  },
+  "disable": {
+    "message": "Отключить",
+    "description": ""
+  },
+  "disable_selected_extensions": {
+    "message": "Отключить выбранные расширения",
+    "description": ""
+  },
+  "dont_have_an_account": {
+    "message": "Нет аккаунта?",
+    "description": ""
+  },
+  "dont_send_telemetry": {
+    "message": "Не отправлять телеметрию",
+    "description": ""
+  },
+  "dont_show_promo_offers": {
+    "message": "Не показывать промо-предложения",
+    "description": ""
+  },
+  "edit_smart_settings": {
+    "message": "Редактировать настройки",
+    "description": ""
+  },
+  "email": {
+    "message": "Почта",
+    "description": ""
+  },
+  "enable_browsec_for_all_sites_excluding_selected_sites": {
+    "message": "Авто-выключение VPN для выбранных сайтов",
+    "description": ""
+  },
+  "enable_browsec_for_all_sites_excluding_selected_sites_description_1": {
+    "message": "Включите VPN",
+    "description": ""
+  },
+  "enable_browsec_for_all_sites_excluding_selected_sites_description_2": {
+    "message": "Нажмите Умные настройки → Редактировать",
+    "description": ""
+  },
+  "enable_browsec_for_all_sites_excluding_selected_sites_description_3": {
+    "message": "Введите нужный домен, выберите ВЫКЛ и нажмите IMG",
+    "description": ""
+  },
+  "enable_browsec_only_for_selected_sites": {
+    "message": "Авто-включение VPN для выбранных сайтов",
+    "description": ""
+  },
+  "enable_browsec_only_for_selected_sites_description_1": {
+    "message": "Отключите VPN",
+    "description": ""
+  },
+  "enable_browsec_only_for_selected_sites_description_2": {
+    "message": "Нажмите Умные настройки → Редактировать",
+    "description": ""
+  },
+  "enable_browsec_only_for_selected_sites_description_3": {
+    "message": "Введите нужный домен, выберите для него страну и нажмите IMG",
+    "description": ""
+  },
+  "failed": {
+    "message": "Сбой",
+    "description": ""
+  },
+  "ff_screen_privacy_choices_header": {
+    "message": "Согласие на сбор и обработку данных",
+    "description": ""
+  },
+  "ff_screen_privacy_choices_text": {
+    "message": "В Browsec мы стремимся защищать вашу конфиденциальность. Для предоставления вам наилучшего сервиса мы собираем и обрабатываем определенные персональные данные. Пожалуйста, ознакомьтесь с нашим запросом.",
+    "description": ""
+  },
+  "ff_screen_statistical_data_header": {
+    "message": "Статистические данные",
+    "description": ""
+  },
+  "ff_screen_statistical_data_text": {
+    "message": "Мы собираем и обрабатываем технические и интерактивные данные, чтобы выявлять ошибки и улучшать производительность продукта. Узнайте больше в нашей ",
+    "description": ""
+  },
+  "ff_screen_identifiers_header": {
+    "message": "Идентификаторы",
+    "description": ""
+  },
+  "ff_screen_identifiers_text": {
+    "message": "Мы будем использовать ваш IP-адрес и идентификатор пользователя для доступа к сервису Browsec. Эта информация необходима нам для предоставления наших услуг. Узнайте больше в нашей  ",
+    "description": ""
+  },
+  "ff_screen_privacy_policy_link_text": {
+    "message": "Политике конфиденциальности.",
+    "description": ""
+  },
+  "ff_screen_privacy_policy_link_url": {
+    "message": "https://addons.mozilla.org/ru/firefox/addon/browsec/privacy",
+    "description": ""
+  },
+  "find_out_how_fix": {
+    "message": "Узнайте, как починить.",
+    "description": ""
+  },
+  "fix_it": {
+    "message": "Исправить",
+    "description": ""
+  },
+  "fix_proxy_settings": {
+    "message": "Исправить настройки прокси",
+    "description": ""
+  },
+  "forgot_your_password": {
+    "message": "Забыли пароль?",
+    "description": ""
+  },
+  "for_only": {
+    "message": "всего за",
+    "description": ""
+  },
+  "from_only_X_per_month": {
+    "message": "всего от XXX/месяц!",
+    "description": ""
+  },
+  "get_monthly_premium": {
+    "message": "Возьми Premium с помесячной оплатой",
+    "description": ""
+  },
+  "get_more_with_browsec_premium": {
+    "message": "С Browsec Premium ты получишь больше",
+    "description": ""
+  },
+  "get_N_days_free_premium_trial": {
+    "message": "Попробуй XXX дней премиума бесплатно",
+    "description": ""
+  },
+  "get_premium_now": {
+    "message": "Получить Premium прямо сейчас!",
+    "description": ""
+  },
+  "get_turbo_speed": {
+    "message": "Get Turbo Speed",
+    "description": ""
+  },
+  "go_ahead_and_renew_it": {
+    "message": "Продлите его",
+    "description": ""
+  },
+  "go_back": {
+    "message": "Назад",
+    "description": ""
+  },
+  "health_check": {
+    "message": "Диагностика",
+    "description": ""
+  },
+  "help": {
+    "message": "Справка",
+    "description": ""
+  },
+  "hide_health_check_logs": {
+    "message": "Скрыть логи диагностики",
+    "description": ""
+  },
+  "home": {
+    "message": "Начало",
+    "description": ""
+  },
+  "how_to_use_smart_settings": {
+    "message": "Как использовать умные настройки:",
+    "description": ""
+  },
+  "if_no_write_to_email": {
+    "message": "Если не получилось, напишите нам на",
+    "description": ""
+  },
+  "incorrect_email_or_password": {
+    "message": "Неправильная почта или пароль",
+    "description": ""
+  },
+  "i_want_to": {
+    "message": "Мне нужно:",
+    "description": ""
+  },
+  "locations_help_1": {
+    "message": "Browsec может установить безопасное соединение через свои серверы в любой из этих стран. С IP-адреса, принадлежащего выбранной стране, вы будете просматривать веб-страницы так, как будто действительно там находитесь.",
+    "description": ""
+  },
+  "locations_help_2": {
+    "message": "Чтобы получить доступ к содержимому, доступному только для определенной страны, выберите соответствующую страну из списка.",
+    "description": ""
+  },
+  "locations_help_3": {
+    "message": "Чтобы скрыть свое местоположение (для конфиденциальности или доступа к контенту, запрещенному в вашей стране), можно выбрать любую страну. Чем ближе виртуальная страна к реальной, тем выше скорость соединения.",
+    "description": ""
+  },
+  "N_servers_in_N_virtual_Locations": {
+    "message": "Более $1 серверов в $2 странах",
+    "description": ""
+  },
+  "off": {
+    "message": "ВЫКЛ",
+    "description": ""
+  },
+  "ok_i_got_it": {
+    "message": "Понятно",
+    "description": ""
+  },
+  "on": {
+    "message": "ВКЛ",
+    "description": ""
+  },
+  "one_smart_setting_description_1": {
+    "message": "Перейдите на Premium, чтобы добавлять Умные настройки без ограничений и поддержать развитие Browsec.",
+    "description": ""
+  },
+  "one_smart_setting_description_2": {
+    "message": "Также вы получите:",
+    "description": ""
+  },
+  "one_smart_setting_description_list_1": {
+    "message": "Доступ к 40+ странам",
+    "description": ""
+  },
+  "one_smart_setting_description_list_2": {
+    "message": "Турбо-скорость",
+    "description": ""
+  },
+  "only_X_per_month": {
+    "message": "всего за XXX в месяц",
+    "description": ""
+  },
+  "other_websites": {
+    "message": "Другие сайты",
+    "description": ""
+  },
+  "dependent_website": {
+    "message": "Связано с",
+    "description": ""
+  },
+  "password": {
+    "message": "Пароль",
+    "description": ""
+  },
+  "pin_the_browsec_extension": {
+    "message": "Закрепите расширение Browsec",
+    "description": ""
+  },
+  "please_enter_domain": {
+    "message": "Введите домен",
+    "description": ""
+  },
+  "please_enter_valid_domain": {
+    "message": "Введите правильный домен",
+    "description": ""
+  },
+  "please_try_again_or_contact_support": {
+    "message": "Попробуй ещё раз или напиши в поддержку Browsec.",
+    "description": ""
+  },
+  "premium_locations": {
+    "message": "Премиальные страны",
+    "description": ""
+  },
+  "premium_servers": {
+    "message": "Премиальные серверы",
+    "description": ""
+  },
+  "premium_server_authentication_error": {
+    "message": "Ошибка авторизации на премиум-сервере. VPN отключен. Пожалуйста, переподключитесь к VPN в расширении Browsec.",
+    "description": ""
+  },
+  "privacy_protection_disabled": {
+    "message": "Защита отключена",
+    "description": ""
+  },
+  "privacy_protection_partially_enabled": {
+    "message": "Текущий сайт: Защита включена",
+    "description": ""
+  },
+  "privacy_protection_partially_disabled": {
+    "message": "Текущий сайт: Защита выключена",
+    "description": ""
+  },
+  "remove_cache_on_authorization_popups": {
+    "message": "Удалять кэш на диалогах авторизации",
+    "description": ""
+  },
+  "remove_smart_setting": {
+    "message": "Удалить умную настройку",
+    "description": ""
+  },
+  "running": {
+    "message": "Выполняется",
+    "description": ""
+  },
+  "running_dots": {
+    "message": "Проверка...",
+    "description": ""
+  },
+  "select": {
+    "message": "Выбрать",
+    "description": ""
+  },
+  "select_allow_in_popup_window": {
+    "message": "Нажмите \"Разрешить\" во всплывающем окне",
+    "description": ""
+  },
+  "setting_was_deleted": {
+    "message": "Настройка удалена",
+    "description": ""
+  },
+  "show_health_check_logs": {
+    "message": "Показать логи диагностики",
+    "description": ""
+  },
+  "sign_in": {
+    "message": "Войти",
+    "description": ""
+  },
+  "sign_in_title": {
+    "message": "Вход",
+    "description": ""
+  },
+  "sign_out": {
+    "message": "Выйти",
+    "description": ""
+  },
+  "sign_up": {
+    "message": "Создать",
+    "description": ""
+  },
+  "skipped": {
+    "message": "Пропущено",
+    "description": ""
+  },
+  "smart_settings": {
+    "message": "Умные настройки",
+    "description": ""
+  },
+  "smart_settings_allow_you_to_control": {
+    "message": "Умные настройки позволяют лучше контролировать Browsec",
+    "description": ""
+  },
+  "smart_settings_features_1": {
+    "message": "Авто-включение VPN для выбранных сайтов",
+    "description": ""
+  },
+  "smart_settings_features_2": {
+    "message": "Авто-выключение VPN для выбранных сайтов",
+    "description": ""
+  },
+  "smart_settings_features_3": {
+    "message": "Посещение определенных сайтов через заранее заданные страны",
+    "description": ""
+  },
+  "something_went_wrong": {
+    "message": "Что-то пошло не так...",
+    "description": ""
+  },
+  "start": {
+    "message": "Начать",
+    "description": ""
+  },
+  "start_vpn": {
+    "message": "Включить VPN",
+    "description": ""
+  },
+  "terms_and_conditions_ff": {
+    "message": "Соглашения и разрешения использования расширения",
+    "description": ""
+  },
+  "this_account_is_locked_please_contact_us": {
+    "message": "Аккаунт заблокирован.\nПожалуйста, свяжитесь с нами для его разблокировки.",
+    "description": ""
+  },
+  "this_domain_already_in_list": {
+    "message": "Этот домен уже есть в списке",
+    "description": ""
+  },
+  "this_option_is_available_only_for_premium": {
+    "message": "This option is available only for Premium accounts",
+    "description": ""
+  },
+  "top_performance_guaranteed": {
+    "message": "Лучшие в своем классе серверы гарантируют высочайшую производительность",
+    "description": ""
+  },
+  "try_again": {
+    "message": "Повторить",
+    "description": ""
+  },
+  "turbo_speed": {
+    "message": "Турбо-скорость",
+    "description": ""
+  },
+  "turn_it_on": {
+    "message": "Включить",
+    "description": ""
+  },
+  "undo": {
+    "message": "Отменить",
+    "description": ""
+  },
+  "upgrade_connection_speed": {
+    "message": "Улучшить скорость",
+    "description": ""
+  },
+  "upgrade_to_premium": {
+    "message": "Получить Premium",
+    "description": ""
+  },
+  "use": {
+    "message": "→",
+    "description": ""
+  },
+  "use_browsec_for_webrtc_connections": {
+    "message": "Использовать Browsec для подключений WebRTC",
+    "description": ""
+  },
+  "use_different_locations_for_different_sites": {
+    "message": "Посещение определенных сайтов через заранее заданные страны",
+    "description": ""
+  },
+  "use_different_locations_for_different_sites_description_1": {
+    "message": "Включите VPN",
+    "description": ""
+  },
+  "use_different_locations_for_different_sites_description_2": {
+    "message": "Нажмите Умные настройки → Редактировать",
+    "description": ""
+  },
+  "use_different_locations_for_different_sites_description_3": {
+    "message": "Введите нужный домен, выберите для него страну и нажмите IMG",
+    "description": ""
+  },
+  "virtual_locations": {
+    "message": "Виртуальные страны",
+    "description": ""
+  },
+  "vpn_blocked": {
+    "message": "VPN заблокирован",
+    "description": ""
+  },
+  "warning": {
+    "message": "Внимание",
+    "description": ""
+  },
+  "webrtc_settings_controlled_by_another_extension": {
+    "message": "Настройки WebRTC контролируются другим расширением",
+    "description": ""
+  },
+  "welcome_back": {
+    "message": "С возвращением!",
+    "description": ""
+  },
+  "we_have_detected_other_extensions_which_block_access": {
+    "message": "Мы обнаружили другие расширения, которые блокируют доступ к настройкам прокси. Отключите эти расширения, чтобы использовать Browsec.",
+    "description": ""
+  },
+  "we_have_detected_other_extensions_which_can_conflict": {
+    "message": "Обнаружены расширения, которые могут конфликтовать с Browsec. Если Browsec работает неправильно, попробуйте отключить эти расширения.",
+    "description": ""
+  },
+  "what_is_webrtc_title": {
+    "message": "Что такое WebRTC?",
+    "description": ""
+  },
+  "what_is_webrtc_text_1": {
+    "message": "WebRTC (web real time communication) - это протокол, позволяющий совершать аудио- и видеозвонки из браузера.",
+    "description": ""
+  },
+  "what_is_webrtc_text_2": {
+    "message": "Однако через WebRTC сайт также может узнать ваш реальный IP-адрес, даже если вы используете VPN (утечка WebRTC).",
+    "description": ""
+  },
+  "what_is_webrtc_text_3": {
+    "message": "Эта опция предотвратит утечку WebRTC при включенном Browsec, но может снизить качество аудио- и видеозвонков. Вам решать, что для вас важнее.",
+    "description": ""
+  },
+  "with_smart_settings_you_can": {
+    "message": "С Умными настройками вы можете:",
+    "description": ""
+  },
+  "you_can_enable_these_extensions_later": {
+    "message": "Позже вы сможете включить эти расширения в настройках браузера.",
+    "description": ""
+  },
+  "you_can_have_only_1_smart_setting": {
+    "message": "В бесплатном варианте доступна только 1 Умная настройка.",
+    "description": ""
+  },
+  "you_just_installed_browsec": {
+    "message": "Browsec установлен!",
+    "description": ""
+  },
+  "you_may_now_open_the_extension": {
+    "message": "Теперь надо открыть окно расширения, чтобы запустить VPN.",
+    "description": ""
+  },
+  "your_browsers_connections_are_not_encrypted": {
+    "message": "Соединение не шифруется.<br/>Ваш IP и местоположение доступны третьим лицам.",
+    "description": ""
+  },
+  "your_premium_is_about_to_expire": {
+    "message": "Срок действия вашего Browsec Premium истекает",
+    "description": ""
+  },
+  "your_privacy_is_protected": {
+    "message": "Защита включена",
+    "description": ""
+  },
+  "your_proxy_settings_are_blocked": {
+    "message": "Ваши настройки прокси блокируются другим расширением",
+    "description": ""
+  },
+  "your_proxy_blocked_by_antivirus": {
+    "message": "Кажется, вы используете антивирус, который блокирует VPN.",
+    "description": ""
+  },
+  "7_days_money_back_guarantee": {
+    "message": "Гарантия возврата - 7 дней",
+    "description": ""
+  },
+  "extension_description": {
+    "message": "Browsec VPN - это бесплатное ВПН-расширение для Chrome, которое защищает ваш IP от интернет-угроз и дает приватный доступ в Интернет.",
+    "description": ""
+  },
+  "extension_name": {
+    "message": "Browsec VPN - бесплатный ВПН для Хрома",
+    "description": ""
+  },
+  "esn": {
+    "message": "Browsec VPN",
+    "description": ""
+  },
+  "proxy_overlay_premium": {
+    "message": "Премиум",
+    "description": ""
+  },
+  "virtual_location": {
+    "message": "Виртуальные страны",
+    "description": ""
+  },
+  "country_search": {
+    "message": "Поиск страны",
+    "description": ""
+  },
+  "stop_vpn": {
+    "message": "Выключить VPN",
+    "description": ""
+  },
+  "account_upgrade": {
+    "message": "Улучшить аккаунт и получить доступ к 600+ серверам в 43 странах",
+    "description": ""
+  },
+  "home_page_stars_shown": {
+    "message": "Отлично!",
+    "description": ""
+  },
+  "home_page_thanks": {
+    "message": "Спасибо за обратную связь!",
+    "description": ""
+  },
+  "is_it_working": {
+    "message": "Работает?",
+    "description": ""
+  },
+  "is_it_working_yes": {
+    "message": "Да!",
+    "description": ""
+  },
+  "is_it_working_no": {
+    "message": "Исправьте!",
+    "description": ""
+  },
+  "stars_rate_us": {
+    "message": "Оцените нас",
+    "description": ""
+  },
+  "browsec_healthcheck": {
+    "message": "Диагностика Browsec",
+    "description": ""
+  },
+  "browsec_healthcheck_description": {
+    "message": "Диагностика может занять несколько минут. Browsec будет включен и отключен несколько раз. Пожалуйста, не открывайте новые вкладки, пока идет диагностика.",
+    "description": ""
+  }
+}
