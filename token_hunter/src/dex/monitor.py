@@ -9,7 +9,7 @@ from django_telethon.models import App, ClientSession
 from nodriver.core.config import Config
 from telethon import TelegramClient
 from .transactions_data import DexscreenerData, DextoolsData
-from ..token.buyer import TokenBuyer
+from ..token.buyer import real_buy_token
 from ..token.checker import TokenChecker, CheckSettings
 from ..token.social import get_social_info
 from ..token.tasks import buy_token_task
@@ -122,19 +122,19 @@ class DexScreener():
                                 social_data,
                             )
                             
-                    token_buyer = TokenBuyer(
-                        pairs, 
-                        total_transfers, 
-                        is_mutable_metadata,
-                    )
+                    # token_buyer = TokenBuyer(
+                    #     pairs, 
+                    #     total_transfers, 
+                    #     is_mutable_metadata,
+                    # )
 
-                    await sync_to_async(token_buyer.buy_token)(
-                        Mode.DATA_COLLECTION,
-                        snipers_data,
-                        top_traders_data,
-                        twitter_data,
-                        telegram_data,
-                    )
+                    # await sync_to_async(token_buyer.buy_token)(
+                    #     Mode.DATA_COLLECTION,
+                    #     snipers_data,
+                    #     top_traders_data,
+                    #     twitter_data,
+                    #     telegram_data,
+                    # )
                     
             await self.browser.wait(10)
             

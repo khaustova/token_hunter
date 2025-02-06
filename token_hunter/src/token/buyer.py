@@ -1,158 +1,18 @@
 import logging
 from telethon import TelegramClient
-import time
-from .checker import TokenChecker
-from ..utils.tasks_data import get_active_tasks
-from ..utils.tokens_data import (
-    get_pairs_data, 
-    get_token_age, 
-    get_social_data
-)
-from ...models import Status, Settings, Transaction, Mode
 
 logger = logging.getLogger(__name__)
 
 
-class TokenBuyer:
+async def real_buy_token(token_address: str, telegram_client: TelegramClient,) -> None:
+    """
+    Реальная покупка токена через бот Maestro
+    """  
     
-    def __init__(
-        self, 
-        pair: str, 
-        telegram_client: TelegramClient, 
-        is_mutable_metadata: bool=True,
-    ):
-        self.pair = pair
-        self.is_mutable_metadata = is_mutable_metadata
-        self.telegram_client = telegram_client
+    await telegram_client.connect()
 
-    def buy_token(
-        self, 
-        mode: Mode, 
-        snipers_data: dict | None=None, 
-        top_traders_data: dict | None=None, 
-        twitter_data: dict | None=None, 
-        telegram_data: dict | None=None,
-        price_change: float | None=None,
-        settings_id: int | None=None,
-        dextscore: int | None=None,
-        is_mutable_metadata: bool=False,
-        transfers: int | None=None,
-    ):
-        """
-        Покупает токен и запускает задачу отслеживания стоимости токенов, если 
-        она не запущена.
-        """
-        
+    await telegram_client.send_message("@maestro", token_address)
+    
+    await telegram_client.disconnect()
 
-        token_data = get_pairs_data(self.pair)[0]
-        
-        if not token_data:
-            self.buy_token(
-                mode,
-                snipers_data,
-                top_traders_data,
-                twitter_data,
-                telegram_data,
-                price_change,
-                settings_id,
-                dextscore,
-                is_mutable_metadata,
-                transfers,
-            )
-        
-        token_age = get_token_age(token_data["pairCreatedAt"])
-        
-        social_data = get_social_data(token_data.get("info"))
-        
-        if not token_data.get("priceChange", {}).get("m5"):
-            logger.error("Нет данных об изменении цены за 5 минут")
-            return
-            
-        transaction, created = Transaction.objects.get_or_create(
-            pair=self.pair.lower(),
-            token_name=token_data["baseToken"]["name"],
-            token_address=token_data["baseToken"]["address"],
-            token_age_b=token_age,
-            price_b=token_data["priceUsd"],
-            buys_m5=token_data["txns"]["m5"]["buys"],
-            sells_m5=token_data["txns"]["m5"]["sells"],
-            buys_h1=token_data["txns"]["h1"]["buys"],
-            sells_h1=token_data["txns"]["h1"]["sells"],
-            buys_h6=token_data["txns"]["h6"]["buys"],
-            sells_h6=token_data["txns"]["h6"]["sells"],
-            buys_h24=token_data["txns"]["h24"]["buys"],
-            sells_h24=token_data["txns"]["h24"]["sells"],
-            transfers=transfers,
-            volume_m5=token_data["volume"]["m5"],
-            volume_h1=token_data["volume"]["h1"],
-            volume_h6=token_data["volume"]["h6"],
-            volume_h24=token_data["volume"]["h24"],
-            price_change_m5=token_data["priceChange"]["m5"],
-            price_change_h1=token_data["priceChange"]["h1"],
-            price_change_h6=token_data["priceChange"]["h6"],
-            price_change_h24=token_data["priceChange"]["h24"],
-            liquidity=token_data["liquidity"]["usd"],
-            fdv=token_data["fdv"],
-            market_cap=token_data["marketCap"],
-            is_mutable_metadata = is_mutable_metadata,
-            is_telegram=social_data["is_telegram"],
-            is_twitter=social_data["is_twitter"],
-            is_website=social_data["is_website"],
-            dextscore=dextscore,
-            price_change_check=price_change,
-            status=Status.OPEN,
-            mode=mode
-        )
-        
-        if snipers_data:
-            transaction.sns_held_all = snipers_data.get("held_all")
-            transaction.sns_sold_some = snipers_data.get("sold_some")
-            transaction.sns_sold_all = snipers_data.get("sold_all")
-            transaction.sns_bought = snipers_data.get("bought")
-            transaction.sns_sold = snipers_data.get("sold")
-            transaction.save()
-            
-        if top_traders_data:
-            transaction.tt_bought = top_traders_data.get("bought")
-            transaction.tt_sold = top_traders_data.get("sold")
-            transaction.tt_unrealized = top_traders_data.get("unrealized")
-            transaction.tt_speed = top_traders_data.get("speed")
-            transaction.save()
-            
-        if twitter_data:
-            transaction.twitter_days = twitter_data.get("twitter_days")
-            transaction.twitter_followers = twitter_data.get("twitter_followers")
-            transaction.twitter_smart_followers = twitter_data.get("twitter_smart_followers")
-            transaction.twitter_tweets = twitter_data.get("twitter_tweets")
-            transaction.is_twitter_error = twitter_data.get("is_twitter_error")
-            transaction.save()
-            
-        if telegram_data:
-            transaction.telegram_members = telegram_data.get("telegram_members")
-            transaction.is_telegram_error = telegram_data.get("is_telegram_error")
-            transaction.save()
-            
-        if token_data.get("boosts"):
-            transaction.boosts = token_data["boosts"].get("active")
-           
-        if settings_id:
-            transaction.settings = Settings.objects.get(id=settings_id)
-            
-        transaction.save()
-            
-        logger.info(f"Покупка токена {token_data["baseToken"]["name"]} за {token_data["priceUsd"]} USD") 
-
-    async def real_buy_token(self) -> None:
-        """
-        Реальная покупка токена через бот Maestro
-        """  
-        
-        await self.telegram_client.connect()
-
-        token_data = get_pairs_data(self.pair)[0]
-        token_address = token_data["baseToken"]["address"]
-        await self.telegram_client.send_message("@maestro", token_address)
-        
-        await self.telegram_client.disconnect()
-
-        logger.info(f"Покупка токена {token_address} через Maestro Bot")
+    logger.info(f"Покупка токена {token_address} через Maestro Bot")
