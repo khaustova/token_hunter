@@ -15,7 +15,7 @@ def get_pairs_data(pairs: str | list[str]) -> dict:
     """
     
     token_data_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pairs}"
-    token_data = None
+    token_data = {}
     while not token_data:
         try:
             token_data = requests.get(token_data_url, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT)).json()["pairs"]
@@ -28,6 +28,10 @@ def get_pairs_data(pairs: str | list[str]) -> dict:
 
 
 def get_pairs_data_for_30_more_tokens(buying_prices: dict) -> list:
+    """
+    Возвращает данные о более, чем 30 токенах.
+    """
+    
     if len(buying_prices.keys()) < 30:
         tokens_str = ",".join(buying_prices.keys())
         tokens_data = get_pairs_data(tokens_str)
@@ -111,75 +115,31 @@ def get_pairs_count(token_address: str) -> int:
     return count
 
 
-def get_socials_data(token_data) -> dict:
+def get_social_data(token_data: dict|None=None) -> dict:
     """
     Возвращает словарь, в котором определено наличие сайта, Твиттера 
     и Телеграма для токена token_address.
     """
     
-    socials_data= {
+    social_data = {
         "is_telegram": False, 
         "is_twitter": False, 
         "is_website": False
     }
     
-    info = token_data.get("info", None)
+    info = token_data.get("info")
     
     if not info:
-        return socials_data
+        return social_data
     
     if info.get("websites"):
-        socials_data["is_website"] = True
+        social_data["is_website"] = True
         
     if info.get("socials"):
         for socio in info.get("socials"):
             if socio.get("type") == "twitter":
-                socials_data["is_twitter"] = True
+                social_data["is_twitter"] = True
             elif socio.get("type") == "telegram":
-                socials_data["is_telegram"] = True
+                social_data["is_telegram"] = True
                 
-    return socials_data
-
-
-def count_pnl_loss(bought_str: str, sold_str: str) -> int:
-    """
-    Возвращает количество отрицательных PNL.
-    """
-    try:
-        bought_lst = [float(x) for x in bought_str.split(" ")]
-        sold_lst = [float(x) for x in sold_str.split(" ")]
-        pnl_lst = [sold - bought if sold else 0 for bought, sold in zip(bought_lst, sold_lst)]
-        
-        pnl_loss = sum(i < 0 for i in pnl_lst)
-        
-        return pnl_loss
-    except:
-        return 
-        
-
-def get_sum(num_str: str) -> float:
-    """
-    Вовзращает сумму чисел в строке.
-    """
-    
-    try:
-        num_lst = [float(x) for x in num_str.split(" ")]
-        num_sum = sum(num_lst)
-        
-        return num_sum
-    except:
-        return
-
-
-def count_zero(num_str: str) -> int:
-    """
-    Возвращает количество нулей в строке.
-    """
-    
-    try:
-        num_lst = [float(x) for x in num_str.split(" ")]
-        count_zero = num_lst.count(0)
-        
-        return count_zero
-    except:
-        return
+    return social_data

@@ -685,6 +685,12 @@ class Transaction(models.Model):
         default=0,
         verbose_name="Буст"
     )
+    dextscore = models.IntegerField(
+        blank=True,
+        null=True,
+        default=0,
+        verbose_name="DextScore"
+    )
     telegram_members = models.IntegerField(
         blank=True,
         null=True,
@@ -772,6 +778,18 @@ class Transaction(models.Model):
         null=True,
         verbose_name="Продажи топов"
     )
+    tt_unrealized = models.CharField(
+        max_length=2048,
+        blank=True,
+        null=True,
+        verbose_name="Нереализованные токены топов"
+    )
+    tt_speed = models.CharField(
+        max_length=2048,
+        blank=True,
+        null=True,
+        verbose_name="Скорость топов"
+    )
     # Итоговые данные:
     PNL = models.DecimalField(
         blank=True, 
@@ -805,10 +823,15 @@ class Transaction(models.Model):
         null=True,
         verbose_name="PNL 50 %"
     )
-    PNL_loss_5 = models.BooleanField(
+    PNL_100 = models.BooleanField(
         blank=True,
         null=True,
-        verbose_name="PNL -5 %"
+        verbose_name="PNL 100 %"
+    )
+    PNL_200 = models.BooleanField(
+        blank=True,
+        null=True,
+        verbose_name="PNL 200 %"
     )
     PNL_loss_10 = models.BooleanField(
         blank=True,

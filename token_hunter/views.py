@@ -10,11 +10,11 @@ from .forms import SettingsForm
 from .models import Transaction, Status, Settings, MonitoringRule, Mode
 from .serializers import TransactionSerializer
 from .src.dex.tasks import (
-    watching_dexscreener_task, 
-    watching_boosted_tokens_task,
+    monitor_dexscreener_task, 
+    monitor_boosted_tokens_task,
     parsing_dexscreener_task,
 )
-from .src.tokens.tasks import track_tokens
+from .src.token.tasks import track_tokens_task
 from .src.utils.tokens_data import get_pairs_data
 from .src.utils.tasks_data import get_dexscreener_worker_tasks_ids
 
@@ -63,14 +63,14 @@ def watch_dexscreener(request: HttpRequest):
                     settings_ids.append(settings.id)
           
             if monitoring_rule == MonitoringRule.BOOSTED:
-                monitoring = watching_boosted_tokens_task.delay(settings_ids=settings_ids)
+                monitoring = monitor_boosted_tokens_task.delay(settings_ids=settings_ids)
                 logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
                    
             elif monitoring_rule == MonitoringRule.FILTER:
-                process = watching_dexscreener_task.delay(FILTER)
+                process = monitor_dexscreener_task.delay(FILTER)
                 logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
                 
-            tracking_price = track_tokens.delay()
+            tracking_price = track_tokens_task.delay()
             logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id}")
             
         elif "_stop_monitoring" in request.POST:
