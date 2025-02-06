@@ -11,3 +11,4 @@ page_sources
 .venv
 .env
 logs
+token_hunter/src/dex/users
