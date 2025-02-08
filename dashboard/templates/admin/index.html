@@ -23,7 +23,7 @@
 
       <div class="content-card">
         <h4 class="content-card__title">{% get_settings_form %}</h4>
-        <form class="parsing__form" action="{% url 'token_hunter:watch_dexscreener' %}" method="POST">
+        <form class="parsing__form" action="{% url 'token_hunter:monitor_dexscreener' %}" method="POST">
           {% csrf_token %}
           <div class="settings_wrapper">
           {% for field in settings_form %}
@@ -36,32 +36,45 @@
           </div>
             
           <div class="parsing-buttons_wrapper">
-            {% get_watcher_tasks_id as watcher_tasks_ids %}
-            {% if watcher_tasks_ids %}
-              <button class="watcher__button watcher-stop__button" id="stop-monitoring-button" type="submit" name="_stop_monitoring">Остановить мониторинг Dexscreener ⛔</button>
-            {% else %}
-              <button 
-              class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring" 
-              {% if watcher_tasks_ids.parsing_task_id %} disabled="true"{% endif %}>Мониторинг Dexscreener 👀</button>
+              <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг Dexscreener 👀</button>
+              <button class="watcher__button" id="watch-dex-button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
+
+            {% get_celery_tasks_id as celery_tasks_id %}
+            <p>
+              <b>Отслеживание стоимости токенов:</b>
+              {% if celery_tasks_id.track_tokens_task_id %} 
+              ✅ (<a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=celery_tasks_id.track_tokens_task_id.0 %}">Остановить</a>)
+              {% else %}
+              ❌ (<a href="{% url 'token_hunter:start_track_tokens_task' %}">Запустить</a>)
+              {% endif %}
+            </p>
+
+            {% if celery_tasks_id.boosted_task_id %}
+              <p class="loading"><b>Выполняется мониторинг boosted токенов на Dexscreener</b></p>
+              {% for boosted_id in celery_tasks_id.boosted_task_id %}
+                <p class="stop_task">
+                  <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=boosted_id %}">⛔ Остановить экземпляр {{ boosted_id|truncatechars:5 }}</a>
+                </p>
+              {% endfor %}
             {% endif %}
 
-            {% get_watcher_tasks_id as watcher_tasks_ids %}
-            {% if watcher_tasks_ids.parsing_task_id != None %}
-              <button class="watcher__button watcher-stop__button" id="stop-parsing-button" type="submit" name="_stop_parsing">Остановить парсинг топа кошельков ⛔</button>
-            {% elif watcher_tasks_ids.parsing_task_id == None %}
-              <button 
-              class="watcher__button" id="watch-dex-button" type="submit" name="_parsing" 
-              {% if watcher_tasks_ids.watching_task_id %} disabled="true"{% endif %}>Обновить топ кошельков 📈</button>
-            {% endif %}
+            {% if celery_tasks_id.filter_task_id %}
+            <p class="loading"><b>Выполняется мониторинг токенов на Dexscreener по фильтру</b></p>
+            {% for filter_task_id in celery_tasks_id.filter_task_id %}
+              <p class="stop_task">
+                <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=filter_task_id %}">⛔ Остановить экземпляр {{ filter_task_id|truncatechars:5 }}</a>
+              </p>
+            {% endfor %}
+          {% endif %}
 
-            {% get_watcher_tasks_id as watcher_tasks_ids %}
-            {% if watcher_tasks_ids.boosted_task_id != None %}
-              <p class="loading">Выполняется мониторинг boosted токенов на Dexscreener</p>
-            {% elif watcher_tasks_ids.watching_task_id != None %}
-              <p class="loading">Выполняется мониторинг Dexscreener</p>
-            {% elif watcher_tasks_ids.parsing_task_id != None %}
-              <p class="loading">Выполняется парсинг топа кошельков на Dexscreener</p>
-            {% endif %}
+          {% if celery_tasks_id.parsing_task_id %}
+          <p class="loading"><b>Выполняется парсинг топа кошельков на Dexscreener по фильтру</b></p>
+          {% for parsing_task_id in celery_tasks_id.parsing_task_id %}
+            <p class="stop_task">
+              <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=parsing_task_id %}">⛔ Остановить экземпляр {{ parsing_task_id|truncatechars:5 }}</a>
+            </p>
+          {% endfor %}
+        {% endif %}
 
           </div>
         </form>
@@ -209,71 +222,6 @@
           </section> 
         </div> 
       </div>
-
-      {% comment %} <div class="content-card" id="recent-actions-module">
-        <h4 class="content-card__title">{% trans 'Recent actions' %}</h4>
-        {% load log %}
-        {% get_admin_log 10 as admin_log for_user user %}
-        {% if not admin_log %}
-          <p>{% trans 'None available' %}</p>
-        {% else %}
-          <div class="timeline">
-            {% for entry in admin_log %}
-              <div>
-                {% if entry.is_change %}
-                  <span class="material-symbols-outlined icon-edit">
-                    edit
-                  </span>
-                {% elif entry.is_deletion %}
-                  <span class="material-symbols-outlined icon-delete">
-                    delete
-                  </span>
-                {% elif entry.is_addition %}
-                  <span class="material-symbols-outlined icon-create">
-                    add
-                  </span>
-                {% endif %}
-                <div class="timeline-item">
-                  <span class="time">
-                    <span class="material-symbols-outlined icon-datetime">
-                      schedule
-                    </span>
-                    {% blocktrans with timesince=entry.action_time|timesince %}{{ timesince }} ago{% endblocktrans %}
-                  </span>
-                  <h3 class="timeline-header">
-                    {% if entry.is_deletion or not entry.get_admin_url %}
-                      {{ entry.object_repr }}
-                    {% else %}
-                      <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
-                    {% endif %}
-                    {% if entry.model %}
-                      <span class="mini quiet">
-                        {% filter capfirst %}
-                          {{ entry.model }}
-                        {% endfilter %}
-                      </span>
-                    {% endif %}
-                  </h3>
-                  {% if not entry.is_deletion %}
-                    <div class="timeline-body">
-                      {% if entry.is_addition %}
-                        {{ entry }}
-                      {% else %}
-                        <ul style="list-style: none; padding: 0;">
-                          {% action_message_to_list entry as action_message_list %}
-                          {% for action_message in action_message_list %}
-                            <li>{{ action_message.message|bold_first_word }}</li>
-                          {% endfor %}
-                        </ul>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div> {% endcomment %}
     </div>
   </div>
 

@@ -122,6 +122,7 @@ def buy_token_task(
     dextscore: int | None=None,
     is_mutable_metadata: bool=False,
     transfers: int | None=None,
+    boosts_ages: str | None=None 
 ) -> None:
     """
     Эмулирует покупку токена и сохраняет информацию о нём в базу данных.
@@ -203,6 +204,9 @@ def buy_token_task(
         
     if token_data.get("boosts"):
         transaction.boosts = token_data["boosts"].get("active")
+        
+        if boosts_ages:
+            transaction.boosts_ages = boosts_ages
         
     if settings_id:
         transaction.settings = Settings.objects.get(id=settings_id)

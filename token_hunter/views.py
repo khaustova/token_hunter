@@ -28,7 +28,7 @@ except:
 
 
 @require_POST
-def watch_dexscreener(request: HttpRequest):
+def monitor_dexscreener(request: HttpRequest):
     """
     В зависимости от нажатой кнопки запускает задачу парсинга топа кошельков 
     или мониторинга DexScreener для поиска и покупки токенов.
@@ -70,8 +70,7 @@ def watch_dexscreener(request: HttpRequest):
                 process = monitor_dexscreener_task.delay(FILTER)
                 logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
                 
-            tracking_price = track_tokens_task.delay()
-            logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id}")
+
             
         elif "_stop_monitoring" in request.POST:
             tasks_ids = get_dexscreener_worker_tasks_ids()
@@ -94,6 +93,28 @@ def watch_dexscreener(request: HttpRequest):
             logger.info(f"Выполнение задачи {task_id} парсинга топа кошельков на DexScreener остановлено")
             
         
+    return HttpResponseRedirect("/")
+
+
+def stop_task(request: HttpRequest, task_id: str):
+    """
+    Останавливает задачу Celery по её id.
+    """
+    
+    app.control.revoke(task_id, terminate=True)
+    logger.info(f"Задача {task_id} остановлено")
+    
+    return HttpResponseRedirect("/")
+
+
+def start_track_tokens_task(request: HttpRequest):
+    """
+    Запускает задачу отслеживания стоимости токенов.
+    """
+    
+    tracking_price = track_tokens_task.delay()
+    logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id}")
+    
     return HttpResponseRedirect("/")
         
 

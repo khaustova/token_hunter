@@ -303,14 +303,13 @@ def get_check_token_form(context: template.Context) -> str:
 
 
 @register.simple_tag()
-def get_watcher_tasks_id() -> str:
+def get_celery_tasks_id() -> str:
     """
     Возвращает id текущей активной задачи: мониторинга или парсинга DexScreener.
     """
     
     worker_tasks_ids = get_dexscreener_worker_tasks_ids()
-    is_tasks = any(worker_tasks_ids.values())
-    return is_tasks
+    return worker_tasks_ids
 
 
 @register.tag(name="transactions_result_list")

@@ -936,4 +936,18 @@ section.pnl__section {
     } 
 }
 
+.stop_task {
+    margin-left: 10px;
+}
 
+a.stop_task_link, 
+a.stop_task_link:link, 
+a.stop_task_link:visited  {
+    color: var(--color-delete);
+    text-decoration: none;
+}
+
+a.stop_task_link:hover  {
+    color: var(--color-hover);
+    text-decoration: none;
+}
