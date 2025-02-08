@@ -685,6 +685,12 @@ class Transaction(models.Model):
         default=0,
         verbose_name="Буст"
     )
+    boosts_ages = models.CharField(
+        max_length=2048,
+        blank=True,
+        null=True,
+        verbose_name="Возраст на момент бустов"
+    )
     dextscore = models.IntegerField(
         blank=True,
         null=True,

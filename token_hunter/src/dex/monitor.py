@@ -20,6 +20,7 @@ from ..utils.tokens_data import (
     get_pairs_count, 
     get_latest_boosted_tokens, 
     get_token_data,
+    get_token_age
 )
 from ...models import TopTrader, Transaction, Settings, Mode
 from ...settings import check_settings
@@ -149,6 +150,7 @@ class DexScreener():
         
         black_list = []
         step = 0
+        boosted_tokens = {}
         while True:
             time.sleep(2)
             
@@ -170,11 +172,14 @@ class DexScreener():
                 if token["amount"] < 500:
                     continue
                 
+                if boosted_tokens.get(token["tokenAddress"], {}).get("total_amount") == token["totalAmount"]:
+                    continue
+                
                 token_data = get_token_data(token_address)[0]
                 if not token_data.get("liquidity"):
                     black_list.append(token_address)
                     continue
-                
+                  
                 pair = token_data.get("pairAddress")
 
                 rugcheck_result = await rugcheck(self.browser, token["tokenAddress"])
@@ -210,8 +215,20 @@ class DexScreener():
                     mode = Mode.REAL
                     
                 time.sleep(20)
-                price_30s = float(get_pairs_data(pair)[0]["priceUsd"])
+                upd_token_data =  get_pairs_data(pair)[0]
+                price_30s = float(upd_token_data["priceUsd"])
                 price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
+                
+                boosted_tokens.setdefault(
+                    token["tokenAddress"], 
+                    {
+                        "total_amount": token["totalAmount"],
+                        "boosts_ages": "",
+                    })
+                
+                token_age = str(get_token_age(upd_token_data["pairCreatedAt"])) + " "
+                
+                boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
                 
                 buy_token_task.delay(
                     pair=pair,
@@ -224,8 +241,8 @@ class DexScreener():
                     settings_id=settings_id,
                     is_mutable_metadata=is_mutable_metadata,
                     dextscore=dextscore,
+                    boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
                 )
-                black_list.append(token_address)
                 
     async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
         """
