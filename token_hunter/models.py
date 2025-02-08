@@ -86,13 +86,6 @@ class Settings(models.Model):
         default=Mode.BOOSTED,
         verbose_name="Режим"
     )
-    filter = models.CharField(
-        blank=True,
-        null=True,
-        max_length=1024,
-        default="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
-        verbose_name="Фильтр по умолчанию"
-    )
     
     # Цена токена:
     price_min = models.FloatField(

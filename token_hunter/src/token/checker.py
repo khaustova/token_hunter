@@ -70,7 +70,7 @@ class CheckSettings:
         }
         
         return check_functions
-           
+
     def get_check_token_data(self):
         check_token_data = [
             # Цена токена: 

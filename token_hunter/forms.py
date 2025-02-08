@@ -18,6 +18,16 @@ class SettingsSelect2TagWidget(ModelSelect2TagWidget):
 
 
 class SettingsForm(forms.Form):
+    filter = forms.CharField(
+        required=False,
+        initial="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
+        widget=forms.TextInput(
+            attrs={
+                "default": "Введите фильтр", 
+            }
+        ),
+        label="Введите выражение с фильтром для токенов:",
+    )
     monitoring_rule = forms.ChoiceField(
         choices=MonitoringRule,
         label="Выберите режим"

@@ -53,89 +53,97 @@ class DexScreener():
         """
         
         #await self._get_2captcha_api_key()
+        if not filter:
+            filter = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&minAge=5&maxAge=60"
+        
         dex_page = await self.browser.get(
             "https://dexscreener.com/solana/raydium" + filter
         )
         #await self._check_cloudflare(dex_page)
         #await dex_page.wait(10)
         await asyncio.sleep(10)
-        black_list, watch_list = [], []
-        all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
-        step = 0
-        await self.telegram_client.connect()
         
+        black_list_links, black_list_token_address = [], []
+        step = 0
+    
         while True:
             # Регулярное обновление страницы для избежания ошибки "Aw, Snap!" 
             step += 1
-            if step == 200:
-                step = 0
+            if step == 120:
                 await dex_page.reload()
                 await asyncio.sleep(5)
+                step = 0
                    
             all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
 
-            links = [item for item in all_links if item not in black_list]
+            links = [item for item in all_links if item not in black_list_links]
             await asyncio.sleep(5)
+            
             if links:
                 for link in links:
-                    pairs = link.attributes[-1].split("/")[-1]
-                    token_checker = TokenChecker(pairs)
+                    pair = link.attributes[-1].split("/")[-1]
 
-                    is_transaction = await self._check_transaction(token_checker.token_address)
-                    if is_transaction:
-                        black_list.append(link)
-                        continue
+                    token_data = get_pairs_data(pair)[0]
+                    token_address = token_data["baseToken"]["address"]
                     
-                    if not token_checker.check_age():
-                        black_list.append(link)
-                        continue
-                    
-                    pairs_count = get_pairs_count(token_checker.token_address)
-                    if pairs_count != 1:
-                        black_list.append(link)
+                    pair_count = get_pairs_count(token_address)
+                    if pair_count != 1:
+                        black_list_links.append(link)
                         continue
     
                     await dex_page.wait(2)
 
-                    rugcheck = await self.rugcheck(token_checker.token_address)
-                    risk_level = rugcheck["risk_level"]
-                    is_mutable_metadata = rugcheck["is_mutable_metadata"]
-                    logger.info(f"Уровень риска токена {token_checker.token_name}: {risk_level}")
+                    rugcheck_result = await rugcheck(self.browser, token_address)
+                    risk_level = rugcheck_result.get("risk_level")
+                    is_mutable_metadata = rugcheck_result.get("is_mutable_metadata")
+                    logger.info(f"Уровень риска токена {token_address}: {risk_level}")
                     
                     if risk_level == None:
                         continue
                     elif risk_level != "Good":
-                        black_list.append(link)
+                        black_list_links.append(link)
                         continue
   
                     await dex_page.wait(2)
-                    #total_transfers = None
+
+                    # total_transfers = get_total_transfers(token["tokenAddress"])
+                    # twitter_data, telegram_data = get_social_info(token.get("links"))
                     
-                    total_transfers = await self.get_total_transfers(token_checker.token_address)
+                    descreener = DexscreenerData(self.browser, pair)
+                    transaction_data = await descreener.get_transactions_data()
+                    top_traders_data = transaction_data.get("top_traders_data")
+                    snipers_data = transaction_data.get("snipers_data")
+                    dextscore = transaction_data.get("dextscore")
+                    
+                    mode = Mode.DATA_COLLECTION
+                    
+                    token_checker = TokenChecker(pair, self.check_settings)
+                
+                    settings_id = token_checker.check_token(snipers_data, top_traders_data)
+                    
+                    if settings_id:
+                        mode = Settings.objects.get(id=settings_id).mode
                         
-                    snipers_data, top_traders_data = await self.get_transactions_data(pairs)
-
-                    twitter_data, telegram_data = None, None
-                    if token_checker.token_data.get("info"):
-                        social_data = token_checker.token_data.get("info").get("socials")
-                        if social_data:
-                            twitter_data, telegram_data = await self.get_social_data(
-                                social_data,
-                            )
+                    if check_settings(pair, top_traders_data, snipers_data):
+                        mode = Mode.REAL
+                        
+                    time.sleep(15)
+                    upd_token_data =  get_pairs_data(pair)[0]
+                    price_15s = float(upd_token_data["priceUsd"])
+                    price_change = (price_15s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
                             
-                    # token_buyer = TokenBuyer(
-                    #     pairs, 
-                    #     total_transfers, 
-                    #     is_mutable_metadata,
-                    # )
-
-                    # await sync_to_async(token_buyer.buy_token)(
-                    #     Mode.DATA_COLLECTION,
-                    #     snipers_data,
-                    #     top_traders_data,
-                    #     twitter_data,
-                    #     telegram_data,
-                    # )
+                    buy_token_task.delay(
+                        pair=pair,
+                        mode=mode,
+                        snipers_data=snipers_data,
+                        top_traders_data=top_traders_data,
+                        twitter_data=None,
+                        telegram_data=None,
+                        price_change=price_change,
+                        settings_id=settings_id,
+                        is_mutable_metadata=is_mutable_metadata,
+                        dextscore=dextscore,
+                    )
                     
             await self.browser.wait(10)
             
@@ -214,10 +222,10 @@ class DexScreener():
                 if check_settings(pair, top_traders_data, snipers_data):
                     mode = Mode.REAL
                     
-                time.sleep(20)
+                time.sleep(15)
                 upd_token_data =  get_pairs_data(pair)[0]
-                price_30s = float(upd_token_data["priceUsd"])
-                price_change = (price_30s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
+                price_15s = float(upd_token_data["priceUsd"])
+                price_change = (price_15s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
                 
                 boosted_tokens.setdefault(
                     token["tokenAddress"], 
@@ -318,15 +326,19 @@ class DexScreener():
         return list(Transaction.objects.filter(token_address=token_address))
 
 
-async def run_dexscreener_monitor_filter_tokens(filter):
+async def run_dexscreener_monitor_filter_tokens(settings_ids, filter):
     """
     Инициализирует браузер и запускает мониторинг DesScreener.
     """
     
     config = Config()
     #config.add_extension("./extensions/captcha_solver")
+    check_settings = {}
+    for settings_id in settings_ids:
+        check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
+    
     browser = await uc.start(config=config)
-    dexscreener = DexScreener(browser)
+    dexscreener = DexScreener(browser, check_settings)
     await dexscreener.monitor_filter_tokens(filter)
     
 
@@ -357,14 +369,3 @@ async def run_top_traders_parser(filter, pages):
     dex_worker = DexScreener(browser)
     await dex_worker.parse_top_traders(filter, pages)
     
-    
-async def run_top_traders_parser(filter, pages):  
-    """
-    Инициализирует браузер и запускает парсинг топов кошельков DesScreener.
-    """  
-    
-    config = Config()
-   # config.add_extension("./extensions/captcha_solver")
-    browser = await uc.start(config=config, sandbox=False)
-    dex_worker = DexScreener(browser)
-    await dex_worker.parse_top_traders(filter, pages)

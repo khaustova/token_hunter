@@ -249,8 +249,8 @@ def get_open_transactions() -> dict:
     if open_transactions_qs:
         buying_prices = {transaction.pair: transaction.price_b for transaction in open_transactions_qs}
         
-        open_transactions_pairs = [transaction.pair for transaction in open_transactions_qs]
-        tokens_data = get_pairs_data(",".join(open_transactions_pairs))
+        open_transactions_pair = [transaction.pair for transaction in open_transactions_qs]
+        tokens_data = get_pairs_data(",".join(open_transactions_pair))
         
         current_pnl = {}
         for token_data in tokens_data:

@@ -13,18 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True, base=AbortableTask)
-def monitor_dexscreener_task(self, filter: str) -> str:
+def monitor_dexscreener_task(self, settings_ids: list, filter: str) -> str:
     """
     Обёртывает функцией синхронизации асинхронную функцию мониторинга DexScreener.
     """
     
-    async_to_sync(run_dexscreener_monitor_filter_tokens)(filter)
+    async_to_sync(run_dexscreener_monitor_filter_tokens)(settings_ids, filter)
     
     return f"Мониторинг Dexscreener завершён"
 
 
 @app.task(bind=True, base=AbortableTask)
-def monitor_boosted_tokens_task(self, settings_ids) -> str:
+def monitor_boosted_tokens_task(self, settings_ids: list) -> str:
     """
     Обёртывает функцией синхронизации асинхронную функцию мониторинга boosts  
     токенов на DexScreener.

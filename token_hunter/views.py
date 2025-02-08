@@ -16,15 +16,8 @@ from .src.dex.tasks import (
 )
 from .src.token.tasks import track_tokens_task
 from .src.utils.tokens_data import get_pairs_data
-from .src.utils.tasks_data import get_dexscreener_worker_tasks_ids
 
 logger = logging.getLogger(__name__)
-
-try:
-    settings = Settings.objects.all().first()
-    FILTER = settings.filter
-except:
-    FILTER = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1"
 
 
 @require_POST
@@ -36,18 +29,13 @@ def monitor_dexscreener(request: HttpRequest):
     
     form = SettingsForm(request.POST)
     if form.is_valid():
+        if form.cleaned_data.get("filter"):
+            filter = form.cleaned_data["filter"]  
+        else:
+            filter = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1"
         
-        if "_parsing" in request.POST:
-            if form.cleaned_data["filter"]:
-                filter = form.cleaned_data["filter"]  
-            else:
-                filter = FILTER
-            if form.cleaned_data["pages"]: 
-                pages = int(form.cleaned_data["pages"])  
-            else:
-                pages = 1
-                
-            process = parsing_dexscreener_task.delay(filter, pages)
+        if "_parsing" in request.POST: 
+            process = parsing_dexscreener_task.delay(filter)
             logger.info(f"Запущена задача парсинга топа кошельков на DexScreener {process.id}")
                 
         elif "_monitoring" in request.POST:
@@ -67,30 +55,8 @@ def monitor_dexscreener(request: HttpRequest):
                 logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
                    
             elif monitoring_rule == MonitoringRule.FILTER:
-                process = monitor_dexscreener_task.delay(FILTER)
+                process = monitor_dexscreener_task.delay(settings_ids=settings_ids, filter=filter)
                 logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
-                
-
-            
-        elif "_stop_monitoring" in request.POST:
-            tasks_ids = get_dexscreener_worker_tasks_ids()
-            
-            watching_task_id = tasks_ids.get("watching_task_id")
-            if watching_task_id:      
-                app.control.revoke(watching_task_id, terminate=True)
-                logger.info(f"Остановлена задача {watching_task_id}  мониторинга DexScreener")
-            
-            boosted_task_id = tasks_ids.get("boosted_task_id")
-            if boosted_task_id:
-                app.control.revoke(boosted_task_id, terminate=True)
-                logger.info(f"Остановлена задача {boosted_task_id} мониторинга boosted токенов на DexScreener")
-                
-        elif "_stop_parsing" in request.POST:
-            tasks_ids = get_dexscreener_worker_tasks_ids()
-            task_id = tasks_ids["parsing_task_id"]
-                
-            app.control.revoke(task_id, terminate=True)
-            logger.info(f"Выполнение задачи {task_id} парсинга топа кошельков на DexScreener остановлено")
             
         
     return HttpResponseRedirect("/")

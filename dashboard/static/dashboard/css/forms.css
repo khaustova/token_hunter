@@ -846,7 +846,8 @@ button[type=submit].check-token__button {
     flex-direction: column;
 }
 
-label[for=id_settings] {
+label[for=id_settings],
+label[for=id_monitoring_rule] {
     margin-top: 10px;
 }
 
