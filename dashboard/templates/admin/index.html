@@ -107,8 +107,8 @@
             {% for trader in top_traders %}
               <tr>
                 <td>
-                  {% get_wallet_link trader.wallet_address as solsniffer_link %}
-                  <a href="{{ solsniffer_link }}">{{ trader.wallet_address }}</a>
+                  {% get_wallet_link trader.wallet_address as wallet_link %}
+                  <a href="{{ wallet_link }}">{{ trader.wallet_address }}</a>
                 </td>
                 <td>
                   {{ trader.token_count }}

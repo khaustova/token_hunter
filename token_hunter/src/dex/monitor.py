@@ -12,7 +12,7 @@ from .transactions_data import DexscreenerData, DextoolsData
 from ..token.buyer import real_buy_token
 from ..token.checker import TokenChecker, CheckSettings
 from ..token.social import get_social_info
-from ..token.tasks import buy_token_task
+from ..token.tasks import buy_token_task, save_top_traders_data_task
 from ..token.transfers import get_total_transfers
 from ..token.rugcheck import rugcheck, sync_rugcheck
 from ..utils.tokens_data import (
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class DexScreener():
-    def __init__(self, browser, check_settings):
+    def __init__(self, browser, check_settings=None):
         self.browser = browser
         self.check_settings = check_settings
         
@@ -109,8 +109,8 @@ class DexScreener():
                     # total_transfers = get_total_transfers(token["tokenAddress"])
                     # twitter_data, telegram_data = get_social_info(token.get("links"))
                     
-                    descreener = DexscreenerData(self.browser, pair)
-                    transaction_data = await descreener.get_transactions_data()
+                    dexscreener = DexscreenerData(self.browser, pair)
+                    transaction_data = await dexscreener.get_transactions_data()
                     top_traders_data = transaction_data.get("top_traders_data")
                     snipers_data = transaction_data.get("snipers_data")
                     dextscore = transaction_data.get("dextscore")
@@ -204,8 +204,8 @@ class DexScreener():
                 # total_transfers = get_total_transfers(token["tokenAddress"])
                 # twitter_data, telegram_data = get_social_info(token.get("links"))
                 
-                descreener = DexscreenerData(self.browser, pair)
-                transaction_data = await descreener.get_transactions_data()
+                dexscreener = DexscreenerData(self.browser, pair)
+                transaction_data = await dexscreener.get_transactions_data()
                 top_traders_data = transaction_data.get("top_traders_data")
                 snipers_data = transaction_data.get("snipers_data")
                 dextscore = transaction_data.get("dextscore")
@@ -252,10 +252,11 @@ class DexScreener():
                     boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
                 )
                 
-    async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
+    async def parse_top_traders(self, filter: str="", pages: int=2) -> None:
         """
         Парсит pages страниц топов кошельков по токенам, ограниченным filter.
         """
+        stop_lst_links = []
         
         for page in range(1, pages + 1):
             logger.info(f"Начат парсинг топ кошельков на странице {page}")
@@ -266,48 +267,44 @@ class DexScreener():
             
             await asyncio.sleep(10)
             
-            links = await dex_page.query_selector_all("a.ds-dex-table-row")
-            
+            all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
+            links = [item for item in all_links if item not in stop_lst_links]
             await self.browser.wait(10)
             if links:
                 for link in links:
                     pair = link.attributes[-1].split("/")[-1]
+                    
                     is_visited = await self._check_visited_top_traders_link(pair)
                     if is_visited:
                         logger.debug(f"Токен на странице уже проанализирован")
                         await self.browser.wait(5)
                         continue
                     
-                    try:
-                        await link.click()
-                        await self.browser.wait(3)
-                    except:
-                        await self.browser.wait(3)
+                    token_data = get_pairs_data(pair)[0]
+                    token_address = token_data["baseToken"]["address"]
+
+                    rugcheck_result = await rugcheck(self.browser, token_address)
+                    risk_level = rugcheck_result.get("risk_level")
+                    logger.info(f"Уровень риска токена {token_address}: {risk_level}")
+
+                    if risk_level == None:
                         continue
-                    
-                    top_traders_button = await dex_page.find("Top Traders")
-                    await top_traders_button.click()
-                                        
-                    token_link = await dex_page.query_selector_all("a.custom-isf5h9")
-                    token_address = token_link[1].attributes[-1].split("/")[-1]
-                    
-                    await dex_page.wait(10)
-                    
-                    risk_level = await self.rugcheck_token(token_address)
-                    logger.info(f"Уровень риска токена {token_address}: {risk_level}")    
                     if risk_level != "Good":
-                        await dex_page.back()
-                        await dex_page
+                        stop_lst_links.append(token_address)
                         continue
                     
-                    top_traders_button = await dex_page.find("Top Traders")
-                    await top_traders_button.click()
+                    descreener = DexscreenerData(self.browser, pair)
+                    transaction_data = await descreener.get_transactions_data(is_parser=True)
+                    top_traders_data = transaction_data.get("top_traders_data")
                     
-                    await dex_page.wait(3)
+                    save_top_traders_data_task.delay(
+                        pair=pair,
+                        token_name=token_data["baseToken"]["name"],
+                        token_address=token_address,
+                        top_traders_data=top_traders_data
+                    )
                     
-                    top_traders_data = await self.get_top_traders(dex_page)
-                    
-                    await dex_page.back()
+                    stop_lst_links.append(links)
 
     @sync_to_async
     def _check_visited_top_traders_link(self, pair: str):
@@ -358,7 +355,7 @@ async def run_dexscreener_monitor_boosted_token(settings_ids):
     await boosted_worker.monitor_boosted_tokens()
 
 
-async def run_top_traders_parser(filter, pages):  
+async def run_dexscreener_parse_top_traders(filter):  
     """
     Инициализирует браузер и запускает парсинг топов кошельков DesScreener.
     """  
@@ -367,5 +364,5 @@ async def run_top_traders_parser(filter, pages):
    # config.add_extension("./extensions/captcha_solver")
     browser = await uc.start(config=config, sandbox=False)
     dex_worker = DexScreener(browser)
-    await dex_worker.parse_top_traders(filter, pages)
+    await dex_worker.parse_top_traders(filter)
     

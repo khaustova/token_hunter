@@ -6,7 +6,7 @@ from asgiref.sync import async_to_sync
 from .monitor import (
     run_dexscreener_monitor_boosted_token, 
     run_dexscreener_monitor_filter_tokens,
-    run_top_traders_parser, 
+    run_dexscreener_parse_top_traders, 
 )
 
 logger = logging.getLogger(__name__)
@@ -36,12 +36,12 @@ def monitor_boosted_tokens_task(self, settings_ids: list) -> str:
 
 
 @app.task(bind=True, base=AbortableTask)
-def parsing_dexscreener_task(self, filter: str, pages: int) -> str:
+def parse_dexscreener_task(self, filter: str) -> str:
     """
     Обёртывает функцией синхронизации асинхронную функцию парсинга топов 
     кошельков DexScreener.
     """
     
-    async_to_sync(run_top_traders_parser)(filter, pages)
+    async_to_sync(run_dexscreener_parse_top_traders)(filter)
 
     return "Парсинг топ кошельков на Dexscreener закончен"

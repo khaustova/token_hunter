@@ -30,16 +30,27 @@ def clear_number(number_str: str) -> float:
     return number
 
 
+def get_pnl(bought_str: str, sold_str: str) -> list:
+    """
+    Возвращает список PNL.
+    """
+    try:
+        bought_lst = [float(x) for x in bought_str.split(" ")]
+        sold_lst = [float(x) for x in sold_str.split(" ")]
+        pnl_lst = [sold - bought if sold else 0 for bought, sold in zip(bought_lst, sold_lst)]
+        
+        return pnl_lst
+    except:
+        return
+    
+
 def count_pnl_loss(bought_str: str, sold_str: str) -> int:
     """
     Возвращает количество отрицательных PNL.
     """
     
     try:
-        bought_lst = [float(x) for x in bought_str.split(" ")]
-        sold_lst = [float(x) for x in sold_str.split(" ")]
-        pnl_lst = [sold - bought if sold else 0 for bought, sold in zip(bought_lst, sold_lst)]
-        
+        pnl_lst = get_pnl(bought_str, sold_str)
         pnl_loss = sum(i < 0 for i in pnl_lst)
         
         return pnl_loss

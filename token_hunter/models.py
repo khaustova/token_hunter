@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.db.models import Count 
 
 class TopTrader(models.Model):
     """
@@ -27,6 +27,10 @@ class TopTrader(models.Model):
         default="Solana",
         verbose_name="Сеть"
     )
+    transaction_count = models.IntegerField(
+        default=0,
+        verbose_name="Количество транзакций"
+    )
     bought = models.IntegerField(
         verbose_name="Купил"
     )
@@ -42,9 +46,10 @@ class TopTrader(models.Model):
         verbose_name = "Топ кошельков"
         verbose_name_plural = "Топ кошельков"
 
+
     def __str__(self):
         return f"Кошелёк {self.wallet_address} c {self.PNL} на {self.token_name}"
-   
+  
 
 class Mode(models.TextChoices):
     """

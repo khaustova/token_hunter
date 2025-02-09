@@ -275,7 +275,7 @@ def get_wallet_link(address: str) -> str:
     Возвращает ссылку на анализ кошелька address на solsniffer.com.
     """
     
-    return "https://solsniffer.com/snifwallets/wallet/" + address
+    return "https://www.birdeye.so/profile/" + address
 
 
 @register.simple_tag(takes_context=True)

@@ -34,7 +34,7 @@ def get_dexscreener_worker_tasks_ids() -> dict | None:
                 tasks_ids["filter_task_id"].append(task["id"])
             elif task["name"] == "token_hunter.src.dex.tasks.monitor_boosted_tokens_task":
                 tasks_ids["boosted_task_id"].append(task["id"])
-            elif task["name"] == "token_hunter.src.dex.tasks.parsing_dexscreener_task":
+            elif task["name"] == "token_hunter.src.dex.tasks.parse_dexscreener_task":
                 tasks_ids["parsing_task_id"].append(task["id"])
             elif task["name"] == "token_hunter.src.token.tasks.track_tokens_task":
                 tasks_ids["track_tokens_task_id"].append(task["id"])

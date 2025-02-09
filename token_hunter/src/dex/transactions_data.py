@@ -19,7 +19,7 @@ class DexscreenerData:
         self.pair = pair
         self.url = "https://dexscreener.com/solana/" + self.pair
 
-    async def get_transactions_data(self) -> tuple:
+    async def get_transactions_data(self, is_parser=False) -> tuple:
         """
         Открывает страницу токена на DexScreener и сохраняет данные 
         о транзакциях снайперов и топ трейдеров.
@@ -42,7 +42,7 @@ class DexscreenerData:
             top_traders_button = await page.find("Top Traders")
             await top_traders_button.click()
             time.sleep(3)
-            top_traders_data = await self.get_top_traders(page)
+            top_traders_data = await self.get_top_traders(page, is_parser)
         except:
             top_traders_data = None
 
@@ -123,7 +123,7 @@ class DexscreenerData:
  
         return snipers_data
                     
-    async def get_top_traders(self, page, mode="monitor") -> dict:
+    async def get_top_traders(self, page, is_parser) -> dict:
         """
         Получает данные о покупках и продажах из таблицы Top Traders на странице 
         токена. Подсчитывает количество значений в зависимости от диапазона
@@ -142,13 +142,16 @@ class DexscreenerData:
         
         main_div = soup.find("div", recursive=False)
         top_traders_divs = main_div.find_all("div", recursive=False)
-        bought_lst, sold_lst = [], []
+        bought_lst, sold_lst, unrealized_lst = [], [], []
+        wallets_lst = []
+        
         for divs in top_traders_divs[1:]:
             top_trader_spans = divs.find_all("span")
             
-            if mode == "parse":
+            if is_parser:
                 top_trader_link = divs.find("a")["href"]
                 wallet_address = top_trader_link.split("/")[-1]
+                wallets_lst.append(wallet_address)
                 
             bought = self._get_list_element_by_index(top_trader_spans, 2)
 
@@ -174,6 +177,9 @@ class DexscreenerData:
 
         top_traders_data["bought"] = " ".join(map(str, bought_lst))
         top_traders_data["sold"] = " ".join(map(str, sold_lst))
+        
+        if is_parser:
+            top_traders_data["wallets"] = " ".join(map(str, wallets_lst))
             
         return top_traders_data
     

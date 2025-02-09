@@ -12,7 +12,7 @@ from .serializers import TransactionSerializer
 from .src.dex.tasks import (
     monitor_dexscreener_task, 
     monitor_boosted_tokens_task,
-    parsing_dexscreener_task,
+    parse_dexscreener_task,
 )
 from .src.token.tasks import track_tokens_task
 from .src.utils.tokens_data import get_pairs_data
@@ -35,7 +35,7 @@ def monitor_dexscreener(request: HttpRequest):
             filter = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1"
         
         if "_parsing" in request.POST: 
-            process = parsing_dexscreener_task.delay(filter)
+            process = parse_dexscreener_task.delay(filter)
             logger.info(f"Запущена задача парсинга топа кошельков на DexScreener {process.id}")
                 
         elif "_monitoring" in request.POST:

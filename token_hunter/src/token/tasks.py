@@ -3,7 +3,8 @@ import time
 from core.celery import app
 from django.utils import timezone
 from ..utils.tokens_data import get_pairs_data, get_token_age, get_social_data
-from ...models import Transaction, Status, Settings, Mode
+from ..utils.preprocessing_data import get_pnl
+from ...models import Transaction, Status, Settings, Mode, TopTrader
 
 logger = logging.getLogger(__name__)
 
@@ -214,3 +215,34 @@ def buy_token_task(
     transaction.save()
         
     logger.info(f"Эмуляция покупки токена {token_data["baseToken"]["name"]} за {token_data["priceUsd"]} USD") 
+    
+    
+@app.task
+def save_top_traders_data_task(
+    pair: str, 
+    token_name: str,
+    token_address: str,
+    top_traders_data: dict, 
+) -> None:
+    """
+    Сохраняет данные о топовых кошельках токена.
+    """
+    pnl_lst = get_pnl(top_traders_data["bought"], top_traders_data["sold"])
+    top_traders_data["bought"] = [float(x) for x in top_traders_data["bought"].split(" ")]
+    top_traders_data["sold"] = [float(x) for x in top_traders_data["sold"].split(" ")]
+    top_traders_data["wallets"] = top_traders_data["wallets"].split(" ")
+    
+    
+    for i in range(len(top_traders_data["bought"])):
+        if top_traders_data["bought"][i] == 0 or pnl_lst[i] <= 0:
+            continue
+
+        top_trader, created = TopTrader.objects.get_or_create(
+            pair=pair.lower(),
+            token_name=token_name,
+            token_address=token_address,
+            wallet_address=top_traders_data["wallets"][i],
+            bought=top_traders_data["bought"][i],
+            sold=top_traders_data["sold"][i],
+            PNL=pnl_lst[i],
+        )
