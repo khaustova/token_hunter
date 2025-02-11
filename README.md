@@ -158,3 +158,8 @@ python3 manage.py authtelegram
 - Написать проверку внутри функции `check_settings()` в файле `settings.py`.
 
 Функция `check_settings()` проверяет параметры в любом режиме работы и независимо от настроек, созданных в панели администратора.
+
+## Скриншоты
+
+![screen 1](https://github.com/user-attachments/assets/560bfbae-61f5-4f05-b6c1-e5352a15b0bf) 
+![screen 2](https://github.com/user-attachments/assets/0a6e1f00-770b-4f6d-81c3-34f7e7897429)
