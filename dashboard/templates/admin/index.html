@@ -10,6 +10,9 @@
 <script src="http://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
 <script src="{% static "dashboard/js/transaction_chart.js" %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script> 
+
+<link rel="stylesheet" href="{% static "dashboard/css/spoiler.css" %}">
+<script src="{% static "dashboard/js/spoiler.js" %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -26,17 +29,76 @@
         <form class="parsing__form" action="{% url 'token_hunter:monitor_dexscreener' %}" method="POST">
           {% csrf_token %}
           <div class="settings_wrapper">
-          {% for field in settings_form %}
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.errors %}
-              <div class="error">{{ field.errors }}</div>
-            {% endif %}
-          {% endfor %}
+            <label for="id_monitoring_rule">Выберите режим:</label>
+            {{ settings_form.monitoring_rule }}
+
+            <label for="id_settings">Выберите настройки для покупки токенов:</label>
+            {{ settings_form.settings }}
+
+          <div class="spoiler spoiler-filter">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Настройки фильтра токенов</div>
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_parameters">
+                <div class="form-row field-take_profit">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_take_profit">Введите выражение с фильтром для токенов:</label>
+                      {{ settings_form.filter }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Настройки стоп-лосса и тейк-профита</div>
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_parameters">
+                <div class="form-row field-take_profit">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_take_profit">Введите значение тейк-профита:</label>
+                      {{ settings_form.take_profit }}
+                    </div>
+                  </div>
+                </div>
+                <div class="form-row field-stop_loss">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_stop_loss">Введите значение стоп-лосса:</label>
+                      {{ settings_form.stop_loss }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Настройки ботов для покупки</div>
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_parameters">
+                <div class="form-row field-take_profit">
+                    <div class="flex-container">
+                      <label for="id_take_profit">Выберите бота для совершения транзакций:</label>
+                      {{ settings_form.bot }}
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           </div>
             
           <div class="parsing-buttons_wrapper">
-              <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг Dexscreener 👀</button>
+              <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг 👀</button>
               <button class="watcher__button" id="watch-dex-button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
 
             {% get_celery_tasks_id as celery_tasks_id %}
@@ -78,22 +140,6 @@
 
           </div>
         </form>
-      </div>
-
-      <div class="content-card">
-        <h4 class="content-card__title">{% get_check_token_form %}</h4>
-          {% csrf_token %}
-          {% for field in check_token_form %}
-            {{field.label_tag}}
-            <div class="check-token__form">
-            {{field}}
-            {% if field.errors%}
-              <div class="error">{{field.errors}}</div>
-            {% endif %}
-          {% endfor %}
-          <button class="check-token__button" id="check-token-button" type="submit" name='checktokenButton'>Проверить токен 🔎</button>
-          <div id="check-token-result"></div>
-        </div>
       </div>
 
       <div class="content-card">
@@ -225,23 +271,4 @@
     </div>
   </div>
 
-  <script>
-    document.getElementById("check-token-button").addEventListener("click", function(event) {
-      event.preventDefault();
-      const token = document.getElementById('check-token-input').value;
-      const url = "{% url 'token_hunter:check_token' %}"
-      fetch(url, {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": "{{ csrf_token }}"
-          },
-          body: JSON.stringify(token)
-        })
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById("check-token-result").innerText = `hello`;
-      })
-    });
-  </script>
 {% endblock %}

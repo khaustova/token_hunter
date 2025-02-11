@@ -18,6 +18,9 @@ class SettingsSelect2TagWidget(ModelSelect2TagWidget):
 
 
 class SettingsForm(forms.Form):
+    CHOICES = [
+        ('maestro', 'Maestro Sniper Bot'),
+    ]
     filter = forms.CharField(
         required=False,
         initial="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
@@ -44,21 +47,16 @@ class SettingsForm(forms.Form):
         required=False, 
         label="Выберите настройки для покупки токенов", 
         initial=1)
-
-    
-class CheckTokenForm(forms.Form): 
-    """
-    Форма для базовой проверки токена.
-    """
-     
-    token = forms.CharField(
-        required=False,
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": "Введите адрес токена в сети SOLANA", 
-                "id": "check-token-input", 
-                "name": "token"
-            }
-        ),
-        label="Введите адрес токена в сети SOLANA:",
+    take_profit = forms.FloatField(
+        initial=60,
+        label="Введите значение тейк-профита"
+    )
+    stop_loss = forms.FloatField(
+        initial=-20,
+        label="Введите значение стоп-лосса"
+    )
+    bot = forms.ChoiceField(
+        widget=forms.RadioSelect,
+        choices=CHOICES, 
+        initial="maestro",
     )

@@ -847,7 +847,7 @@ button[type=submit].check-token__button {
 }
 
 label[for=id_settings],
-label[for=id_monitoring_rule] {
+.spoiler-filter {
     margin-top: 10px;
 }
 
@@ -884,7 +884,7 @@ input.sell-button:hover {
     width: 100%;
 }
 
-.settings-form .flex-container {
+.spoiler .flex-container {
     flex-direction: column;
 }
 
@@ -919,4 +919,16 @@ input.sell-button:hover {
     background-color: transparent;
     margin: 15px 0 5px 0;
     font-size: 16px;
+}
+
+.settings-form_parameters {
+    justify-content: space-between;
+}
+
+.settings-form_parameters input {
+    width: 100% !important;
+}
+
+.settings-form_parameters input[type="radio"] {
+    width: auto !important;
 }

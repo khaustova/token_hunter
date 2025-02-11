@@ -497,17 +497,7 @@ class Settings(models.Model):
         null=True,
         verbose_name="Максимальное количество boost"
     )
-    
-    # Риски:
-    take_profit = models.FloatField(
-        default=60,
-        verbose_name="Take Profit"
-    )
-    stop_loss = models.FloatField(
-        default=-20,
-        verbose_name="Stop Loss"
-    )
-    
+
     class Meta:
         verbose_name = "Настройки"
         verbose_name_plural = "Настройки"

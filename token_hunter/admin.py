@@ -20,10 +20,10 @@ class TransactionResource(resources.ModelResource):
 
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin):
-    list_display = ("token_name", "price_b", "price_s", "PNL", "PNL_20", "link", "mode", "sell", "boosts_ages")
-    list_per_page = 30
+    list_display = ("token_name", "price_b", "price_s", "PNL", "link", "mode", "sell")
     list_filter = ("status", "mode", "settings")
-    
+    list_per_page = 30
+
     actions = [delete_all]
     
     resource_classes = [TransactionResource]
@@ -34,7 +34,7 @@ class TransactionAdmin(ImportExportModelAdmin):
         transaction = Transaction.objects.get(pk=obj.pk)
         if transaction.status == Status.OPEN:
             link = reverse("token_hunter:sell_token", args=[obj.pk])
-            html = '<input class="sell-button" type="button" onclick="location.href=\'{}\'" value="Продать" />'.format(link)
+            html = '<input class="sell-button" type="button" onclick="location.href=\'{}\'" value="Закрыть" />'.format(link)
             
             return format_html(html)
         
@@ -58,5 +58,4 @@ class TopTradersAdmin(admin.ModelAdmin):
     list_display = ("wallet_address", "transaction_count", "PNL")
     list_per_page = 50
     ordering = ['-transaction_count']
-    
     actions = [delete_all]

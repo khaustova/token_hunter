@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from copy import deepcopy
 from django import template
 from django.apps import apps
-from django.db.models import Count, QuerySet
+from django.db.models import Count
 from django.urls import reverse
 from django.http import HttpRequest
 from django.utils.html import escape, format_html
@@ -14,7 +14,7 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.admin.templatetags.admin_list import result_list
 from django.contrib.admin.templatetags.base import InclusionAdminNode
 from django.core.paginator import Paginator
-from token_hunter.forms import SettingsForm, CheckTokenForm
+from token_hunter.forms import SettingsForm
 from token_hunter.models import TopTrader, Transaction, Status
 from token_hunter.src.utils.tasks_data import get_dexscreener_worker_tasks_ids
 from token_hunter.src.utils.tokens_data import get_pairs_data
@@ -30,6 +30,7 @@ def sidebar_status(request: HttpRequest) -> str:
     Если у пользователя боковая панель свёрнута, то возвращает
     соответствующий CSS класс.
     """
+    
     if request.COOKIES.get("menu", "") == "closed":
         return "sidebar-collapse"
 
@@ -41,6 +42,7 @@ def get_customization_settings() -> dict:
     """
     Возвращает словарь с настройками кастомизации панели администратора.
     """
+    
     customization_settings = get_settings()
 
     return customization_settings
@@ -51,6 +53,7 @@ def get_search_model() -> dict:
     """
     Возвращает словарь с параметрами для поиска по модели.
     """
+    
     settings = get_settings()
 
     if not settings["search_model"]:
@@ -72,6 +75,7 @@ def get_apps(context: template.Context) -> list:
     Возвращает список приложений, отфильтрованный и упорядоченный в соответ-
     ствии с настройками кастомизации.
     """
+    
     available_apps = deepcopy(context.get("available_apps", []))
     settings = get_settings()
     sidebar_icons = settings["sidebar_icons"]
@@ -118,6 +122,7 @@ def get_sidebar_menu(context: template.Context) -> list:
     Возвращает список приложений, включающий в себя (при наличии) дополнитель-
     ные ссылки, для меню на боковой панели.
     """
+    
     menu = get_apps(context)
     settings = get_settings()
     extra_links = settings.get("extra_links")
@@ -138,6 +143,7 @@ def action_message_to_list(action: LogEntry) -> list:
     """
     Возвращает отформатированный список со всеми действиями пользователя.
     """
+    
     messages = []
 
     if action.change_message and action.change_message[0] == "[":
@@ -177,6 +183,7 @@ def bold_first_word(text: str) -> SafeText:
     """
     Возвращает текст, в котором первое слово обернуто в тег <strong>.
     """
+    
     text_words = escape(text).split()
 
     if not len(text_words):
@@ -193,6 +200,7 @@ def sort_header(header: dict, forloop: dict) -> str:
     """
     Вовзращает классы CSS для сортировки данных в столбцах таблицы модели.
     """
+    
     classes = []
     sorted, asc, desc = (
         header.get("sorted"),
@@ -287,19 +295,7 @@ def get_settings_form(context: template.Context) -> str:
     settings_form = SettingsForm()
     context["settings_form"] = settings_form
     
-    return "Dexscreener"
-
-
-@register.simple_tag(takes_context=True)
-def get_check_token_form(context: template.Context) -> str:
-    """
-    Добавляет в контекст форму для проверки токена.
-    """
-    
-    check_token_form = CheckTokenForm()
-    context["check_token_form"] = check_token_form
-
-    return "Проверка токена"
+    return "DEX Screener"
 
 
 @register.simple_tag()

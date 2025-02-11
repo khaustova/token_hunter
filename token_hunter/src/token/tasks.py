@@ -8,14 +8,8 @@ from ...models import Transaction, Status, Settings, Mode, TopTrader
 
 logger = logging.getLogger(__name__)
 
-try:
-    settings = Settings.objects.all().first()
-    STOP_LOSS = settings.stop_loss
-    TAKE_PROFIT = settings.take_profit
-except:
-    STOP_LOSS = -20
-    TAKE_PROFIT = 60
-
+STOP_LOSS = -20
+TAKE_PROFIT = 300
 
 @app.task
 def track_tokens_task(TOKENS_DATA={}) -> str:
@@ -81,6 +75,12 @@ def track_tokens_task(TOKENS_DATA={}) -> str:
                 if pnl >= 50 and not TOKENS_DATA[pair]["is_50"]:
                     TOKENS_DATA[pair]["is_50"] = True
                     
+                if pnl >= 100 and not TOKENS_DATA[pair]["is_100"]:
+                    TOKENS_DATA[pair]["is_100"] = True
+                    
+                if pnl >= 200 and not TOKENS_DATA[pair]["is_200"]:
+                    TOKENS_DATA[pair]["is_200"] = True
+                    
                 if pnl >= TAKE_PROFIT or pnl <= STOP_LOSS:
                     token_age = get_token_age(token_data["pairCreatedAt"])
                     
@@ -94,6 +94,8 @@ def track_tokens_task(TOKENS_DATA={}) -> str:
                         PNL_30=TOKENS_DATA[pair]["is_30"],
                         PNL_40=TOKENS_DATA[pair]["is_40"],
                         PNL_50=TOKENS_DATA[pair]["is_50"],
+                        PNL_100=TOKENS_DATA[pair]["is_100"],
+                        PNL_200=TOKENS_DATA[pair]["is_200"],
                         PNL_loss_10=TOKENS_DATA[pair]["is_loss_10"],
                         status=Status.CLOSED    
                     )
