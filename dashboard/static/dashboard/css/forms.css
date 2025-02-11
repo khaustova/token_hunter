@@ -586,7 +586,7 @@ select[name="action"] {
 .form-row input[type="password"],
 .form-row select {
     display: block;
-    width: calc(100% - 200px);
+    width: 100%;
 }
 
 label.required::after {
@@ -659,12 +659,6 @@ textarea:focus {
 .select2-dropdown {
     border-radius: 0.25rem !important;
     border: 1px solid var(--color-accent) !important;
-}
-
-/* Ckeditor */
-
-.django-ckeditor-widget {
-    width: calc(100% - 200px);
 }
 
 /* Checkbox */

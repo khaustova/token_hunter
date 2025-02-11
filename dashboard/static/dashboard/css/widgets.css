@@ -539,7 +539,6 @@ ul.timelist, .timelist li {
 /* Related widget wrapper */
 
 .related-widget-wrapper {
-    width: calc(100% - 200px);
     float: left;
     overflow: hidden; 
 }
