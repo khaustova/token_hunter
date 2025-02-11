@@ -57,6 +57,20 @@ def monitor_dexscreener(request: HttpRequest):
             elif monitoring_rule == MonitoringRule.FILTER:
                 process = monitor_dexscreener_task.delay(settings_ids=settings_ids, filter=filter)
                 logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
+                
+        elif "_track_tokens" in request.POST:
+            if form.cleaned_data.get("take_profit"):
+                take_profit = form.cleaned_data["take_profit"]
+            else:
+                take_profit = 60
+                
+            if form.cleaned_data.get("stop_loss"):
+                stop_loss = form.cleaned_data["stop_loss"]
+            else:
+                stop_loss = -20
+                
+            tracking_price = track_tokens_task.delay(take_profit=take_profit, stop_loss=stop_loss)
+            logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id} с параметрами тейк-профит: {take_profit} и стоп-лосс: {stop_loss}")
             
         
     return HttpResponseRedirect("/")
@@ -71,27 +85,6 @@ def stop_task(request: HttpRequest, task_id: str):
     logger.info(f"Задача {task_id} остановлено")
     
     return HttpResponseRedirect("/")
-
-
-def start_track_tokens_task(request: HttpRequest):
-    """
-    Запускает задачу отслеживания стоимости токенов.
-    """
-    
-    tracking_price = track_tokens_task.delay()
-    logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id}")
-    
-    return HttpResponseRedirect("/")
-        
-
-def check_token(request: HttpRequest) -> JsonResponse:
-    """
-    Базовая проверка введённого в форму токена.
-    """
-    
-    token = json.loads(request.body)
-
-    return JsonResponse({"status": "done"})
 
 
 def sell_token(request: HttpRequest, transaction_id: int):

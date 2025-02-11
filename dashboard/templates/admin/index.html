@@ -98,16 +98,16 @@
           </div>
             
           <div class="parsing-buttons_wrapper">
-              <button class="watcher__button" id="watch-dex-button" type="submit" name="_monitoring">Мониторинг 👀</button>
-              <button class="watcher__button" id="watch-dex-button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
+              <button class="watcher__button" type="submit" name="_monitoring">Мониторинг 👀</button>
+              <button class="watcher__button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
 
             {% get_celery_tasks_id as celery_tasks_id %}
             <p>
               <b>Отслеживание стоимости токенов:</b>
               {% if celery_tasks_id.track_tokens_task_id %} 
               ✅ (<a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=celery_tasks_id.track_tokens_task_id.0 %}">Остановить</a>)
-              {% else %}
-              ❌ (<a href="{% url 'token_hunter:start_track_tokens_task' %}">Запустить</a>)
+              {% else %} ❌ (<button class="track_tokens__button" type="submit" name="_track_tokens">Запустить</button>)
+              
               {% endif %}
             </p>
 

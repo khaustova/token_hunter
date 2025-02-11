@@ -927,3 +927,9 @@ input.sell-button:hover {
 .settings-form_parameters input[type="radio"] {
     width: auto !important;
 }
+
+button.track_tokens__button {
+    padding: 0;
+    background: transparent;
+    color: var(--color-accent);
+}

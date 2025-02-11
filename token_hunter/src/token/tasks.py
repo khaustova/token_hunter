@@ -8,11 +8,11 @@ from ...models import Transaction, Status, Settings, Mode, TopTrader
 
 logger = logging.getLogger(__name__)
 
-STOP_LOSS = -20
-TAKE_PROFIT = 300
+TOKENS_DATA = {}
+
 
 @app.task
-def track_tokens_task(TOKENS_DATA={}) -> str:
+def track_tokens_task(take_profit, stop_loss) -> str:
     """
     Отслеживает стоимость купленных токенов.
     Когда разница между текущей стоимостью и стоимостью покупки превышает 
@@ -81,7 +81,7 @@ def track_tokens_task(TOKENS_DATA={}) -> str:
                 if pnl >= 200 and not TOKENS_DATA[pair]["is_200"]:
                     TOKENS_DATA[pair]["is_200"] = True
                     
-                if pnl >= TAKE_PROFIT or pnl <= STOP_LOSS:
+                if pnl >= take_profit or pnl <= stop_loss:
                     token_age = get_token_age(token_data["pairCreatedAt"])
                     
                     Transaction.objects.filter(token_address=token_address).update(
