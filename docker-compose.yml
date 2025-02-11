@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - 8000:8000
+    env_file:
+      - .env.example
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15.3
+    env_file:
+      - .env.example
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.0.5-alpine 
+    restart: unless-stopped
+    expose:
+        - 6379
+
+  celery:
+    build: .
+    restart: always
+    command: celery -A core worker -l info
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - .env.example
+    depends_on:
+      - postgres
+      - redis
+      - web
+      
+volumes:
+  pgdata: {}
