@@ -1,10 +1,10 @@
-**Token Hunter** – это веб-приложение на Django, предназначенное для настраиваемой торговли токенами в сети Solana.
+**Token Hunter** – веб-приложение на Django для настраиваемой торговли токенами в сети Solana и парсинга топовых кошельков.
 
 ## Используемые сервисы
 
 Приложение использует следующие внешние сервисы для получения данных и анализа токенов:
 
-:gem:  [DEX Screener](https://dexscreener.com/) и [DEX Screener API](https://docs.dexscreener.com/api/reference) – получение данных о токенах.  
+:gem:  [DEX Screener](https://dexscreener.com/) – получение данных о токенах и кошельках.  
 :shield: [RugCheck](https://rugcheck.xyz/) – оценка безопасности токена.  
 :bar_chart: [Getmoni](https://rugcheck.xyz/) – анализ активности по токену в X (Twitter).  
 
