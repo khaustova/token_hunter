@@ -132,6 +132,7 @@ form .form-row p {
 .flex-container {
     display: flex;
     flex-wrap: nowrap;
+    flex-direction: column;
 }
 
 .form-multiline > div {

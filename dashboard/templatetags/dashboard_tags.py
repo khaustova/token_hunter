@@ -272,6 +272,7 @@ def get_open_transactions() -> dict:
             open_transactions[transaction.pair] = {}
             open_transactions[transaction.pair]["token_name"] = transaction.token_name
             open_transactions[transaction.pair]["opening_date"] = transaction.opening_date
+            open_transactions[transaction.pair]["mode"] = transaction.get_mode_display()
             open_transactions[transaction.pair]["current_pnl"] = round(current_pnl[transaction.pair.lower()], 2)
     
     return open_transactions

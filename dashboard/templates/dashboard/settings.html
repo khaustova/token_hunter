@@ -100,14 +100,6 @@
                 </div>
               </div>
             </div>
-            <div class="form-row field-filter">
-              <div>
-                <div class="flex-container">
-                  <label for="id_filter">Фильтр по умолчанию:</label>
-                  {{ adminform.form.filter }}
-                </div>
-              </div>
-            </div>
 
             <h2>Данные о токене</h2>
             <div class="spoiler">
@@ -1097,24 +1089,6 @@
           </div>
             </div>
           </div>
-
-          <h2>Настройки прибыли</h2>
-            <div class="form-row field-take_profit">
-              <div>
-                <div class="flex-container">
-                  <label class="required" for="id_take_profit">Take Profit:</label>
-                  {{ adminform.form.take_profit }}
-                </div>
-              </div>
-            </div>
-            <div class="form-row field-stop_loss">
-              <div>
-                <div class="flex-container">
-                  <label class="required" for="id_stop_loss">Stop Loss:</label>
-                  {{ adminform.form.stop_loss }}
-                </div>
-              </div>
-            </div>
           </fieldset>
           {% endblock %}
           {% block after_field_sets %}{% endblock %}

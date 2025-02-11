@@ -211,6 +211,7 @@
               <tbody>
                 <th>Токен</th>
                 <th>Дата покупки</th>
+                <th>Тип</th>
                 <th>Текущий PNL</th>
                 {% for pair, data in open_transactions.items %}
                   <tr>
@@ -219,6 +220,9 @@
                     </td>
                     <td>
                       {{ data.opening_date }}
+                    </td>
+                    <td>
+                      {{ data.mode }}
                     </td>
                     <td>
                       {{ data.current_pnl }} %
