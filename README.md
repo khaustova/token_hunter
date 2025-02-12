@@ -44,7 +44,7 @@ git clone https://github.com/khaustova/muiv_timetable.git
 <details>
   <summary>В виртуальном окружении</summary>
 
-  * Убедитесь, что у вас установлены и настроены Redis и PostgreSQL.
+  * Убедитесь, что у вас установлены и запущены Redis и PostgreSQL.
 
   * Переименуйте файл `.env.example` в `.env` и добавьте свои данные.  
 
@@ -80,6 +80,12 @@ git clone https://github.com/khaustova/muiv_timetable.git
 
   ```
   python3 manage.py migrate
+  ```
+
+  * Запустите Celery:
+  
+  ```
+  celery -A core worker -l info
   ```
 
   * Запустите сервер:
