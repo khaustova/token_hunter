@@ -1,116 +1,103 @@
+
+![Static Badge](https://img.shields.io/badge/Python-3.12.5-orange) ![Static Badge](https://img.shields.io/badge/Django-5.1-blue) ![Static Badge](https://img.shields.io/badge/Django_REST_framework-3.15.2-blue) ![Static Badge](https://img.shields.io/badge/Django_Telethon-1.4.0-blue) ![Static Badge](https://img.shields.io/badge/Celery-5.4.0-blue) ![Static Badge](https://img.shields.io/badge/PostgreSQL-14.15-purple) ![Static Badge](https://img.shields.io/badge/Redis-6.0.16-purple) ![Static Badge](https://img.shields.io/badge/DEX_Screener_API-v1-purple)
+
 **Token Hunter** – веб-приложение на Django для настраиваемой торговли токенами в сети Solana и парсинга топовых кошельков.
 
 ## Используемые сервисы
 
-Приложение использует следующие внешние сервисы для получения данных и анализа токенов:
-
-:gem:  [DEX Screener](https://dexscreener.com/) – получение данных о токенах и кошельках.  
-:shield: [RugCheck](https://rugcheck.xyz/) – оценка безопасности токена.  
-:bar_chart: [Getmoni](https://rugcheck.xyz/) – анализ активности по токену в X (Twitter).  
+:gem:  [DEX Screener](https://dexscreener.com/) – получение данных о токенах и кошельках   
+:shield: [RugCheck](https://rugcheck.xyz/) – оценка безопасности токена   
+:bar_chart: [Getmoni](https://rugcheck.xyz/) – анализ активности по токену в X (Twitter)   
 
 ## Основные функции
 
-Приложение предоставляет следующие возможности:
+:mag_right: Мониторинг токенов по фильтрам   
+:zap: Мониторинг boosted токенов   
+:shopping_cart: Эмуляция покупки токенов  
+:gear: Настройка параметров для выбора токенов   
+:robot: Покупка токенов через Maestro Sniper Bot в Telegram  
+:chart_with_upwards_trend: Экспорт данных в Excel  
+:detective: Парсинг топовых кошельков  
 
-:mag_right: **Мониторинг токенов по фильтрам**  
-:zap: **Мониторинг boosted токенов**  
-:shopping_cart: **Эмуляция покупки токенов**  
-:gear: **Настройка параметров для выбора токенов**  
-:robot: **Покупка токенов через Maestro Sniper Bot в Telegram**  
-:chart_with_upwards_trend: **Экспорт данных в Excel**  
-:detective: **Парсинг топовых кошельков**  
+## Запуск
 
-## Запуск приложения
-
-#### Шаг 1: Клонирование репозитория
-
-Клонируйте репозиторий проекта на свой компьютер:
+1. Клонируйте репозиторий проекта на свой компьютер:
 
 ```
-git clone https://github.com/khaustova/token_hunter.git
+git clone https://github.com/khaustova/muiv_timetable.git
 ```
 
-#### Шаг 2: Выбор способа запуска
-
-Вы можете запустить приложение двумя способами: используя Docker или виртуальное окружение.
-
+2. Запустите приложение одним из двух способов:
 <details>
-  <summary>Использовать Docker</summary>
-
-1. Переименуйте файл `.env.example` в `.env` и добавьте свои данные.
-2. Запустите проект с помощью команды:
-    
-
-```
-docker-compose up --build
-```
+  <summary>В Docker</summary>
+  
+  * Переименуйте файл `.env.example` в `.env` и добавьте свои данные.   
+  
+  * Запустите приложение с помощью команды:  
+  
+    ```
+    docker-compose up --build
+    ```
   
 </details>  
 
 <details>
-  <summary>Использовать виртуальное окружение</summary>
+  <summary>В виртуальном окружении</summary>
 
-1. Создайте виртуальное окружение:
+  * Убедитесь, что у вас установлены и настроены Redis и PostgreSQL.
+
+  * Переименуйте файл `.env.example` в `.env` и добавьте свои данные.  
+
+  * Создайте виртуальное окружение:
     
 
-```
-python3 -m venv .venv
-```
+  ```
+  python3 -m venv .venv
+  ```
 
-Активируйте виртуальное окружение:
+  * Активируйте виртуальное окружение:  
 
-- Для Linux/MacOS:
+    * Для Linux/MacOS:  
+
+    ```
+    source .venv/bin/activate
+    ```
+   
+    * Для Windows:  
+
+    ```
+    .venv\Scripts\activate
+    ```
+
+  * Установите необходимые библиотеки:
+
+  ```
+  pip install -r requirements.txt
+  ```
+
+  * Выполните миграции базы данных:
     
 
-```
-source .venv/bin/activate
-```
+  ```
+  python3 manage.py migrate
+  ```
 
-- Для Windows:
+  * Запустите сервер:
 
-```
-.venv\Scripts\activate
-```
-
-Установите необходимые пакеты:
-
-```
-pip install -r requirements.txt
-```
-
-- Переименуйте файл `.env.example` в `.env` и добавьте свои данные.
-- Убедитесь, что у вас установлены и запущены Redis и PostgreSQL.
-- Выполните миграцию базы данных:
-    
-
-```
-python3 manage.py migrate
-```
-
-Запустите Celery:
-
-```
-celery -A core worker -l info
-```
-
-Запустите сервер:
-
-```
-python3 manage.py runserver
-```
+  ```
+  python3 manage.py runserver
+  ```
   
 </details> 
+  
 
-
-#### Шаг 3: Доступ к приложению
-
-После выполнения всех шагов приложение будет доступно по адресу http://127.0.0.1:8000.
+3. Приложение будет доступно по адресу http://127.0.0.1:8000.  
 
 ## Настройка Telegram
 
 Для автоматической покупки и продажи токенов, а также для взаимодействия с Telegram-каналом, требуется настроить интеграцию с Telegram.
 
-#### Шаг 1: Получение API ID и Hash
+#### Получение API ID и Hash
 
 1. Перейдите на сайт https://my.telegram.org/auth.
 2. Авторизуйтесь с номером телефона, который будете использовать для торговли.
@@ -124,7 +111,7 @@ TELETHON_API_ID=ваш_идентификатор
 TELETHON_API_HASH=ваш_хэш
 ```
 
-#### Шаг 2: Авторизация в Telegram
+#### Авторизация в Telegram
 
 1. Убедитесь, что в файле `.env` в переменной `TELEGRAM_PHONE_NUMBER` указан правильный номер телефона.
 2. Выполните команду для авторизации:
