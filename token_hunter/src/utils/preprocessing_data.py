@@ -18,14 +18,19 @@ def clear_number(number_str: str) -> float:
         .replace("$", "")
         .replace(" ", "")
     )
-    if number_str[-1] == "K":
-        number_str = number_str[:-1]
-        number = float(number_str) * 1000
-    elif number_str[-1] == "M":
-        number_str = number_str[:-1]
-        number = float(number_str) * 1000000
-    else:
-        number = float(number_str)
+    
+    try:
+        if number_str[-1] == "K":
+            number_str = number_str[:-1]
+            number = float(number_str) * 1000
+        elif number_str[-1] == "M":
+            number_str = number_str[:-1]
+            number = float(number_str) * 1000000
+        else:
+            number = float(number_str)
+    except Exception as e:
+        logger.error("Ошибка преобразования строки в число")
+        number = None
     
     return number
 

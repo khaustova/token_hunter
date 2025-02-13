@@ -27,7 +27,7 @@ class DexscreenerData:
 
         page = await self.browser.get(self.url, new_tab=True)
 
-        time.sleep(5)
+        time.sleep(25)
         await page.wait(10)
         try:  
             snipers_button = await page.find("Snipers")
@@ -45,21 +45,31 @@ class DexscreenerData:
             top_traders_data = await self.get_top_traders(page, is_parser)
         except:
             top_traders_data = None
+            
+        time.sleep(5)
+        try:  
+            holders_button = await page.find("Holders")
+            await holders_button.click()
+            time.sleep(3)
+            holders_data = await self.get_holders(page)
+            
+            total_holders = holders_button.text
+            holders_data["total"] = clear_number(total_holders.split(" ")[1][1:-1])
+        except:
+            holders_data = None
 
         await page.close()
-        
+
         return {
             "snipers_data": snipers_data,
-            "top_traders_data": top_traders_data
+            "top_traders_data": top_traders_data,
+            "holders_data": holders_data
         }
 
     async def get_snipers(self, page) -> dict:
         """
-        Получает данные о покупках и продажах из таблицы Snipers на странице 
-        токена. Подсчитывает количество значений в зависимости от диапазона, 
-        а также количество снайперов, держащих или продавших (часть или всё).
-        Сохраняет информацию о первых десяти транзакциях.
-        Возвращает результат в виде словаря.
+        Возвращает словарь с данными о транзакциях из таблицы Snipers на странице 
+        токена. 
         """
         
         snipers_table = await page.query_selector(
@@ -67,7 +77,7 @@ class DexscreenerData:
         )
         await snipers_table
         snipers_table_html = await snipers_table.get_html()    
-        
+
         soup = BeautifulSoup(snipers_table_html, "html.parser")
         snipers_data = {
             "held_all": 0,
@@ -77,13 +87,15 @@ class DexscreenerData:
         
         main_div = soup.find("div", recursive=False)
         snipers_divs = main_div.find_all("div", recursive=False)
-        bought_lst, sold_lst = [], []
+        bought_lst, sold_lst, unrealized_lst = [], [], []
         
         for divs in snipers_divs[1:]:
             snipers_spans = divs.find_all("span")
+            
             bought = self._get_list_element_by_index(snipers_spans, 5)
             sold = "-"
-            
+            unrealized = self._get_list_element_by_index(divs.find_all("div"), 7)
+
             operation = self._get_list_element_by_index(snipers_spans, 2)
             if operation == "Held all":
                 snipers_data["held_all"] += 1
@@ -106,6 +118,7 @@ class DexscreenerData:
                     sold = self._get_list_element_by_index(snipers_spans, 6)
                     if sold != "-":
                         sold = clear_number(sold)
+                        
   
             if bought != "-":
                 bought_lst.append(bought)
@@ -117,17 +130,26 @@ class DexscreenerData:
             else:
                 sold_lst.append(0)
                 
-        
+            if unrealized != '-':
+                try:
+                    unrealized = clear_number(unrealized)
+                except:
+                    unrealized = 0
+                    
+                unrealized_lst.append(unrealized)
+            else:
+                unrealized_lst.append(0)
+ 
         snipers_data["bought"] = " ".join(map(str, bought_lst))
         snipers_data["sold"] = " ".join(map(str, sold_lst))
- 
+        snipers_data["unrealized"] = " ".join(map(str, unrealized_lst))
+
         return snipers_data
                     
     async def get_top_traders(self, page, is_parser) -> dict:
         """
-        Получает данные о покупках и продажах из таблицы Top Traders на странице 
-        токена. Подсчитывает количество значений в зависимости от диапазона
-        и возвращает результат в виде словаря.
+        Возвращает словарь с данными о транзакциях из таблицы Top Traders 
+        на странице токена. 
         """
         
         await page.wait(2)
@@ -136,7 +158,7 @@ class DexscreenerData:
         )
         await top_traders_table
         top_traders_table_html = await top_traders_table.get_html()
-
+        
         soup = BeautifulSoup(top_traders_table_html, "html.parser")
         top_traders_data = {}
         
@@ -164,6 +186,8 @@ class DexscreenerData:
                 sold = self._get_list_element_by_index(top_trader_spans, 7)
                 if sold != "-":
                     sold = clear_number(sold)
+                    
+            unrealized = self._get_list_element_by_index(divs.find_all("div"), 6)
                 
             if bought != "-":
                 bought_lst.append(bought)
@@ -174,14 +198,58 @@ class DexscreenerData:
                 sold_lst.append(sold)
             else:
                 sold_lst.append(0)
+                
+            if unrealized != '-':
+                try:
+                    unrealized = clear_number(unrealized)
+                except:
+                    unrealized = 0
+                    
+                unrealized_lst.append(unrealized)
+            else:
+                unrealized_lst.append(0)
 
         top_traders_data["bought"] = " ".join(map(str, bought_lst))
         top_traders_data["sold"] = " ".join(map(str, sold_lst))
-        
+        top_traders_data["unrealized"] = " ".join(map(str, unrealized_lst))
+
         if is_parser:
             top_traders_data["wallets"] = " ".join(map(str, wallets_lst))
             
         return top_traders_data
+    
+    async def get_holders(self, page) -> dict:
+        """
+        Возвращает словарь с данными о держателях токенов из таблицы Holders 
+        на странице токена. 
+        """
+        
+        await page.wait(2)
+        holders_table = await page.query_selector(
+            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
+        )
+        await holders_table
+        holders_table_html = await holders_table.get_html()
+        
+        soup = BeautifulSoup(holders_table_html, "html.parser")
+        holders_data = {}
+        
+        main_div = soup.find("div", recursive=False)
+        holders_divs = main_div.find_all("div", recursive=False)
+
+        percentages_lst, liquidity_lst = [], []
+        for divs in holders_divs[1:-1]:
+            percentages_div = divs.find_all("div", recursive=False)[2]
+
+            if len(divs.find_all("div")[2].find_all("span")) == 2:
+                liquidity_lst.append(clear_number(percentages_div.text))
+            else:
+                percentages_lst.append(clear_number(percentages_div.text))
+            
+        holders_data["percentages"] = " ".join(map(str, percentages_lst))
+        holders_data["liquidity"] = " ".join(map(str, liquidity_lst))
+
+        return holders_data
     
     def _get_list_element_by_index(self, lst: list, ind: int) -> str:
         """
@@ -195,6 +263,7 @@ class DexscreenerData:
             result = "0"
             
         return result
+
 
 
 class DextoolsData:

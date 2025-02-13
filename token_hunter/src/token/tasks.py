@@ -118,6 +118,7 @@ def buy_token_task(
     mode: Mode, 
     snipers_data: dict | None=None, 
     top_traders_data: dict | None=None, 
+    holders_data: dict | None=None,
     twitter_data: dict | None=None, 
     telegram_data: dict | None=None,
     price_change: float | None=None,
@@ -183,27 +184,30 @@ def buy_token_task(
         transaction.sns_sold_all = snipers_data.get("sold_all")
         transaction.sns_bought = snipers_data.get("bought")
         transaction.sns_sold = snipers_data.get("sold")
-        transaction.save()
+        transaction.sns_unrealized = snipers_data.get("unrealized")
         
     if top_traders_data:
         transaction.tt_bought = top_traders_data.get("bought")
         transaction.tt_sold = top_traders_data.get("sold")
         transaction.tt_unrealized = top_traders_data.get("unrealized")
         transaction.tt_speed = top_traders_data.get("speed")
-        transaction.save()
-        
+        transaction.tt_unrealized = top_traders_data.get("unrealized")
+
+    if holders_data:
+        transaction.holders_percentages = holders_data.get("percentages")
+        transaction.holders_liquidity = holders_data.get("liquidity")
+        transaction.holders_total = holders_data.get("total")
+    
     if twitter_data:
         transaction.twitter_days = twitter_data.get("twitter_days")
         transaction.twitter_followers = twitter_data.get("twitter_followers")
         transaction.twitter_smart_followers = twitter_data.get("twitter_smart_followers")
         transaction.twitter_tweets = twitter_data.get("twitter_tweets")
         transaction.is_twitter_error = twitter_data.get("is_twitter_error")
-        transaction.save()
         
     if telegram_data:
         transaction.telegram_members = telegram_data.get("telegram_members")
         transaction.is_telegram_error = telegram_data.get("is_telegram_error")
-        transaction.save()
         
     if token_data.get("boosts"):
         transaction.boosts = token_data["boosts"].get("active")

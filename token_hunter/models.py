@@ -722,15 +722,7 @@ class Transaction(models.Model):
         default=False,
         verbose_name="Твиттер указан, но не существует"
     )
-    opening_date = models.DateTimeField(
-        auto_now_add=True, 
-        verbose_name="Время покупки"
-    )
-    closing_date = models.DateTimeField(
-        blank=True, 
-        null=True, 
-        verbose_name="Время продажи"
-    )
+
     # Данные о снайперах:
     sns_bought = models.CharField(
         max_length=2048,
@@ -759,6 +751,13 @@ class Transaction(models.Model):
         null=True,
         verbose_name="Снайперы, продавшие всё"
     )
+    sns_unrealized = models.CharField(
+        max_length=2048,
+        blank=True,
+        null=True,
+        verbose_name="Нереализованная сумма снайперов"
+    )
+    
     # Данные о топовых кошельках:
     tt_bought = models.CharField(
         max_length=2048,
@@ -776,7 +775,7 @@ class Transaction(models.Model):
         max_length=2048,
         blank=True,
         null=True,
-        verbose_name="Нереализованные токены топов"
+        verbose_name="Нереализованная сумма топов"
     )
     tt_speed = models.CharField(
         max_length=2048,
@@ -784,6 +783,26 @@ class Transaction(models.Model):
         null=True,
         verbose_name="Скорость топов"
     )
+    
+    # Держатели:
+    holders_percentages = models.CharField(
+        max_length=2048,
+        blank=True,
+        null=True,
+        verbose_name="Процент токенов у основных держателей"
+    )
+    holders_liquidity = models.CharField(
+        max_length=2048,
+        blank=True,
+        null=True,
+        verbose_name="Процент токенов в ликвидности"
+    )
+    holders_total = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Количество держателей"
+    )
+    
     # Итоговые данные:
     PNL = models.DecimalField(
         blank=True, 
@@ -852,13 +871,24 @@ class Transaction(models.Model):
         verbose_name="Тип"
     )
 
-    # Настройки транзакции
+    # Настройки транзакции:
     settings = models.ForeignKey(
         Settings,
         on_delete=models.CASCADE,
         verbose_name="Настройки",
         blank=True,
         null=True,  
+    )
+    
+    # Дата открытия и закрытия:
+    opening_date = models.DateTimeField(
+        auto_now_add=True, 
+        verbose_name="Время покупки"
+    )
+    closing_date = models.DateTimeField(
+        blank=True, 
+        null=True, 
+        verbose_name="Время продажи"
     )
  
     class Meta:

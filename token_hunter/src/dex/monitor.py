@@ -113,6 +113,7 @@ class DexScreener():
                     transaction_data = await dexscreener.get_transactions_data()
                     top_traders_data = transaction_data.get("top_traders_data")
                     snipers_data = transaction_data.get("snipers_data")
+                    holders_data = transaction_data.get("holders_data")
                     dextscore = transaction_data.get("dextscore")
                     
                     mode = Mode.DATA_COLLECTION
@@ -124,8 +125,8 @@ class DexScreener():
                     if settings_id:
                         mode = Settings.objects.get(id=settings_id).mode
                         
-                    if check_settings(pair, top_traders_data, snipers_data):
-                        mode = Mode.REAL
+                    if not check_settings(pair, top_traders_data, snipers_data, holders_data):
+                        continue
                         
                     time.sleep(15)
                     upd_token_data =  get_pairs_data(pair)[0]
@@ -137,6 +138,7 @@ class DexScreener():
                         mode=mode,
                         snipers_data=snipers_data,
                         top_traders_data=top_traders_data,
+                        holders_data=holders_data,
                         twitter_data=None,
                         telegram_data=None,
                         price_change=price_change,
