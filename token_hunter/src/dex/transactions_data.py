@@ -27,7 +27,7 @@ class DexscreenerData:
 
         page = await self.browser.get(self.url, new_tab=True)
 
-        time.sleep(25)
+        time.sleep(5)
         await page.wait(10)
         try:  
             snipers_button = await page.find("Snipers")
