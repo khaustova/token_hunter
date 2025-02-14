@@ -17,6 +17,7 @@ def clear_number(number_str: str) -> float:
         .replace("<", "")
         .replace("$", "")
         .replace(" ", "")
+        .replace("%", "")
     )
     
     try:
