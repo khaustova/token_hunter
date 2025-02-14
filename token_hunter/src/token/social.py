@@ -8,7 +8,7 @@ from ..utils.preprocessing_data import clear_number
 logger = logging.getLogger(__name__)
 
 
-async def get_social_info(social_data: dict) -> tuple:
+async def get_social_info(browser, social_data: dict, telegram_client) -> tuple:
     """
     Возвращает данные о телеграме и твиттере токена.
     """
@@ -18,10 +18,10 @@ async def get_social_info(social_data: dict) -> tuple:
         for data in social_data:
             if data.get("type") == "twitter":
                 twitter_name = data.get("url").split("/")[-1]
-                twitter_data = await get_twitter_data(twitter_name)
+                twitter_data = await get_twitter_data(browser, twitter_name)
             elif data.get("type") == "telegram":
                 channel_name = data.get("url").split("/")[-1]
-                telegram_data = await get_telegram_data(channel_name)
+                telegram_data = await get_telegram_data(telegram_client, channel_name)
                     
     return (twitter_data, telegram_data)
 

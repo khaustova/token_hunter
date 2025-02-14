@@ -204,7 +204,7 @@ class DexScreener():
                     continue
 
                 # total_transfers = get_total_transfers(token["tokenAddress"])
-                # twitter_data, telegram_data = get_social_info(token.get("links"))
+                twitter_data, telegram_data = get_social_info(self.browser, token.get("links"), self.telegram_client)
                 
                 dexscreener = DexscreenerData(self.browser, pair)
                 transaction_data = await dexscreener.get_transactions_data()
