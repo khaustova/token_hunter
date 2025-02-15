@@ -177,7 +177,7 @@ form ul.inline li {
 .aligned label {
     display: block;
     padding: 4px 10px 0 0;
-    width: 200px;
+    width: 100%;
     word-wrap: break-word;
     line-height: 1;
 }
@@ -562,6 +562,10 @@ select[name="action"] {
     color: var(--color-text);
 }
 
+input[type="number"] {
+    width: 100%;
+}
+
 select[name="action"] {
     height: 28px;
 }
@@ -906,8 +910,8 @@ input.sell-button:hover {
     margin-bottom: 15px;
 }
 
-.settings-form .checkbox-row {
-    flex-direction: row;
+.checkbox-row {
+    flex-direction: row !important;
 }
 
 .settings-form h2 {
