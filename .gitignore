@@ -11,4 +11,5 @@ page_sources
 .venv
 .env
 logs
+settings.py
 token_hunter/src/dex/users
