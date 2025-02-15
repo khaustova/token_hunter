@@ -2,13 +2,15 @@ import time
 import logging
 from bs4 import BeautifulSoup
 from datetime import datetime
+from nodriver.core.browser import Browser
 from telethon import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
 from ..utils.preprocessing_data import clear_number
+
 logger = logging.getLogger(__name__)
 
 
-async def get_social_info(browser, social_data: dict, telegram_client) -> tuple:
+async def get_social_info(browser: Browser, social_data: dict, telegram_client) -> tuple:
     """
     Возвращает данные о телеграме и твиттере токена.
     """
@@ -26,7 +28,7 @@ async def get_social_info(browser, social_data: dict, telegram_client) -> tuple:
     return (twitter_data, telegram_data)
 
 
-async def get_twitter_data(browser, twitter_name: str) -> dict:
+async def get_twitter_data(browser: Browser, twitter_name: str) -> dict:
     """
     Получает данные о твиттере токена: количестве подписчиков, 
     в т.ч. известных, возрасте аккаунта и количестве твитов,  

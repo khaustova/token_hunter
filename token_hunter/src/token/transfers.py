@@ -1,10 +1,11 @@
 import time
 import logging
+from nodriver.core.browser import Browser
 
 logger = logging.getLogger(__name__)
 
 
-async def get_total_transfers(browser, token_address):
+async def get_total_transfers(browser: Browser, token_address: str) -> int | None:
     """
     Возвращает количество трансферов токена token_address с solscan.io.
     """

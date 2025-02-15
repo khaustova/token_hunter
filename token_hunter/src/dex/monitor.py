@@ -23,7 +23,11 @@ from ..utils.tokens_data import (
     get_token_age
 )
 from ...models import TopTrader, Transaction, Settings, Mode
-from ...settings import check_settings
+
+try:
+    from ...settings import check_api_data, check_settings
+except:
+    from ...settings_example import check_api_data, check_settings
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +88,10 @@ class DexScreener():
                     pair = link.attributes[-1].split("/")[-1]
 
                     token_data = get_pairs_data(pair)[0]
+                    
+                    if not check_api_data(token_data):
+                        continue
+                    
                     token_address = token_data["baseToken"]["address"]
                     
                     pair_count = get_pairs_count(token_address)
@@ -106,8 +114,15 @@ class DexScreener():
   
                     await dex_page.wait(2)
 
-                    # total_transfers = get_total_transfers(token["tokenAddress"])
-                    # twitter_data, telegram_data = get_social_info(token.get("links"))
+                    # total_transfers = await get_total_transfers(
+                    #     browser=self.browser, 
+                    #     token_address=token_data["tokenAddress"]
+                    # )
+                    twitter_data, telegram_data = await get_social_info(
+                        browser=self.browser, 
+                        social_data=token_data.get("links"), 
+                        telegram_client=self.telegram_client
+                    )
                     
                     dexscreener = DexscreenerData(self.browser, pair)
                     transaction_data = await dexscreener.get_transactions_data()
@@ -139,8 +154,8 @@ class DexScreener():
                         snipers_data=snipers_data,
                         top_traders_data=top_traders_data,
                         holders_data=holders_data,
-                        twitter_data=None,
-                        telegram_data=None,
+                        twitter_data=twitter_data,
+                        telegram_data=telegram_data,
                         price_change=price_change,
                         settings_id=settings_id,
                         is_mutable_metadata=is_mutable_metadata,
@@ -203,13 +218,21 @@ class DexScreener():
                     black_list.append(token_address)
                     continue
 
-                # total_transfers = get_total_transfers(token["tokenAddress"])
-                twitter_data, telegram_data = get_social_info(self.browser, token.get("links"), self.telegram_client)
+                # total_transfers = await get_total_transfers(
+                #     browser=self.browser, 
+                #     token_address=token["tokenAddress"]
+                # )
+                twitter_data, telegram_data = await get_social_info(
+                    browser=self.browser, 
+                    social_data=token.get("links"), 
+                    telegram_client=self.telegram_client
+                )
                 
                 dexscreener = DexscreenerData(self.browser, pair)
                 transaction_data = await dexscreener.get_transactions_data()
                 top_traders_data = transaction_data.get("top_traders_data")
                 snipers_data = transaction_data.get("snipers_data")
+                holders_data = transaction_data.get("holders_data")
                 dextscore = transaction_data.get("dextscore")
 
                 mode = Mode.BOOSTED
@@ -245,8 +268,9 @@ class DexScreener():
                     mode=mode,
                     snipers_data=snipers_data,
                     top_traders_data=top_traders_data,
-                    twitter_data=None,
-                    telegram_data=None,
+                    holders_data=holders_data,
+                    twitter_data=twitter_data,
+                    telegram_data=telegram_data,
                     price_change=price_change,
                     settings_id=settings_id,
                     is_mutable_metadata=is_mutable_metadata,

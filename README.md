@@ -27,77 +27,165 @@
 git clone https://github.com/khaustova/muiv_timetable.git
 ```
 
-2. Запустите приложение одним из двух способов:
-<details>
-  <summary>В Docker</summary>
-  
-  * Переименуйте файл `.env.example` в `.env` и добавьте свои данные.   
-  
-  * Запустите приложение с помощью команды:  
-  
-    ```
-    docker-compose up --build
-    ```
-  
-</details>  
+2. Переименуйте файл `.env.example` в `.env` и добавьте свои данные. 
 
-<details>
-  <summary>В виртуальном окружении</summary>
-
-  * Убедитесь, что у вас установлены и запущены Redis и PostgreSQL.
-
-  * Переименуйте файл `.env.example` в `.env` и добавьте свои данные.  
-
-  * Создайте виртуальное окружение:
-    
-
-  ```
-  python3 -m venv .venv
-  ```
-
-  * Активируйте виртуальное окружение:  
-
-    * Для Linux/MacOS:  
-
-    ```
-    source .venv/bin/activate
-    ```
+3. Найдите в папке `token_hunter` файл `settings_example.py` и переименуйте его в `settings.py`. Добавьте собственные проверки в функции `check_api_data()` и `check_settings()`.
    
-    * Для Windows:  
+   Функция `check_api_data()` выполняет проверку в начале анализа токена и принимает данные, полученные через API.
+   <details>
+   <summary>Пример данных</summary>
+      <code>{
+        "chainId" : "solana",
+        "dexId" : "raydium",  
+        "url" : "https://dexscreener.com/solana/dqcj8kcnbdmm7kww4w4w9hvbhb7raellpt3raxsjmgnt",
+        "pairAddress" : "DQcj8kcnBdMm7KWw4w4W9HVbhB7RAeLLPt3rAxsjmgnT",
+        "baseToken" : {
+            "address" : "B7NPUGvxC8BUF5a8BdxurBNxCjV3HwyN6DaRivtqNAjB",
+            "name" : "Pi Network AI",
+            "symbol" : "PiAI"
+        },
+        "quoteToken" : {
+            "address" : "So11111111111111111111111111111111111111112",
+            "name" : "Wrapped SOL",
+            "symbol" : "SOL"
+        },
+        "priceNative" : "0.00000000000002174",
+        "priceUsd" : "0.000000000004224",
+        "txns" : {
+            "m5" : {
+                "buys" : 121,
+                "sells" : 73
+            },
+            "h1" : {
+                "buys" : 1050,
+                "sells" : 706
+            },
+            "h6" : {
+                "buys" : 8176,
+                "sells" : 4854
+            },
+            "h24" : {
+                "buys" : 8618,
+                "sells" : 5078
+            }
+        },
+        "volume" : {
+            "h24" : 1017521.56,
+            "h6" : 962844.46,
+            "h1" : 120586.98,
+            "m5" : 13581.37
+        },
+        "priceChange" : {
+            "m5" : -28.15,
+            "h1" : -40.1,
+            "h6" : -49.48,
+            "h24" : 507
+        },
+        "liquidity" : {
+            "usd" : 30492.81,
+            "base" : 3611984589615754,
+            "quote" : 78.4331
+        },
+        "fdv" : 180343,
+        "marketCap" : 180343,
+        "pairCreatedAt" : 1739604349000,
+        "info" : {
+            "imageUrl" : "https://dd.dexscreener.com/ds-data/tokens/solana/B7NPUGvxC8BUF5a8BdxurBNxCjV3HwyN6DaRivtqNAjB.png?key=a838fa",
+            "header" : "https://dd.dexscreener.com/ds-data/tokens/solana/B7NPUGvxC8BUF5a8BdxurBNxCjV3HwyN6DaRivtqNAjB/header.png?key=a838fa",
+            "openGraph" : "https://cdn.dexscreener.com/token-images/og/solana/B7NPUGvxC8BUF5a8BdxurBNxCjV3HwyN6DaRivtqNAjB?timestamp=1739638500000",
+            "websites" : [ {
+                "label" : "Website",
+                "url" : "https://pi-network.club"
+            }, {
+                "label" : "CoinMarketCap",
+                "url" : "https://coinmarketcap.com/currencies/pi-network-ai/"
+            } ],
+            "socials" : [ {
+                "type" : "twitter",
+                "url" : "https://x.com/PiAICTO"
+            }, {
+                "type" : "telegram",
+                "url" : "https://t.me/PiNetworkcto"
+            } ]
+        },
+        "boosts" : {
+            "active" : 500
+        }
+    }</code>
 
-    ```
-    .venv\Scripts\activate
-    ```
-
-  * Установите необходимые библиотеки:
-
-  ```
-  pip install -r requirements.txt
-  ```
-
-  * Выполните миграции базы данных:
+   </details>  
     
+   Функция `check_settings()` выполняет проверку перед покупкой или её эмуляцией и принимает данные, полученные как через API, так и со страницы токена, которые включают в себя данные о топовых транзакциях, снайперах и основных держателях.  
 
-  ```
-  python3 manage.py migrate
-  ```
+4. Запустите приложение одним из двух способов:  
+    <details>
+      <summary>В Docker</summary>
+      
+      
+      * Запустите приложение с помощью команды:  
+      
+        ```
+        docker-compose up --build
+        ```
+      
+    </details>  
 
-  * Запустите Celery:
+    <details>
+      <summary>В виртуальном окружении</summary>
+
+      * Убедитесь, что у вас установлены и запущены Redis и PostgreSQL.
+
+
+      * Создайте виртуальное окружение:
+        
+
+      ```
+      python3 -m venv .venv
+      ```
+
+      * Активируйте виртуальное окружение:  
+
+        * Для Linux/MacOS:  
+
+        ```
+        source .venv/bin/activate
+        ```
+      
+        * Для Windows:  
+
+        ```
+        .venv\Scripts\activate
+        ```
+
+      * Установите необходимые библиотеки:
+
+      ```
+      pip install -r requirements.txt
+      ```
+
+      * Выполните миграции базы данных:
+        
+
+      ```
+      python3 manage.py migrate
+      ```
+
+      * Запустите Celery:
+      
+      ```
+      celery -A core worker -l info
+      ```
+
+      * Запустите сервер:
+
+      ```
+      python3 manage.py runserver
+      ```
+      
+    </details> 
   
-  ```
-  celery -A core worker -l info
-  ```
 
-  * Запустите сервер:
-
-  ```
-  python3 manage.py runserver
-  ```
-  
-</details> 
-  
-
-3. Приложение будет доступно по адресу http://127.0.0.1:8000.  
+5. Приложение будет доступно по адресу http://127.0.0.1:8000.  
 
 ## Настройка Telegram
 
