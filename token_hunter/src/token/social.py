@@ -20,7 +20,7 @@ async def get_social_info(browser: Browser, social_data: dict, telegram_client) 
         for data in social_data:
             if data.get("type") == "twitter":
                 twitter_name = data.get("url").split("/")[-1]
-                twitter_data = await get_twitter_data(browser, twitter_name)
+                # twitter_data = await get_twitter_data(browser, twitter_name)
             elif data.get("type") == "telegram":
                 channel_name = data.get("url").split("/")[-1]
                 telegram_data = await get_telegram_data(telegram_client, channel_name)

@@ -162,6 +162,8 @@ class DexScreener():
                         dextscore=dextscore,
                     )
                     
+                    black_list_links.append(link)
+                    
             await self.browser.wait(10)
             
     async def monitor_boosted_tokens(self) -> None:
@@ -204,6 +206,9 @@ class DexScreener():
                 if not token_data.get("liquidity"):
                     black_list.append(token_address)
                     continue
+                
+                if not check_api_data(token_data):
+                    continue
                   
                 pair = token_data.get("pairAddress")
 
@@ -244,8 +249,8 @@ class DexScreener():
                 if settings_id:
                     mode = Settings.objects.get(id=settings_id).mode
                     
-                if check_settings(pair, top_traders_data, snipers_data):
-                    mode = Mode.REAL
+                if not check_settings(pair, top_traders_data, snipers_data, holders_data):
+                    continue
                     
                 time.sleep(15)
                 upd_token_data =  get_pairs_data(pair)[0]
@@ -258,10 +263,11 @@ class DexScreener():
                         "total_amount": token["totalAmount"],
                         "boosts_ages": "",
                     })
-                
+
                 token_age = str(get_token_age(upd_token_data["pairCreatedAt"])) + " "
                 
                 boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
+                boosted_tokens[token["tokenAddress"]]["total_amount"] = token["totalAmount"]
                 
                 buy_token_task.delay(
                     pair=pair,
