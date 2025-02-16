@@ -67,7 +67,7 @@ class DexScreener():
         #await dex_page.wait(10)
         await asyncio.sleep(10)
         
-        black_list_links, black_list_token_address = [], []
+        black_list_links, black_list_pairs = [], []
         step = 0
     
         while True:
@@ -86,6 +86,9 @@ class DexScreener():
             if links:
                 for link in links:
                     pair = link.attributes[-1].split("/")[-1]
+                    
+                    if pair in black_list_pairs:
+                        continue
 
                     token_data = get_pairs_data(pair)[0]
                     
@@ -163,6 +166,7 @@ class DexScreener():
                     )
                     
                     black_list_links.append(link)
+                    black_list_pairs.append(pair)
                     
             await self.browser.wait(10)
             
