@@ -44,4 +44,4 @@ def check_settings(
     if tt_bought_sum == 0:
         return False
      
-    return False
+    return True
