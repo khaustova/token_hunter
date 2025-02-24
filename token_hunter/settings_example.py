@@ -36,7 +36,7 @@ def check_settings(
     """
     token_data = get_pairs_data(pair)[0]
     
-    if not snipers_data or not top_traders_data or not holders_data:
+    if not top_traders_data:
         return False
 
     tt_bought_sum = get_sum_of_operation(top_traders_data["bought"])
