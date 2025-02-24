@@ -30,7 +30,7 @@ def clear_number(number_str: str) -> float:
             number = float(number_str)
     except Exception as e:
         logger.error(f"Ошибка преобразования строки '{number_str}' в число")
-        number = None
+        number = -1
     
     return number
 
