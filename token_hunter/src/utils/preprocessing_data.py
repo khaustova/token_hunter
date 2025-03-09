@@ -18,6 +18,9 @@ def clear_number(number_str: str) -> float:
         .replace("$", "")
         .replace(" ", "")
         .replace("%", "")
+        .replace("+", "")
+        .replace("₄", "00")
+        .replace("₅", "000")
     )
     try:
         if number_str[-1] == "K":
@@ -29,7 +32,6 @@ def clear_number(number_str: str) -> float:
         else:
             number = float(number_str)
     except Exception as e:
-        logger.error(f"Ошибка преобразования строки '{number_str}' в число")
         number = -1
     
     return number

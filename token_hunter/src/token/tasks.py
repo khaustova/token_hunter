@@ -19,7 +19,6 @@ def track_tokens_task(take_profit, stop_loss) -> str:
     значение TAKE_PROFIT или ниже значения STOP_LOSS, происходит продажа токена.
     """
     
-    step = 0
     while True:
         try:
             open_transactions = Transaction.objects.filter(status=Status.OPEN)
@@ -28,7 +27,6 @@ def track_tokens_task(take_profit, stop_loss) -> str:
             logger.error("Ошибка обращения к базе данных")
             continue
         
-        step += 1
         if open_transactions:
             
             buying_prices = {transaction.pair: transaction.price_b for transaction in open_transactions}
@@ -40,8 +38,6 @@ def track_tokens_task(take_profit, stop_loss) -> str:
                 buying_price = buying_prices[pair.lower()]
                 current_price = float(token_data["priceUsd"])
                 pnl = ((current_price - buying_price) / buying_price) * 100 
-                if step == 120:
-                    logger.debug(f"PNL токена {token_data["baseToken"]["name"]}: {pnl}")
 
                 TOKENS_DATA.setdefault(
                     pair, 
@@ -51,15 +47,9 @@ def track_tokens_task(take_profit, stop_loss) -> str:
                         "is_30": None, 
                         "is_40": None, 
                         "is_50": None,
-                        "is_100": None, 
-                        "is_200": None, 
-                        "is_loss_10": None
                     }
                 )
  
-                if pnl <= -10 and not TOKENS_DATA[pair]["is_loss_10"]:
-                    TOKENS_DATA[pair]["is_loss_10"] = True
-                
                 if pnl >= 10 and not TOKENS_DATA[pair]["is_10"]:
                     TOKENS_DATA[pair]["is_10"] = True
                 
@@ -74,12 +64,7 @@ def track_tokens_task(take_profit, stop_loss) -> str:
                     
                 if pnl >= 50 and not TOKENS_DATA[pair]["is_50"]:
                     TOKENS_DATA[pair]["is_50"] = True
-                    
-                if pnl >= 100 and not TOKENS_DATA[pair]["is_100"]:
-                    TOKENS_DATA[pair]["is_100"] = True
-                    
-                if pnl >= 200 and not TOKENS_DATA[pair]["is_200"]:
-                    TOKENS_DATA[pair]["is_200"] = True
+                
                     
                 if pnl >= take_profit or pnl <= stop_loss:
                     token_age = get_token_age(token_data["pairCreatedAt"])
@@ -94,23 +79,14 @@ def track_tokens_task(take_profit, stop_loss) -> str:
                         PNL_30=TOKENS_DATA[pair]["is_30"],
                         PNL_40=TOKENS_DATA[pair]["is_40"],
                         PNL_50=TOKENS_DATA[pair]["is_50"],
-                        PNL_100=TOKENS_DATA[pair]["is_100"],
-                        PNL_200=TOKENS_DATA[pair]["is_200"],
-                        PNL_loss_10=TOKENS_DATA[pair]["is_loss_10"],
                         status=Status.CLOSED    
                     )
                     
                     del TOKENS_DATA[pair]
                     
                     logger.info(f"Продажа токена {token_address} за {current_price} USD") 
-            
-        else:
-            if step == 120:
-                logger.debug("Нет отслеживаемых токенов")
         
         time.sleep(1)
-        if step == 120:
-            step = 0
 
 @app.task
 def buy_token_task(
@@ -125,6 +101,7 @@ def buy_token_task(
     settings_id: int | None=None,
     dextscore: int | None=None,
     is_mutable_metadata: bool=False,
+    trade_history_data: dict | None=None,
     transfers: int | None=None,
     boosts_ages: str | None=None 
 ) -> None:
@@ -197,7 +174,16 @@ def buy_token_task(
         transaction.holders_percentages = holders_data.get("percentages")
         transaction.holders_liquidity = holders_data.get("liquidity")
         transaction.holders_total = holders_data.get("total")
-    
+        
+    if trade_history_data:
+        transaction.prices = trade_history_data.get("prices")
+        transaction.date = trade_history_data.get("date")
+        transaction.operations = trade_history_data.get("operations")
+        transaction.trades_sum = trade_history_data.get("trades_sum")
+        transaction.trades_makers = trade_history_data.get("trades_makers")
+        transaction.trades_for_maker = trade_history_data.get("trades_for_maker")
+        transaction.transactions = trade_history_data.get("transactions")
+        
     if twitter_data:
         transaction.twitter_days = twitter_data.get("twitter_days")
         transaction.twitter_followers = twitter_data.get("twitter_followers")

@@ -34,6 +34,8 @@ async def rugcheck(browser, token_address):
         "risk_level": risk_level,
         "is_mutable_metadata": is_mutable_metadata,
     }
+    
+    logger.info(f"Уровень риска токена {token_address}: {risk_level}")
         
     await rugcheck_page.close()
     
@@ -53,22 +55,23 @@ def sync_rugcheck(driver, token_address):
     
     risk_level = None 
     try:
-        risk_level_element = driver.find_element("div.risk h1.mb-0")
-        risk_level = risk_level_element.text
+        risk_level = driver.find_element(By.XPATH, "//div[contains(@class, 'risk')]/h1").text
     except:
         pass
     
-    try:
-        mutable_metadata = driver.find_element("Mutable metadata")
-        is_mutable_metadata = True
-    except:
-        is_mutable_metadata = False
+    is_mutable_metadata = False
+    
+    # try:
+    #     mutable_metadata = driver.find_element(By.XPATH, "Mutable metadata")
+    #     is_mutable_metadata = True
+    # except:
+    #     is_mutable_metadata = False
         
     result = {
         "risk_level": risk_level,
         "is_mutable_metadata": is_mutable_metadata,
     }
-        
-    driver.close()
     
+    logger.info(f"Уровень риска токена {token_address}: {risk_level}")
+     
     return result

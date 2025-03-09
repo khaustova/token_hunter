@@ -6,6 +6,7 @@ from django.urls import reverse
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from .models import TopTrader, Transaction, Settings, Status
+from .src.utils.tokens_data import get_pairs_data
 
   
 @admin.action(description="Удалить все объекты")
@@ -24,7 +25,8 @@ class TransactionAdmin(ImportExportModelAdmin):
     list_filter = ("status", "mode", "settings")
     list_per_page = 30
 
-    actions = [delete_all]
+    # Действие для удаления всех транзакций:
+    # actions = [delete_all]
     
     resource_classes = [TransactionResource]
     
@@ -40,7 +42,8 @@ class TransactionAdmin(ImportExportModelAdmin):
         
     def link(self, obj):
         transaction = Transaction.objects.get(pk=obj.pk)
-        href = r"https://dexscreener.com/solana/" + transaction.pair
+        token_data = get_pairs_data(transaction.pair)[0]
+        href = r"https://www.dextools.io/app/en/solana/pair-explorer/" + token_data["pairAddress"]
         html = f'<a href={href}>Ссылка</a>'
         
         return format_html(html)

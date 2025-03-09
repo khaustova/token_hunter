@@ -33,9 +33,10 @@ logger = logging.getLogger(__name__)
 
 
 class DexScreener():
-    def __init__(self, browser, check_settings=None):
+    def __init__(self, browser=None, check_settings=None, source=None):
         self.browser = browser
         self.check_settings = check_settings
+        self.source = source
         
         app, is_created = App.objects.update_or_create(
         api_id=settings.TELETHON_API_ID,
@@ -176,8 +177,8 @@ class DexScreener():
         Если токен прошёл проверку, то покупает его.
         """
         
-        await self.browser.get("https://dexscreener.com/solana/raydium")
-        await self.browser.get("https://solscan.io/", new_tab=True)
+        if self.source == "dexscreener":
+            await self.browser.get("https://dexscreener.com/solana/raydium")
         
         black_list = []
         step = 0
@@ -215,59 +216,80 @@ class DexScreener():
                     continue
                   
                 pair = token_data.get("pairAddress")
+                
+                if self.source == "dextools":
+                    dextools = DextoolsData(pair, token["tokenAddress"])
+                    rugcheck_result = {}
+                    rugcheck_result = sync_rugcheck(dextools.driver, token["tokenAddress"])
+                    risk_level = rugcheck_result.get("risk_level")
+                    
+                    if risk_level == None:
+                        continue
+                    if risk_level != "Good":
+                        black_list.append(token_address)
+                        continue
+                    
+                    dextools.open_page()
+                    
+                    # dextscore = dextools.get_dextscore()
+                    dextscore = None
+                    top_traders_data = dextools.get_top_traders()
+                    holders_data = dextools.get_holders()
+                    trade_history_data = dextools.get_trade_history()
+                    snipers_data = None
 
-                rugcheck_result = await rugcheck(self.browser, token["tokenAddress"])
-                risk_level = rugcheck_result.get("risk_level")
-                is_mutable_metadata = rugcheck_result.get("is_mutable_metadata")
-                logger.info(f"Уровень риска токена {token["tokenAddress"]}: {risk_level}")
+                    dextools.close_page()
+                    
+                else:
+                    rugcheck_result = await rugcheck(self.browser, token["tokenAddress"])
+                    risk_level = rugcheck_result.get("risk_level")
 
-                if risk_level == None:
-                    continue
-                if risk_level != "Good":
-                    black_list.append(token_address)
-                    continue
+                    if risk_level == None:
+                        continue
+                    if risk_level != "Good":
+                        black_list.append(token_address)
+                        continue
 
-                # total_transfers = await get_total_transfers(
-                #     browser=self.browser, 
-                #     token_address=token["tokenAddress"]
-                # )
+                    twitter_data, telegram_data = await get_social_info(
+                        browser=self.browser, 
+                        social_data=token.get("links"), 
+                        telegram_client=self.telegram_client
+                    )
+                    
+                    dexscreener = DexscreenerData(self.browser, pair)
+                    transaction_data = await dexscreener.get_transactions_data()
+                    top_traders_data = transaction_data.get("top_traders_data")
+                    snipers_data = transaction_data.get("snipers_data")
+                    holders_data = transaction_data.get("holders_data")
+                    dextscore = None
+                    trade_history_data = None
+
                 twitter_data, telegram_data = await get_social_info(
                     browser=self.browser, 
                     social_data=token.get("links"), 
                     telegram_client=self.telegram_client
                 )
-                
-                dexscreener = DexscreenerData(self.browser, pair)
-                transaction_data = await dexscreener.get_transactions_data()
-                top_traders_data = transaction_data.get("top_traders_data")
-                snipers_data = transaction_data.get("snipers_data")
-                holders_data = transaction_data.get("holders_data")
-                dextscore = transaction_data.get("dextscore")
 
                 mode = Mode.BOOSTED
                 
                 token_checker = TokenChecker(pair, self.check_settings)
                 
-                settings_id = token_checker.check_token(snipers_data, top_traders_data)
+                settings_id = token_checker.check_token(top_traders_data=top_traders_data)
                 
                 if settings_id:
                     mode = Settings.objects.get(id=settings_id).mode
                     
-                if not check_settings(pair, top_traders_data, snipers_data, holders_data):
+                if not check_settings(pair, top_traders_data, holders_data):
                     continue
                     
-                time.sleep(15)
-                upd_token_data =  get_pairs_data(pair)[0]
-                price_15s = float(upd_token_data["priceUsd"])
-                price_change = (price_15s - float(token_data["priceUsd"])) / float(token_data["priceUsd"]) * 100
-                
                 boosted_tokens.setdefault(
                     token["tokenAddress"], 
                     {
                         "total_amount": token["totalAmount"],
                         "boosts_ages": "",
                     })
-
+                
+                upd_token_data =  get_pairs_data(pair)[0]
                 token_age = str(get_token_age(upd_token_data["pairCreatedAt"])) + " "
                 
                 boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
@@ -276,15 +298,15 @@ class DexScreener():
                 buy_token_task.delay(
                     pair=pair,
                     mode=mode,
-                    snipers_data=snipers_data,
                     top_traders_data=top_traders_data,
+                    snipers_data=snipers_data,
                     holders_data=holders_data,
                     twitter_data=twitter_data,
                     telegram_data=telegram_data,
-                    price_change=price_change,
                     settings_id=settings_id,
-                    is_mutable_metadata=is_mutable_metadata,
+                    is_mutable_metadata=rugcheck_result.get("is_mutable_metadata"),
                     dextscore=dextscore,
+                    trade_history_data=trade_history_data,
                     boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
                 )
                 
@@ -375,19 +397,23 @@ async def run_dexscreener_monitor_filter_tokens(settings_ids, filter):
     await dexscreener.monitor_filter_tokens(filter)
     
 
-async def run_dexscreener_monitor_boosted_token(settings_ids):  
+async def run_dexscreener_monitor_boosted_token(settings_ids: list[int], source: str) -> None:  
     """
-    Инициализирует браузер и запускает парсинг топов кошельков DesScreener.
+    Инициализирует браузер и запускает мониторинг boosted токенов на DesScreener.
     """  
     
-    config = Config(headless=False)
-   # config.add_extension("./extensions/captcha_solver")
     check_settings = {}
     for settings_id in settings_ids:
         check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
 
-    browser = await uc.start(config=config, sandbox=False)
-    boosted_worker = DexScreener(browser, check_settings)
+    if source == "dexscreener":
+        config = Config(headless=False)
+        # config.add_extension("./extensions/captcha_solver")
+        browser = await uc.start(config=config, sandbox=False)   
+    else:
+        browser = None
+        
+    boosted_worker = DexScreener(browser, check_settings, source)
     await boosted_worker.monitor_boosted_tokens()
 
 

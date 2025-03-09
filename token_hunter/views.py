@@ -2,7 +2,7 @@ import json
 import logging
 from core.celery import app
 from datetime import datetime
-from django.http import JsonResponse, HttpRequest, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -42,20 +42,22 @@ def monitor_dexscreener(request: HttpRequest):
             if form.cleaned_data["settings"]: 
                 settings_qs = form.cleaned_data["settings"]
                 monitoring_rule = form.cleaned_data["monitoring_rule"]
+                source = form.cleaned_data["source"]
             else:
                 settings_qs = Settings.objects.all()
                 monitoring_rule = MonitoringRule.BOOSTED
+                source = "dexscreener"
                 
             settings_ids= []
             for settings in settings_qs:
                     settings_ids.append(settings.id)
           
             if monitoring_rule == MonitoringRule.BOOSTED:
-                monitoring = monitor_boosted_tokens_task.delay(settings_ids=settings_ids)
+                monitoring = monitor_boosted_tokens_task.delay(settings_ids=settings_ids, source=source)
                 logger.info(f"Запущена задача мониторинга boosted токенов на DexScreener {monitoring.id}")
                    
             elif monitoring_rule == MonitoringRule.FILTER:
-                process = monitor_dexscreener_task.delay(settings_ids=settings_ids, filter=filter)
+                process = monitor_dexscreener_task.delay(settings_ids=settings_ids, filter=filter, source=source)
                 logger.info(f"Запущена задача мониторинга DexScreener {process.id}")
                 
         elif "_track_tokens" in request.POST:
@@ -71,8 +73,7 @@ def monitor_dexscreener(request: HttpRequest):
                 
             tracking_price = track_tokens_task.delay(take_profit=take_profit, stop_loss=stop_loss)
             logger.info(f"Запущена задача отслеживания стоимости {tracking_price.id} с параметрами тейк-профит: {take_profit} и стоп-лосс: {stop_loss}")
-            
-        
+
     return HttpResponseRedirect("/")
 
 
@@ -82,7 +83,7 @@ def stop_task(request: HttpRequest, task_id: str):
     """
     
     app.control.revoke(task_id, terminate=True)
-    logger.info(f"Задача {task_id} остановлено")
+    logger.info(f"Задача {task_id} остановлена")
     
     return HttpResponseRedirect("/")
 

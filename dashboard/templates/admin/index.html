@@ -82,7 +82,23 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Настройки ботов для покупки</div>
+            Настройки источника данных</div>
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_parameters">
+                <div class="form-row field-take_profit">
+                    <div class="flex-container">
+                      <label for="id_take_profit">Выберите источник для получения данных о токенах:</label>
+                      {{ settings_form.source }}
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Настройки бота для покупки</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-take_profit">

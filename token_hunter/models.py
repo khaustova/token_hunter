@@ -722,6 +722,48 @@ class Transaction(models.Model):
         default=False,
         verbose_name="Твиттер указан, но не существует"
     )
+    # Данные о транзакциях:
+    prices = models.CharField(
+        max_length=16384,
+        blank=True,
+        null=True,
+        verbose_name="Изменение цены"
+    )
+    date = models.CharField(
+        max_length=16384,
+        blank=True,
+        null=True,
+        verbose_name="Даты транзакций"
+    )
+    operations = models.CharField(
+        max_length=16384,
+        blank=True,
+        null=True,
+        verbose_name="Операции"
+    )
+    trades_sum = models.CharField(
+        max_length=16384,
+        blank=True,
+        null=True,
+        verbose_name="Суммы операций"
+    )
+    trades_makers = models.CharField(
+        max_length=16384,
+        blank=True,
+        null=True,
+        verbose_name="Торгующие кошельки"
+    )
+    trades_for_maker = models.CharField(
+        max_length=16384,
+        blank=True,
+        null=True,
+        verbose_name="Количество транзакций для кошелька"
+    )
+    transactions = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Общее количество транзакций"
+    )
 
     # Данные о снайперах:
     sns_bought = models.CharField(
@@ -835,21 +877,6 @@ class Transaction(models.Model):
         blank=True,
         null=True,
         verbose_name="PNL 50 %"
-    )
-    PNL_100 = models.BooleanField(
-        blank=True,
-        null=True,
-        verbose_name="PNL 100 %"
-    )
-    PNL_200 = models.BooleanField(
-        blank=True,
-        null=True,
-        verbose_name="PNL 200 %"
-    )
-    PNL_loss_10 = models.BooleanField(
-        blank=True,
-        null=True,
-        verbose_name="PNL -10 %"
     )
     status = models.CharField(
         max_length=64,

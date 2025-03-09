@@ -1,26 +1,41 @@
 from django import forms
-from django.urls import reverse_lazy
-from django_select2.forms import ModelSelect2TagWidget, Select2Widget
+from django_select2.forms import ModelSelect2TagWidget
 from .models import Settings, MonitoringRule        
 
 
 class SettingsSelect2TagWidget(ModelSelect2TagWidget):
+    """
+    Виджет для поля множественного выбора настроек.
+    """
+    
     queryset = Settings.objects.all()
 
     def value_from_datadict(self, data, files, name):
         values = set(super().value_from_datadict(data, files, name))
-        pks = self.queryset.filter(**{'pk__in': list(values)}).values_list('pk', flat=True)
+        pks = self.queryset.filter(**{"pk__in": list(values)}).values_list("pk", flat=True)
         pks = set(map(str, pks))
         cleaned_values = list(pks)
+        
         for val in values - pks:
             cleaned_values.append(self.queryset.create(title=val).pk)
+            
         return cleaned_values
 
 
 class SettingsForm(forms.Form):
-    CHOICES = [
-        ('maestro', 'Maestro Sniper Bot'),
+    """
+    Форма настройки параметров для мониторинга и покупки токенов, а также 
+    для парсинга топовых кошельков.
+    """
+    
+    CHOICES_BOTS = [
+        ("maestro", "Maestro Sniper Bot"),
     ]
+    CHOICES_SOURCE = [
+        ("dexscreener", "DEX Screener"),
+        ("dextools", "DEXTools")
+    ]
+    
     filter = forms.CharField(
         required=False,
         initial="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
@@ -38,9 +53,9 @@ class SettingsForm(forms.Form):
     settings = forms.ModelMultipleChoiceField(
         widget=SettingsSelect2TagWidget(
             model=Settings,
-            search_fields=['name__icontains',],
+            search_fields=["name__icontains",],
             attrs={
-                'data-minimum-input-length': 0
+                "data-minimum-input-length": 0
             },
         ),
         queryset=Settings.objects.all(), 
@@ -55,8 +70,13 @@ class SettingsForm(forms.Form):
         initial=-20,
         label="Введите значение стоп-лосса"
     )
+    source = forms.ChoiceField(
+        widget=forms.RadioSelect,
+        choices=CHOICES_SOURCE,
+        initial="dextools"
+    )
     bot = forms.ChoiceField(
         widget=forms.RadioSelect,
-        choices=CHOICES, 
+        choices=CHOICES_BOTS, 
         initial="maestro",
     )

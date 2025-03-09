@@ -22,7 +22,7 @@ class TokenChecker:
         self.check_settings = check_settings
     
 
-    def check_token(self, snipers_data: dict, top_traders_data: dict):
+    def check_token(self, snipers_data: dict | None=None, top_traders_data: dict| None=None):
         token_data = get_pairs_data(self.pair)[0]
 
         is_check = True

@@ -5,8 +5,11 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium_stealth import stealth
 from ..utils.preprocessing_data import clear_number
 
@@ -118,8 +121,7 @@ class DexscreenerData:
                     sold = self._get_list_element_by_index(snipers_spans, 6)
                     if sold != "-":
                         sold = clear_number(sold)
-                        
-  
+
             if bought != "-":
                 bought_lst.append(bought)
             else:
@@ -265,79 +267,258 @@ class DexscreenerData:
         return result
 
 
-
 class DextoolsData:
-    def __init__(self, pair):
+    def __init__(self, pair, token_address=None):
         self.pair = pair
+        self.token_address = token_address
         self.url = "https://www.dextools.io/app/en/solana/pair-explorer/" + self.pair
         self.driver = self._create_driver()
         
-    def get_transactions_data(self):
+    def open_page(self):
         self.driver.get(self.url)
+        
         time.sleep(5)
         
-        self.driver.find_element(By.XPATH, "//button[contains(., 'Top Traders')]").click()
+    def close_page(self):
+        self.driver.close()
+        
+        time.sleep(5)
+        
+    def get_holders(self):
+        html = self.driver.find_element(By.TAG_NAME, "html")
+        html.send_keys(Keys.PAGE_UP)
+        html.send_keys(Keys.PAGE_UP)
+        
+        holders_button = self._get_element(
+            by=By.XPATH,
+            value="//button[contains(., 'Holders')]"
+        )
+        holders_button.click()
 
         time.sleep(5)
 
-        table = self.driver.find_element(By.CLASS_NAME, "datatable-body")
+        rows = self._get_all_elements(by=By.TAG_NAME, value="datatable-body-row")
         
+        holders_data, percentages = {}, []
+        for row in rows[:-1]:
+            try:
+                cells = row.find_elements(By.TAG_NAME, "datatable-body-cell")
+            except:
+                logger.error("Не удалось прочитать ячейки в строке держателей токена")
+                continue
+            
+            percentages_value = clear_number(cells[1].find_elements(By.TAG_NAME, "div")[1].text)
+            
+            try:
+                maker = row.find_element(By.TAG_NAME, "a").text
+            except:
+                maker = None
+                
+            if maker == "5Q544...e4j1":
+                holders_data["liquidity"] = percentages_value
+            else:
+                percentages.append(percentages_value)
+
+        holders_data["percentages"] = " ".join(map(str, percentages))
+
+        total_holders_element = self._get_element("holders-span")
+        total_holders_text = self._get_text(total_holders_element)
+        holders_data["total"] = int(total_holders_text.split(" ")[-1])
+        
+        return holders_data
+    
+    def get_dextscore(self):
+        dextscore_element = self._get_element(
+            by=By.XPATH, 
+            value="/div[contains(@class, 'dext-value')]/strong"
+        )
+        
+        dextscore = self._get_text(dextscore_element)
+        
+        return dextscore
+           
+    def get_top_traders(self):
+        top_traders_button = self._get_element(
+            by=By.XPATH, 
+            value="//button[contains(., 'Top Traders')]",
+            timeout=10,
+        )
+        top_traders_button.click()
+        time.sleep(5)
+
+        table = self._get_element("datatable-body")
+
         action = ActionChains(self.driver)
         action.move_to_element(table).perform()
         
         max_height = self.driver.execute_script("return arguments[0].scrollHeight", table)
         
-        table_rows = self.driver.find_elements(By.TAG_NAME, "datatable-body-row")
-        bought, sold, unrealized, speed = [], [], [], []
-        makers = []
+        bought, sold, unrealized, speed, makers = [], [], [], [], []
         for i in range(0, max_height, 500):
             self.driver.execute_script(f"arguments[0].scrollTop = {i}", table)
+            
             time.sleep(1)
-            rows = self.driver.find_elements(By.TAG_NAME, "datatable-body-row")
+            
+            rows = self._get_all_elements(by=By.TAG_NAME, value="datatable-body-row")
+            
+            if not rows:
+                continue
             
             for each_row in rows:
-                maker = each_row.find_element(By.XPATH, ".//datatable-body-cell[2]/div/app-maker-address/div/a[1]/span").text
-                if maker in makers:
+                try:
+                    cells = each_row.find_elements(By.TAG_NAME, "datatable-body-cell")
+                except:
+                    logger.error("Не удалось прочитать ячейки в строке топовых транзакций")
                     continue
                 
-                else:
-                    try:
-                        bought.append(each_row.find_element(By.XPATH, ".//datatable-body-cell[8]/div/div/span").text)
-                    except:
+                try:
+                    maker = cells[1].find_element(By.TAG_NAME, "span").text
+                except:
+                    logger.error("Не удалось определить топовый кошелёк")
+                    continue
+                
+                if maker in makers:
+                    continue
+
+                try:
+                    value = cells[7].find_element(By.TAG_NAME, "span").text
+                    clear_value = clear_number(value)
+                    if clear_value == -1:
                         bought.append("0")
-                        
-                    try:
-                        sold.append(each_row.find_element(By.XPATH, ".//datatable-body-cell[9]/div/div/span").text)
-                    except:
-                        sold = "0"
+                    else:
+                        bought.append(clear_value)
+                except:
+                    bought.append("0")
+                    
+                try:
+                    value = cells[8].find_element(By.TAG_NAME, "span").text
+                    clear_value = clear_number(value)
+                    if clear_value == -1:
                         sold.append("0")
+                    else:
+                        sold.append(clear_value)
+                except:
+                    sold.append("0")
+                    
+                try:
+                    each_row.find_element(
+                        By.XPATH, 
+                        ".//app-maker-speed/div/fa-icon[contains(@class, 'medium')]"
+                    ).text
+                    speed.append("medium")
+                except:
+                    speed.append("fast")
+                
+                try:
+                    value = cells[5].find_element(By.TAG_NAME, "div").text
+                    clear_value = clear_number(value)
+                    if clear_value == -1:
+                        unrealized.append("0")
+                    else:
+                        unrealized.append(clear_value)
+                except:
+                    unrealized.append("0")  
+                    
+                makers.append(maker)
                         
-                    try:
-                        each_row.find_element(By.XPATH, ".//app-maker-speed/div/fa-icon[contains(@class, 'medium')]").text
-                        speed.append("medium")
-                    except:
-                        speed.append("fast")
-                    
-                    try:
-                        unrealized.append(each_row.find_element(By.XPATH, ".//datatable-body-row/div[2]/datatable-body-cell[6]/div").text)
-                    except:
-                        unrealized.append("0") 
-                    
+            time.sleep(1)
+
+        top_traders_data = {
+            "bought": " ".join(map(str, bought)),
+            "sold": " ".join(map(str, sold)),
+            "unrealized": " ".join(map(str, unrealized)),
+            "speed": " ".join(map(str, speed)),
+        }
+        
+        return top_traders_data
+    
+    def get_trade_history(self):
+        html = self.driver.find_element(By.TAG_NAME, "html")
+        html.send_keys(Keys.PAGE_UP)
+        
+        trade_history_button = self._get_element(
+            by=By.XPATH, 
+            value="//button[contains(., 'Trade History')]"
+        )
+        trade_history_button.click()
+        
+        time.sleep(5)
+        
+        html.send_keys(Keys.PAGE_DOWN)
+
+        table = self._get_element("datatable-body") 
+        
+        action = ActionChains(self.driver)
+        action.move_to_element(table).perform()
+
+        keys, date, operations, prices, trades_sum, makers, trades_for_maker = ([] for _ in range(7))
+        
+        max_height = self.driver.execute_script("return arguments[0].scrollHeight", table)
+        
+        if max_height > 12000:
+            max_height = 12000
+        
+        for i in range(0, 10000, 650):
+            self.driver.execute_script(f"arguments[0].scrollTop = {i}", table)
+            
             time.sleep(1)
             
-        dextscore = self.driver.find_element(By.XPATH, "//div[contains(@class, 'dext-value')]/strong").text
-        
-        top_traders_data = {
-            "bought": " ".join(bought),
-            "sold": " ".join(sold),
-            "unrealized": " ".join(unrealized),
-            "speed": " ".join(speed),
+            rows = self._get_all_elements(by=By.TAG_NAME, value="datatable-body-row")
+            
+            if not rows:
+                continue
+            
+            for each_row in rows[:-1]:
+                try:
+                    cells = each_row.find_elements(By.TAG_NAME, "datatable-body-cell")
+                except:
+                    logger.error("Не удалось прочитать ячейки в строке истории транзакций")
+                    continue
+
+                if len(cells) < 9:
+                    continue
+                
+                key = f"{cells[0].text}: {cells[8].text}"          
+                if key in keys:
+                    continue
+                
+                date_value = self._get_text_by_index(cells, 0)
+                date.append(date_value)
+                
+                operation_value = self._get_text_by_index(cells, 1)
+                operations.append(operation_value)
+                
+                price_value = clear_number(self._get_text_by_index(cells, 2))
+                prices.append(price_value)
+                
+                trade_sum_value = clear_number(self._get_text_by_index(cells, 3))
+                trades_sum.append(trade_sum_value)
+                
+                maker_value = self._get_text_by_index(cells, 8)
+                makers.append(maker_value)
+                
+                trades_for_maker_value = int(clear_number(self._get_text_by_index(cells, 9)))
+                trades_for_maker.append(trades_for_maker_value) 
+                
+                keys.append(key)
+                
+        transactions_element = self._get_element("pair-explorer-footer__transactions") 
+        try:
+            transactions = self._get_text(transactions_element).split(" ")[-2]
+        except:
+            transactions = 0
+
+        trade_history_data = {
+            "prices": " ".join(map(str, prices)),
+            "date": ",".join(map(str, date)),
+            "operations": " ".join(map(str, operations)),
+            "trades_sum": " ".join(map(str, trades_sum)),
+            "trades_makers": " ".join(map(str, makers)),
+            "trades_for_maker": " ".join(map(str, trades_for_maker)),
+            "transactions": transactions
         }
         
-        return {
-            "top_traders_data": top_traders_data,
-            "dextscore": dextscore,
-        }
+        return trade_history_data
 
     def _create_driver(self):
         options = Options()
@@ -358,7 +539,7 @@ class DextoolsData:
         options.add_argument('--headless')
 
         driver = webdriver.Chrome(options=options)
-        ua = UserAgent(browsers='Chrome', os='Windows', platforms='desktop', fallback="Chrome")
+        ua = UserAgent(browsers='Chrome', os='Windows', platforms='desktop', fallback="Edge").random
         stealth(driver=driver,
                 user_agent=ua,
                 languages=["ru-RU", "ru"],
@@ -378,3 +559,45 @@ class DextoolsData:
         '''
         })
         return driver
+    
+    def _get_all_elements(self, value: str, timeout: int=15, by=By.CLASS_NAME):
+        try:
+            elements = WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_all_elements_located((by, value))
+            )
+        except:
+            elements = None
+            logger.error(f"Не удалось найти элементы {value}")
+        
+        return elements
+    
+    def _get_element(self, value: str, timeout: int=15, by=By.CLASS_NAME): 
+        try:
+            element = WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located((by, value))
+            )
+        except:
+            element = None
+            logger.error(f"Не удалось найти элемент {value}")
+            
+        return element
+    
+    def _get_text(self, element, element_name=""):
+        try:
+            text = element.text
+        except:
+            text = "0"
+            logger.error(f"Не удалось получить текст элемента {element_name}")
+        
+        return text
+    
+    def _get_text_by_index(self, element, i, element_name=""):
+        try:
+            text = element[i].text
+        except:
+            text = "0"
+            logger.error(
+                f"Не удалось получить текст элемента {element_name} по индексу {i}"
+            )
+        
+        return text
