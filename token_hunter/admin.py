@@ -42,8 +42,7 @@ class TransactionAdmin(ImportExportModelAdmin):
         
     def link(self, obj):
         transaction = Transaction.objects.get(pk=obj.pk)
-        token_data = get_pairs_data(transaction.pair)[0]
-        href = r"https://www.dextools.io/app/en/solana/pair-explorer/" + token_data["pairAddress"]
+        href = r"https://www.dextools.io/app/en/solana/pair-explorer/" + transaction.pair
         html = f'<a href={href}>Ссылка</a>'
         
         return format_html(html)

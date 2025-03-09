@@ -28,8 +28,7 @@ def track_tokens_task(take_profit, stop_loss) -> str:
             continue
         
         if open_transactions:
-            
-            buying_prices = {transaction.pair: transaction.price_b for transaction in open_transactions}
+            buying_prices = {transaction.pair.lower(): transaction.price_b for transaction in open_transactions}
             tokens_data = get_pairs_data(",".join(buying_prices.keys()))
 
             for token_data in tokens_data:
@@ -120,7 +119,7 @@ def buy_token_task(
         return
         
     transaction, created = Transaction.objects.get_or_create(
-        pair=pair.lower(),
+        pair=token_data["pairAddress"],
         token_name=token_data["baseToken"]["name"],
         token_address=token_data["baseToken"]["address"],
         token_age_b=token_age,
