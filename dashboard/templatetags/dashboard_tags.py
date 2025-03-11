@@ -263,17 +263,17 @@ def get_open_transactions() -> dict:
         current_pnl = {}
         for token_data in tokens_data:
             pair = token_data["pairAddress"]
-            buying_price = buying_prices[pair.lower()]
+            buying_price = buying_prices[pair]
             current_price = float(token_data["priceUsd"])
             pnl = ((current_price - buying_price) / buying_price) * 100
-            current_pnl[pair.lower()] = pnl
+            current_pnl[pair] = pnl
             
         for transaction in open_transactions_qs:
             open_transactions[transaction.pair] = {}
             open_transactions[transaction.pair]["token_name"] = transaction.token_name
             open_transactions[transaction.pair]["opening_date"] = transaction.opening_date
             open_transactions[transaction.pair]["mode"] = transaction.get_mode_display()
-            open_transactions[transaction.pair]["current_pnl"] = round(current_pnl[transaction.pair.lower()], 2)
+            open_transactions[transaction.pair]["current_pnl"] = round(current_pnl[transaction.pair], 2)
     
     return open_transactions
 
@@ -352,7 +352,7 @@ def update_transactions_info(context: template.Context, data: list) -> SafeText:
     
     current_prices = dict(zip(pairs, [None for _ in range(len(pairs))]))
     for token_data in tokens_data:
-        current_prices[token_data["pairAddress"].lower()] = token_data["priceUsd"]
+        current_prices[token_data["pairAddress"]] = token_data["priceUsd"]
        
     current_pnls = []
     for cur_price, buy_price in zip(current_prices.values(), buying_prices):
