@@ -180,16 +180,10 @@ class DexScreener():
         if self.source == "dexscreener":
             await self.browser.get("https://dexscreener.com/solana/raydium")
         
-        black_list = []
-        step = 0
-        boosted_tokens = {}
+        black_list, boosted_tokens = [], {}
+
         while True:
             time.sleep(2)
-            
-            step += 1
-            if step == 120:
-                logger.debug(f"Получение новых данных по boosted токенам")
-                step = 0
                 
             boosted_tokens_data = get_latest_boosted_tokens()
             for token in boosted_tokens_data:
@@ -201,8 +195,8 @@ class DexScreener():
                 if token_address in black_list:
                     continue
                 
-                if token["amount"] < 500:
-                    continue
+                # if token["amount"] < 500:
+                #     continue
                 
                 if boosted_tokens.get(token["tokenAddress"], {}).get("total_amount") == token["totalAmount"]:
                     continue
@@ -212,8 +206,8 @@ class DexScreener():
                     black_list.append(token_address)
                     continue
                 
-                if not check_api_data(token_data):
-                    continue
+                # if not check_api_data(token_data):
+                #     continue
                   
                 pair = token_data.get("pairAddress")
                 
@@ -223,16 +217,15 @@ class DexScreener():
                     rugcheck_result = sync_rugcheck(dextools.driver, token["tokenAddress"])
                     risk_level = rugcheck_result.get("risk_level")
                     
-                    if risk_level == None:
-                        continue
-                    if risk_level != "Good":
-                        black_list.append(token_address)
-                        continue
+                    # if risk_level == None:
+                    #     continue
+                    # if risk_level != "Good":
+                    #     black_list.append(token_address)
+                    #     continue
                     
                     dextools.open_page()
                     
-                    # dextscore = dextools.get_dextscore()
-                    dextscore = None
+                    dextscore = dextools.get_dextscore()
                     top_traders_data = dextools.get_top_traders()
                     holders_data = dextools.get_holders()
                     trade_history_data = dextools.get_trade_history()

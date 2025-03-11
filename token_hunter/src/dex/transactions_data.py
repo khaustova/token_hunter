@@ -478,11 +478,13 @@ class DextoolsData:
                 if len(cells) < 9:
                     continue
                 
-                key = f"{cells[0].text}: {cells[8].text}"          
+                maker_value = self._get_text_by_index(cells, 8)
+                date_value = self._get_text_by_index(cells, 0)
+                
+                key = f"{date_value}: {maker_value}"          
                 if key in keys:
                     continue
                 
-                date_value = self._get_text_by_index(cells, 0)
                 date.append(date_value)
                 
                 operation_value = self._get_text_by_index(cells, 1)
@@ -494,7 +496,6 @@ class DextoolsData:
                 trade_sum_value = clear_number(self._get_text_by_index(cells, 3))
                 trades_sum.append(trade_sum_value)
                 
-                maker_value = self._get_text_by_index(cells, 8)
                 makers.append(maker_value)
                 
                 trades_for_maker_value = int(clear_number(self._get_text_by_index(cells, 9)))
