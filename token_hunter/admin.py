@@ -21,7 +21,7 @@ class TransactionResource(resources.ModelResource):
 
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin):
-    list_display = ("token_name", "price_b", "price_s", "PNL", "link", "mode", "sell")
+    list_display = ("token_name", "price_b", "price_s", "opening_date", "closing_date", "PNL", "link", "mode", "sell")
     list_filter = ("status", "mode", "settings")
     list_per_page = 30
 
