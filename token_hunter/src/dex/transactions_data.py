@@ -468,7 +468,7 @@ class DextoolsData:
             if not rows:
                 continue
             
-            for each_row in rows[:-1]:
+            for each_row in rows:
                 try:
                     cells = each_row.find_elements(By.TAG_NAME, "datatable-body-cell")
                 except:
