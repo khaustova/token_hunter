@@ -280,7 +280,7 @@ class DextoolsData:
         time.sleep(5)
         
     def close_page(self):
-        self.driver.close()
+        self.driver.quit()
         
         time.sleep(5)
         
@@ -300,7 +300,11 @@ class DextoolsData:
         rows = self._get_all_elements(by=By.TAG_NAME, value="datatable-body-row")
         
         holders_data, percentages = {}, []
-        for row in rows[:-1]:
+        
+        if not rows:
+            return holders_data
+        
+        for row in rows:
             try:
                 cells = row.find_elements(By.TAG_NAME, "datatable-body-cell")
             except:
@@ -319,7 +323,7 @@ class DextoolsData:
             else:
                 percentages.append(percentages_value)
 
-        holders_data["percentages"] = " ".join(map(str, percentages))
+        holders_data["percentages"] = " ".join(map(str, percentages[:-1]))
 
         total_holders_element = self._get_element("holders-span")
         total_holders_text = self._get_text(total_holders_element)
@@ -528,10 +532,10 @@ class DextoolsData:
         options.add_experimental_option('useAutomationExtension', False)
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        base_directory = os.path.join(script_dir, 'users')
-        user_directory = os.path.join(base_directory, f'user_1')
+        # base_directory = os.path.join(script_dir, 'users')
+        # user_directory = os.path.join(base_directory, f'user_1')
 
-        options.add_argument(f'user-data-dir={user_directory}')
+        #options.add_argument(f'user-data-dir={user_directory}')
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument("--disable-notifications")

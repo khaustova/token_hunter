@@ -195,7 +195,7 @@ class DexScreener():
                 if token_address in black_list:
                     continue
                 
-                if token["amount"] < 500:
+                if token["amount"] < 100:
                     continue
                 
                 if boosted_tokens.get(token["tokenAddress"], {}).get("total_amount") == token["totalAmount"]:
