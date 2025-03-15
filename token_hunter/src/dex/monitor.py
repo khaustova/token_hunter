@@ -251,7 +251,7 @@ class DexScreener():
                     
                     dexscreener = DexscreenerData(self.browser, pair)
                     transaction_data = await dexscreener.get_transactions_data()
-                    top_traders_data = transaction_data.get("top_traders_data")
+                    top_traders_data = transaction_data.get("top_traders_data")  
                     snipers_data = transaction_data.get("snipers_data")
                     holders_data = transaction_data.get("holders_data")
                     dextscore = None
@@ -262,6 +262,9 @@ class DexScreener():
                     social_data=token.get("links"), 
                     telegram_client=self.telegram_client
                 )
+                
+                if not top_traders_data:
+                    continue
 
                 mode = Mode.BOOSTED
                 

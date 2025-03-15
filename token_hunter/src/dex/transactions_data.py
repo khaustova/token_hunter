@@ -293,7 +293,11 @@ class DextoolsData:
             by=By.XPATH,
             value="//button[contains(., 'Holders')]"
         )
-        holders_button.click()
+        
+        try:
+            holders_button.click()
+        except:
+            return None
 
         time.sleep(5)
 
@@ -347,7 +351,12 @@ class DextoolsData:
             value="//button[contains(., 'Top Traders')]",
             timeout=10,
         )
-        top_traders_button.click()
+        
+        try:
+            top_traders_button.click()
+        except:
+            return None
+        
         time.sleep(5)
 
         table = self._get_element("datatable-body")
@@ -444,7 +453,11 @@ class DextoolsData:
             by=By.XPATH, 
             value="//button[contains(., 'Trade History')]"
         )
-        trade_history_button.click()
+        
+        try:
+            trade_history_button.click()
+        except:
+            return None
         
         time.sleep(5)
         
