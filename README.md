@@ -19,6 +19,7 @@
 :shopping_cart: Сбор данных и эмуляция покупки токенов  
 :robot: Реальная покупка токенов через Maestro Sniper Bot в Telegram   
 :detective: Парсинг топовых кошельков по фильтру на DEX Screener  
+:page_with_curl: Агрегация спарсенных кошельков по количеству    
 :chart_with_upwards_trend: Экспорт данных в Excel  
 
 ## Запуск
