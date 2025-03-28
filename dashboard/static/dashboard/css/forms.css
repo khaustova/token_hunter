@@ -55,6 +55,7 @@ input[type="submit"].search-model__button:hover {
 /* Buttons */
 
 .add-button,
+.top_traders_group-button,
 input.confirm-delete-button,
 a.cancel-delete-button {
     padding: 5px 10px;
@@ -63,6 +64,10 @@ a.cancel-delete-button {
     border-radius: 3px;
     margin-right: 10px;
     font-size: inherit;
+}
+
+.top_traders_group-button {
+    height: 35px;
 }
 
 input.confirm-delete-button {

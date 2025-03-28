@@ -1,10 +1,20 @@
 from rest_framework import serializers
-from .models import Transaction
- 
- 
+from token_hunter.models import Transaction
+
+
 class TransactionSerializer(serializers.ModelSerializer):
-  
-   class Meta:
-       model = Transaction
-       fields = ("PNL", "mode")
-       depth = 1
+    """Сериализатор для модели Transaction.
+    
+    Используется для преобразования объектов Transaction в JSON-формат и обратно при работе с API.
+    """
+    class Meta:
+        """Мета-класс для настройки сериализатора.
+        
+        Attributes:
+            model: Модель Django, которая сериализуется (Transaction)
+            fields: Поля модели, которые включены в сериализацию (`PNL` и `mode`)
+            depth: Глубина вложенности связанных объектов (1 уровень)
+        """
+        model = Transaction
+        fields = ("PNL", "mode")
+        depth = 1

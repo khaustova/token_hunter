@@ -10,8 +10,7 @@ getJSONData().then(data => {
   data;
   chartPNL(data['data_collection'], 'dataCollectionPNL');
   chartPNL(data['emulation'], 'emulationPNL');
-  chartPNL(data['boosted'], 'boostedPNL');
-  chartPNL(data['real'], 'realPNL');
+  chartPNL(data['real_buy'], 'realBuyPNL');
 });
 
 

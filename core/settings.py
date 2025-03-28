@@ -3,7 +3,6 @@ from import_export.formats.base_formats import XLSX
 from pathlib import Path
 from environ import Env
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = Env()
@@ -207,6 +206,8 @@ if not os.path.exists(LOG_PATH):
     f = open(LOG_PATH, "a").close()
 else:
     f = open(LOG_PATH, "w").close()
+    
+LOGGING_LEVEL = env("LOGGING_LEVEL")
 
 LOGGING = {
     "version": 1,
@@ -231,7 +232,7 @@ LOGGING = {
         },
         "file": {
             "filename": LOG_PATH,
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.FileHandler",
             "formatter": "simple",
         },
@@ -244,21 +245,10 @@ LOGGING = {
         },
         "token_hunter": {
             "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "level": LOGGING_LEVEL,
         }
     }
 }
-
-# SOLANA API
-
-MORALIS_API_KEY = env("MORALIS_API_KEY")
-HELIUS_API_KEY = env("HELIUS_API_KEY")
-
-# CAPTCHA
-
-CAPTCHA_API_KEY = env("CAPTCHA_API_KEY")
-CAPTCHA_EXTENSION_LINK = env("CAPTCHA_EXTENSION_LINK")
-CAPTCHA_EXTENSION_DIR = env("CAPTCHA_EXTENSION_DIR")
 
 # TELETHON
 

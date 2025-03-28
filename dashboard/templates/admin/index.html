@@ -128,7 +128,7 @@
             </p>
 
             {% if celery_tasks_id.boosted_task_id %}
-              <p class="loading"><b>Выполняется мониторинг boosted токенов на Dexscreener</b></p>
+              <p class="loading"><b>Выполняется мониторинг забустенных токенов на DEX Screener</b></p>
               {% for boosted_id in celery_tasks_id.boosted_task_id %}
                 <p class="stop_task">
                   <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=boosted_id %}">⛔ Остановить экземпляр {{ boosted_id|truncatechars:5 }}</a>
@@ -136,8 +136,17 @@
               {% endfor %}
             {% endif %}
 
+            {% if celery_tasks_id.latest_task_id %}
+            <p class="loading"><b>Выполняется мониторинг недавно добавленных токенов на DEX Screener</b></p>
+            {% for latest_task_id in celery_tasks_id.latest_task_id %}
+              <p class="stop_task">
+                <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=latest_task_id %}">⛔ Остановить экземпляр {{ latest_task_id|truncatechars:5 }}</a>
+              </p>
+            {% endfor %}
+          {% endif %}
+
             {% if celery_tasks_id.filter_task_id %}
-            <p class="loading"><b>Выполняется мониторинг токенов на Dexscreener по фильтру</b></p>
+            <p class="loading"><b>Выполняется мониторинг токенов по фильтру на DEX Screener </b></p>
             {% for filter_task_id in celery_tasks_id.filter_task_id %}
               <p class="stop_task">
                 <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=filter_task_id %}">⛔ Остановить экземпляр {{ filter_task_id|truncatechars:5 }}</a>
@@ -146,7 +155,7 @@
           {% endif %}
 
           {% if celery_tasks_id.parsing_task_id %}
-          <p class="loading"><b>Выполняется парсинг топа кошельков на Dexscreener по фильтру</b></p>
+          <p class="loading"><b>Выполняется парсинг топа кошельков</b></p>
           {% for parsing_task_id in celery_tasks_id.parsing_task_id %}
             <p class="stop_task">
               <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=parsing_task_id %}">⛔ Остановить экземпляр {{ parsing_task_id|truncatechars:5 }}</a>
@@ -169,8 +178,8 @@
             {% for trader in top_traders %}
               <tr>
                 <td>
-                  {% get_wallet_link trader.wallet_address as wallet_link %}
-                  <a href="{{ wallet_link }}">{{ trader.wallet_address }}</a>
+                  {% get_wallet_links trader.wallet_address as wallet_link %}
+                  <a href="{{ wallet_link.birdeye }}">{{ trader.wallet_address }}</a>
                 </td>
                 <td>
                   {{ trader.token_count }}
@@ -228,6 +237,7 @@
                 <th>Токен</th>
                 <th>Дата покупки</th>
                 <th>Тип</th>
+                <th>Режим</th>
                 <th>Текущий PNL</th>
                 {% for pair, data in open_transactions.items %}
                   <tr>
@@ -236,6 +246,9 @@
                     </td>
                     <td>
                       {{ data.opening_date }}
+                    </td>
+                    <td>
+                      {{ data.monitoring_rule }}
                     </td>
                     <td>
                       {{ data.mode }}
@@ -258,17 +271,15 @@
         <h4 class="content-card__title">Статистика</h4>
 
         <div class="tabs views"> 
-          <input class="pnl__input" id="pnlRealTab" type="radio" name="pnl" checked> 
-          <label class="pnl__label" for="pnlRealTab">Реальная покупка</label> 
+          <input class="pnl__input" id="pnlBuyTab" type="radio" name="pnl" checked> 
+          <label class="pnl__label" for="pnlBuyTab">Реальная покупка</label> 
           <input class="pnl__input" id="pnlEmulationTab" type="radio" name="pnl"> 
           <label class="pnl__label" for="pnlEmulationTab">Эмуляция</label> 
           <input class="pnl__input" id="pnlCollectionTab" type="radio" name="pnl"> 
           <label class="pnl__label" for="pnlCollectionTab">Сбор данных</label>
-          <input class="pnl__input" id="pnlBoostedTab" type="radio" name="pnl"> 
-          <label class="pnl__label" for="pnlBoostedTab">Boosted</label> 
-          <section class="pnl__section" id="pnlRealContent"> 
+          <section class="pnl__section" id="pnlBuyContent"> 
             <div class="pnl__pie">
-              <canvas id="realPNL"></canvas>
+              <canvas id="realBuyPNL"></canvas>
             </div>
           </section>   
           <section class="pnl__section" id="pnlEmulationContent"> 
@@ -279,11 +290,6 @@
           <section class="pnl__section" id="pnlCollectionContent"> 
             <div class="pnl__pie">
               <canvas id="dataCollectionPNL"></canvas>
-            </div>
-          </section> 
-          <section class="pnl__section" id="pnlBoostedContent"> 
-            <div class="pnl__pie">
-              <canvas id="boostedPNL"></canvas>
             </div>
           </section> 
         </div> 

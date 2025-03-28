@@ -26,11 +26,14 @@ register = template.Library()
 
 @register.simple_tag
 def sidebar_status(request: HttpRequest) -> str:
+    """Проверяет состояние боковой панели пользователя.
+
+    Args:
+        request: Объект запроса Django.
+
+    Returns:
+        Строка "sidebar-collapse", если панель свёрнута, иначе None.
     """
-    Если у пользователя боковая панель свёрнута, то возвращает
-    соответствующий CSS класс.
-    """
-    
     if request.COOKIES.get("menu", "") == "closed":
         return "sidebar-collapse"
 
@@ -39,10 +42,11 @@ def sidebar_status(request: HttpRequest) -> str:
 
 @register.simple_tag
 def get_customization_settings() -> dict:
+    """Получает настройки кастомизации административной панели.
+
+    Returns:
+        Словарь с настройками кастомизации.
     """
-    Возвращает словарь с настройками кастомизации панели администратора.
-    """
-    
     customization_settings = get_settings()
 
     return customization_settings
@@ -50,10 +54,12 @@ def get_customization_settings() -> dict:
 
 @register.simple_tag
 def get_search_model() -> dict:
+    """Получает параметры модели для поиска.
+
+    Returns:
+        Словарь с параметрами поиска, включая URL и название модели.
+            Возвращает None, если модель поиска не настроена.
     """
-    Возвращает словарь с параметрами для поиска по модели.
-    """
-    
     settings = get_settings()
 
     if not settings["search_model"]:
@@ -71,11 +77,14 @@ def get_search_model() -> dict:
 
 @register.simple_tag(takes_context=True)
 def get_apps(context: template.Context) -> list:
+    """Получает список приложений с учётом настроек кастомизации.
+
+    Args:
+        context: Контекст шаблона Django.
+
+    Returns:
+        Отфильтрованный и упорядоченный список приложений.
     """
-    Возвращает список приложений, отфильтрованный и упорядоченный в соответ-
-    ствии с настройками кастомизации.
-    """
-    
     available_apps = deepcopy(context.get("available_apps", []))
     settings = get_settings()
     sidebar_icons = settings["sidebar_icons"]
@@ -118,11 +127,14 @@ def get_apps(context: template.Context) -> list:
 
 @register.simple_tag(takes_context=True)
 def get_sidebar_menu(context: template.Context) -> list:
+    """Возвращает ссылки на приложения и модели и дополнительные ссылки для сайдбара.
+
+    Args:
+        context: Контекст шаблона Django.
+
+    Returns:
+        Список ссылок для сайдбара.
     """
-    Возвращает список приложений, включающий в себя (при наличии) дополнитель-
-    ные ссылки, для меню на боковой панели.
-    """
-    
     menu = get_apps(context)
     settings = get_settings()
     extra_links = settings.get("extra_links")
@@ -140,10 +152,14 @@ def get_sidebar_menu(context: template.Context) -> list:
 
 @register.simple_tag
 def action_message_to_list(action: LogEntry) -> list:
+    """Форматирует сообщения о действиях пользователя.
+
+    Args:
+        action: Запись лога действия.
+
+    Returns:
+        Список отформатированных сообщений о действиях.
     """
-    Возвращает отформатированный список со всеми действиями пользователя.
-    """
-    
     messages = []
 
     if action.change_message and action.change_message[0] == "[":
@@ -180,10 +196,14 @@ def action_message_to_list(action: LogEntry) -> list:
 
 @register.filter
 def bold_first_word(text: str) -> SafeText:
+    """Выделяет первое слово текста жирным шрифтом.
+
+    Args:
+        text: Входной текст.
+
+    Returns:
+        Текст с первым словом в теге <strong>.
     """
-    Возвращает текст, в котором первое слово обернуто в тег <strong>.
-    """
-    
     text_words = escape(text).split()
 
     if not len(text_words):
@@ -197,10 +217,15 @@ def bold_first_word(text: str) -> SafeText:
 
 @register.simple_tag
 def sort_header(header: dict, forloop: dict) -> str:
+    """Генерирует CSS классы для сортировки заголовков таблицы.
+
+    Args:
+        header: Данные заголовка.
+        forloop: Контекст цикла.
+
+    Returns:
+        Строка CSS классов для сортировки.
     """
-    Вовзращает классы CSS для сортировки данных в столбцах таблицы модели.
-    """
-    
     classes = []
     sorted, asc, desc = (
         header.get("sorted"),
@@ -231,10 +256,14 @@ def sort_header(header: dict, forloop: dict) -> str:
 
 @register.simple_tag(takes_context=True)
 def get_top_traders(context: template.Context) -> str:
+    """Добавляет в контекст данные о топ 100 кошельках с пагинацией.
+
+    Args:
+        context: Контекст шаблона Django.
+
+    Returns:
+        Заголовок "Топ кошельков".
     """
-    Добавляет в контекст данные о топ 100 кошельках с учётом пагинации.
-    """
-    
     top_traders = TopTrader.objects.values("wallet_address").annotate(token_count=Count("token_name")).order_by("-token_count")[:100]
     paginator = Paginator(top_traders, 10)
     request = context["request"]
@@ -247,10 +276,11 @@ def get_top_traders(context: template.Context) -> str:
 
 @register.simple_tag()
 def get_open_transactions() -> dict:
+    """Получает данные об открытых транзакциях.
+
+    Returns:
+        Словарь с данными об открытых транзакциях, включая PNL.
     """
-    Возвращает данные об открытых транзакциях.
-    """
-    
     open_transactions_qs = Transaction.objects.filter(status=Status.OPEN)
     open_transactions = {}
     
@@ -273,26 +303,38 @@ def get_open_transactions() -> dict:
             open_transactions[transaction.pair]["token_name"] = transaction.token_name
             open_transactions[transaction.pair]["opening_date"] = transaction.opening_date
             open_transactions[transaction.pair]["mode"] = transaction.get_mode_display()
+            open_transactions[transaction.pair]["monitoring_rule"] = transaction.get_monitoring_rule_display()
             open_transactions[transaction.pair]["current_pnl"] = round(current_pnl[transaction.pair], 2)
     
     return open_transactions
 
 
 @register.simple_tag
-def get_wallet_link(address: str) -> str:
+def get_wallet_links(address: str) -> str:
+    """Генерирует ссылки для анализа кошелька.
+
+    Args:
+        address: Адрес кошелька.
+
+    Returns:
+        Словарь со ссылками на Birdeye и Solscan.
     """
-    Возвращает ссылку на анализ кошелька address на solsniffer.com.
-    """
-    
-    return "https://www.birdeye.so/profile/" + address
+    return {
+        "birdeye": "https://www.birdeye.so/profile/" + address,
+        "solscan": "https://solscan.io/account/" + address,
+    }
 
 
 @register.simple_tag(takes_context=True)
 def get_settings_form(context: template.Context) -> str:
+    """Добавляет форму настроек мониторинга или парсинга в контекст.
+
+    Args:
+        context: Контекст шаблона Django.
+
+    Returns:
+        Заголовок "DEX Screener".
     """
-    Добавляет в контекст форму для мониторинга или парсинга DexScreener.
-    """
-    
     settings_form = SettingsForm()
     context["settings_form"] = settings_form
     
@@ -300,36 +342,62 @@ def get_settings_form(context: template.Context) -> str:
 
 
 @register.simple_tag()
-def get_celery_tasks_id() -> str:
+def get_celery_tasks_id() -> dict:
+    """Получает ID всех активных задач.
+
+    Классифицирует задачи по типам:
+    - parsing_task_id: задачи парсинга топовых трейдеров
+    - track_tokens_task_id: задачи отслеживания стоимости купленных токенов
+    - filter_task_id: задачи мониторинга токенов по фильтру
+    - boosted_task_id: задачи мониторинга забустенных токенов
+
+    Returns:
+        Словарь с ID задач по типам в формате:
+            {
+                "parsing_task_id": list[str],
+                "track_tokens_task_id": list[str],
+                "filter_task_id": list[str],
+                "boosted_task_id": list[str],
+                "latest_task_id": list[str]
+            }
+            или None в случае ошибки.
     """
-    Возвращает id текущей активной задачи: мониторинга или парсинга DexScreener.
-    """
-    
     worker_tasks_ids = get_dexscreener_worker_tasks_ids()
     return worker_tasks_ids
 
 
-@register.tag(name="transactions_result_list")
-def transactions_result_list_tag(parser, token):
-    """
-    Возвращает шаблон страницы транзакций.
+@register.tag(name="transactions_list")
+def transactions_result_list_tag(parser, token) -> InclusionAdminNode:
+    """Переопределяет шаблон для списка транзакций.
+
+    Args:
+        parser: Парсер шаблонов Django.
+        token: Токен шаблона.
+
+    Returns:
+        Узел шаблона для списка транзакций.
     """
     return InclusionAdminNode(
         parser,
         token,
         func=result_list,
-        template_name="change_list_transactions.html",
+        template_name="transactions_list.html",
         takes_context=False,
     )
 
 
 @register.simple_tag(takes_context=True)
 def update_transactions_info(context: template.Context, data: list) -> SafeText:
+    """Добавляет в контекст на странице списка транзакций данные о текущей цене и PNL каждой 
+    открытой позиции.
+
+    Args:
+        context: Контекст шаблона Django.
+        data: Список данных транзакций.
+
+    Returns:
+        Пустая строка (данные добавляются в контекст).
     """
-    Добавляет в контекст данные для каждой транзакции: текущую стоимость токена
-    и текущий PNL.
-    """
-    
     pairs, buying_prices = [], []
     for list in data:
         pair_td = list[0]

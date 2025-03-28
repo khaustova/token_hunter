@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n static dashboard_tags %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Главная</a>
+&nbsp;&#47;&nbsp;Сводная таблица топовых кошельков
+</div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <div class="content-card">
+      <div class="results">
+        <table id="result_list" class="table">
+          <thead>
+            <tr>
+              <th>Адрес кошелька</th>
+              <th>Успешные сделки</th>
+              <th>Общий PNL, %</th>
+              <th>Ссылки</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for wallet in page_obj %}
+              <tr class="{% cycle 'row1' 'row2' %}">
+                <td>{{ wallet.wallet_address }}</td>
+                <td>{{ wallet.total }}</td>
+                <td>{{ wallet.total_pnl }}</td>
+                {% get_wallet_links wallet.wallet_address as wallet_link %}
+                <td><a href="{{ wallet_link.birdeye }}">Birdeye<a>, <a href="{{ wallet_link.solscan }}">Solscan<a></td>
+              </tr>
+                {% empty %}
+              <tr><td colspan="4">Нет данных</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span class="step-links">
+          {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; первая</a>
+            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+          {% endif %}
+          <span class="current">
+            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+          </span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+          {% endif %}
+        </span>
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

@@ -902,10 +902,9 @@ input.pnl__input:checked + label.pnl__label {
     height: 250px;
 }
 
-#pnlRealTab:checked ~ #pnlRealContent, 
 #pnlEmulationTab:checked ~ #pnlEmulationContent, 
 #pnlCollectionTab:checked ~ #pnlCollectionContent,
-#pnlBoostedTab:checked ~ #pnlBoostedContent { 
+#pnlBuyTab:checked ~ #pnlBuyContent { 
     display: block; 
 } 
 
