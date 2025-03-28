@@ -1,15 +1,9 @@
-__pycache__/
+__pycache__
 .pytest_cache
 research
-celerybeat-schedule.db
-latest_logs
 downloaded_files
 db.sqlite3
-transactions
-Архив
-page_sources
 .venv
 .env
 logs
 settings.py
-token_hunter/src/dex/users
