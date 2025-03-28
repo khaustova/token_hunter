@@ -13,13 +13,13 @@
 ## Основные функции
 
 :mag_right: Мониторинг токенов по фильтру на DEX Screener   
-:zap: Мониторинг забустенных токенов через DEX Screener API
-:alarm_clock: Мониторинг недавно добавленных токенов через DEX Screener API
-:gear: Настройка параметров для выбора токенов
-:shopping_cart: Сбор данных и эмуляция покупки токенов
+:zap: Мониторинг забустенных токенов через DEX Screener API  
+:alarm_clock: Мониторинг недавно добавленных токенов через DEX Screener API  
+:gear: Настройка параметров для выбора токенов  
+:shopping_cart: Сбор данных и эмуляция покупки токенов  
 :robot: Реальная покупка токенов через Maestro Sniper Bot в Telegram   
-:detective: Парсинг топовых кошельков по фильтру на DEX Screener
-:chart_with_upwards_trend: Экспорт данных в Excel 
+:detective: Парсинг топовых кошельков по фильтру на DEX Screener  
+:chart_with_upwards_trend: Экспорт данных в Excel  
 
 ## Запуск
 
