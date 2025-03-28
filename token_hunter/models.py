@@ -574,11 +574,6 @@ class Transaction(models.Model):
         null=True,
         verbose_name="Возраст на момент продажи, мин."
     )
-    transfers = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Количество трансферов"
-    )
     buys_m5 = models.IntegerField(
         blank=True,
         null=True,
