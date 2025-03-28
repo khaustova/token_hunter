@@ -256,6 +256,8 @@ python3 manage.py authtelegram
 - Написать проверки внутри функций `check_api_data()` и `check_settings()` в файле `settings.py`.
 
 ## Скриншоты
+![index](https://github.com/user-attachments/assets/96989498-e016-4550-858a-1ce0f576bc59)
+![settings](https://github.com/user-attachments/assets/0a6e1f00-770b-4f6d-81c3-34f7e7897429)
+![transactions](https://github.com/user-attachments/assets/38cf24cb-aacc-42be-b0c3-eedd725ec2f8)
+![top_traders](https://github.com/user-attachments/assets/45892321-bbc7-45a8-a72f-518c94fcd523)
 
-![screen 1](https://github.com/user-attachments/assets/560bfbae-61f5-4f05-b6c1-e5352a15b0bf) 
-![screen 2](https://github.com/user-attachments/assets/0a6e1f00-770b-4f6d-81c3-34f7e7897429)
