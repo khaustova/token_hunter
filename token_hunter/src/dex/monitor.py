@@ -16,7 +16,6 @@ from token_hunter.src.token.tasks import buy_token_task, save_top_traders_data_t
 from token_hunter.src.token.rugcheck import rugcheck, sync_rugcheck
 from token_hunter.src.utils.tokens_data import (
     get_pairs_data,
-    get_pairs_count,
     get_latest_tokens,
     get_latest_boosted_tokens,
     get_token_data,
@@ -84,9 +83,6 @@ class DexMonitor():
             filter: Параметры фильтрации токенов. По умолчанию ищет трендовые токены
                     с ликвидностью >1000 и возрастом от 5 до 60 минут.
         """
-        if not filter:
-            filter = "?rankBy=trendingScoreH6&order=desc&minLiq=1000&minAge=5&maxAge=60"
-
         dex_page = await self.browser.get(
             "https://dexscreener.com/solana/raydium" + filter
         )
@@ -104,7 +100,7 @@ class DexMonitor():
                 
             all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
             links = [item for item in all_links if item not in black_list_links]
-            await asyncio.sleep(5)
+            await self.browser.wait(10)
 
             if links:
                 for link in links:
@@ -118,16 +114,17 @@ class DexMonitor():
                     if not check_api_data(token_data):
                         continue
 
-                    pair_count = get_pairs_count(pair)
-                    if pair_count != 1:
-                        black_list_links.append(link)
-                        continue
-
                     token_info = await self.get_token_info(
                         pair=pair,
                         token_address=token_data["baseToken"]["address"],
                         token_links=token_data.get("links")
-                )
+                    )
+
+                    if token_info == 0:
+                        black_list_pairs.append(pair)
+                        continue
+                    if token_info == -1:
+                        continue
 
                     mode = Mode.DATA_COLLECTION
                     token_checker = TokenChecker(pair, self.check_settings)
@@ -144,6 +141,9 @@ class DexMonitor():
                         token_info.get("holders_data")
                     ):
                         continue
+
+                    if settings.IS_REAL_BUY:
+                        await real_buy_token(token_data["baseToken"]["address"], self.telegram_client)
 
                     buy_token_task.delay(
                         pair=pair,
@@ -194,8 +194,8 @@ class DexMonitor():
                     black_list.append(token_address)
                     continue
 
-                # if not check_api_data(token_data):
-                #     continue
+                if not check_api_data(token_data):
+                    continue
 
                 pair = token_data.get("pairAddress")
 
@@ -220,6 +220,9 @@ class DexMonitor():
 
                 if not check_settings(pair, token_info.get("top_traders_data"), token_info.get("holders_data")):
                     continue
+
+                if settings.IS_REAL_BUY:
+                    await real_buy_token(token["tokenAddress"], self.telegram_client)
 
                 buy_token_task.delay(
                     pair=pair,
@@ -262,8 +265,8 @@ class DexMonitor():
                 if token_address in black_list:
                     continue
 
-                # if token["amount"] < 100:
-                #     continue
+                if token["amount"] < 100:
+                    continue
 
                 if boosted_tokens.get(token["tokenAddress"], {}).get("total_amount") == token["totalAmount"]:
                     continue
@@ -273,8 +276,8 @@ class DexMonitor():
                     black_list.append(token_address)
                     continue
 
-                # if not check_api_data(token_data):
-                #     continue
+                if not check_api_data(token_data):
+                    continue
 
                 pair = token_data.get("pairAddress")
 
@@ -312,6 +315,9 @@ class DexMonitor():
 
                 boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
                 boosted_tokens[token["tokenAddress"]]["total_amount"] = token["totalAmount"]
+                
+                if settings.IS_REAL_BUY:
+                    await real_buy_token(token["tokenAddress"], self.telegram_client)
 
                 buy_token_task.delay(
                     pair=pair,
@@ -334,7 +340,7 @@ class DexMonitor():
 
         Args:
             filter: Фильтр для отбора токенов. По умолчанию пустая строка.
-            pages: Количество страниц для парсинга. По умолчанию 2.
+            pages: Количество страниц для парсинга. По умолчанию 1.
         """
         stop_lst_links = []
 
@@ -387,8 +393,7 @@ class DexMonitor():
 
                     if not top_traders_data:
                         continue
-                    
-                    print(top_traders_data)
+
                     save_top_traders_data_task.delay(
                         pair=pair,
                         token_name=token_data["baseToken"]["name"],
@@ -417,19 +422,21 @@ class DexMonitor():
         if self.source == "dextools":
             dex = DexToolsData(pair, token_address)
             rugcheck_result = sync_rugcheck(dex.driver, token_address)
-            token_info = dex.get_dex_data()
         else:
             dex = DexScreenerData(self.browser, pair)
             rugcheck_result = await rugcheck(self.browser, token_address)
-            token_info = await dex.get_dex_data()
 
-        risk_level = rugcheck_result.get("risk_level")
-
-        if risk_level is None:
+        if rugcheck_result.get("risk_level") is None:
             return -1
-        if risk_level != "Good":
+        if rugcheck_result.get("risk_level") != "Good":
             return 0
-
+        
+        token_info = (
+            dex.get_dex_data()
+            if self.source == "dextools"
+            else await dex.get_dex_data()
+        )
+        
         token_info["is_mutable_metadata"] = rugcheck_result.get("is_mutable_metadata")
         top_traders_data = token_info.get("top_traders_data")
 

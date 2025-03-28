@@ -279,4 +279,10 @@ CACHES = {
     }
 }
 
+# Select2
+
 SELECT2_CACHE_BACKEND = "select2"
+
+# Разрешение реальной покупки токенов
+
+IS_REAL_BUY = env("IS_REAL_BUY").lower() == "true"
