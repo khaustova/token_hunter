@@ -13,7 +13,11 @@ from token_hunter.src.token.buyer import real_buy_token
 from token_hunter.src.token.checker import TokenChecker
 from token_hunter.src.token.social_data import get_social_info
 from token_hunter.src.token.tasks import buy_token_task, save_top_traders_data_task
-from token_hunter.src.token.rugcheck import rugcheck, sync_rugcheck
+from token_hunter.src.rugcheck.rugcheck_api import rugchek_token_with_api
+from token_hunter.src.rugcheck.rugcheck_scraper import (
+    scrape_rugcheck_with_nodriver,
+    scrape_rugcheck_with_selenium
+)
 from token_hunter.src.utils.tokens_data import (
     get_pairs_data,
     get_latest_tokens,
@@ -261,7 +265,7 @@ class DexMonitor():
                     continue
 
                 token_address = token["url"].split("/")[-1]
-                
+
                 if token_address in black_list:
                     continue
 
@@ -304,7 +308,7 @@ class DexMonitor():
                     continue
 
                 boosted_tokens.setdefault(
-                    token["tokenAddress"], 
+                    token["tokenAddress"],
                     {
                         "total_amount": token["totalAmount"],
                         "boosts_ages": "",
@@ -315,7 +319,7 @@ class DexMonitor():
 
                 boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
                 boosted_tokens[token["tokenAddress"]]["total_amount"] = token["totalAmount"]
-                
+
                 if settings.IS_REAL_BUY:
                     await real_buy_token(token["tokenAddress"], self.telegram_client)
 
@@ -346,7 +350,7 @@ class DexMonitor():
 
         for page in range(1, pages + 1):
             logger.info("Начат парсинг топ кошельков на странице %s", page)
-            
+
             dex_page = await self.browser.get(
                 "https://dexscreener.com/solana/page-" + str(page) + filter
             )
@@ -371,25 +375,25 @@ class DexMonitor():
 
                     if not check_api_data(token_data):
                         continue
-                    
-                    if self.source == "dextools":
-                        dex = DexToolsData(pair, token_data["baseToken"]["address"])
-                        rugcheck_result = sync_rugcheck(dex.driver, token_data["baseToken"]["address"])
-                    else:
-                        dex = DexScreenerData(self.browser, pair)
-                        rugcheck_result = await rugcheck(self.browser, token_data["baseToken"]["address"])
 
-                    risk_level = rugcheck_result.get("risk_level")
+                    dex = (
+                        DexToolsData(pair, token_data["baseToken"]["address"])
+                        if self.source == "dextools"
+                        else DexScreenerData(self.browser, pair)
+                    )
 
-                    if risk_level is None:
+                    rugcheck_result = await self.rugcheck_token(token_data["baseToken"]["address"], dex)
+
+                    if rugcheck_result.get("risk_level") is None:
                         return -1
-                    if risk_level != "Good":
+                    if rugcheck_result.get("risk_level") != "Good":
                         return 0
 
-                    if self.source == "dextools":
-                        top_traders_data = dex.get_dex_data(is_parser=True)
-                    else:
-                        top_traders_data = await dex.get_dex_data(is_parser=True)
+                    top_traders_data = (
+                        dex.get_dex_data(is_parser=True)
+                        if self.source == "dextools"
+                        else await dex.get_dex_data(is_parser=True)
+                    )
 
                     if not top_traders_data:
                         continue
@@ -402,6 +406,33 @@ class DexMonitor():
                     )
 
                     stop_lst_links.append(links)
+
+    async def rugcheck_token(
+        self,
+        token_address: str,
+        dex: DexScreenerData | DexToolsData | None=None
+    ) -> str | None:
+        """Возвращает словарь с результатами проверки токена на rugcheck.xyz.
+        
+        В зависимости от настроек выбирает способ получения данных на RugCheck.
+        
+        Args:
+            token_address: Адрес токена.
+            dex: Экземпляр класса DexScreenerData или DexToolsData  
+                в зависимости от выбранного источника данных.
+
+        Returns:
+            Словарь с результатами проверки токена.
+        """
+        if settings.IS_RUGCHECK_API:
+            rugcheck_result = rugchek_token_with_api(token_address)
+        else:
+            if self.source == "dexscreener":
+                rugcheck_result = await scrape_rugcheck_with_nodriver(self.browser, token_address)
+            else:
+                rugcheck_result = scrape_rugcheck_with_selenium(dex.driver, token_address)
+
+        return rugcheck_result
 
     async def get_token_info(self, pair: str, token_address: str, token_links: dict) -> dict | int:
         """Собирает полную информацию о токене и выполняет проверку.
@@ -417,26 +448,27 @@ class DexMonitor():
         Returns:
             Словарь с информацией о токене 
                 или 0 если токен не прошел проверку
-                или -1 если не удалось получить данные
+                или -1 если не удалось получить данные.
         """
-        if self.source == "dextools":
-            dex = DexToolsData(pair, token_address)
-            rugcheck_result = sync_rugcheck(dex.driver, token_address)
-        else:
-            dex = DexScreenerData(self.browser, pair)
-            rugcheck_result = await rugcheck(self.browser, token_address)
+        dex = (
+            DexToolsData(pair, token_address)
+            if self.source == "dextools"
+            else DexScreenerData(self.browser, pair)
+        )
+
+        rugcheck_result = await self.rugcheck_token(token_address, dex)
 
         if rugcheck_result.get("risk_level") is None:
             return -1
         if rugcheck_result.get("risk_level") != "Good":
             return 0
-        
+
         token_info = (
             dex.get_dex_data()
             if self.source == "dextools"
             else await dex.get_dex_data()
         )
-        
+
         token_info["is_mutable_metadata"] = rugcheck_result.get("is_mutable_metadata")
         top_traders_data = token_info.get("top_traders_data")
 
@@ -444,8 +476,8 @@ class DexMonitor():
             return 0
 
         socials_info = await get_social_info(
-            browser=self.browser, 
-            social_data=token_links, 
+            browser=self.browser,
+            social_data=token_links,
             telegram_client=self.telegram_client
         )
 

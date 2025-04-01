@@ -12,6 +12,9 @@ def clear_number(number_str: str) -> float | int:
     Returns:
         Преобразованное число. В случае ошибки возвращает -1.
     """
+    if not number_str:
+        return -1
+
     number_str = number_str.lstrip("$")
     number_str = (
         number_str

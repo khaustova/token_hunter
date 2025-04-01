@@ -286,3 +286,12 @@ SELECT2_CACHE_BACKEND = "select2"
 # Разрешение реальной покупки токенов
 
 IS_REAL_BUY = env("IS_REAL_BUY").lower() == "true"
+
+# Solana 
+
+SOLANA_PRIVATE_KEY = env("SOLANA_PRIVATE_KEY")
+
+# RugCheck
+
+IS_RUGCHECK_API = env("IS_RUGCHECK_API").lower() == "true"
+RUGCHECK_JWT_TOKEN = env("RUGCHECK_JWT_TOKEN")

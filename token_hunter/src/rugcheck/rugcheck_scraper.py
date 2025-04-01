@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 logger = logging.getLogger(__name__)
 
 
-async def rugcheck(browser: Browser, token_address: str) -> dict:
+async def scrape_rugcheck_with_nodriver(browser: Browser, token_address: str) -> dict:
     """Проверяет токен по адресу на сайте rugcheck.xyz.
     
     Notes:
@@ -43,20 +43,20 @@ async def rugcheck(browser: Browser, token_address: str) -> dict:
         "is_mutable_metadata": is_mutable_metadata,
     }
 
-    logger.info(f"Уровень риска токена {token_address}: {risk_level}")
+    logger.debug(f"Уровень риска токена {token_address}: {risk_level}")
 
     await rugcheck_page.close()
 
     return result
 
 
-def sync_rugcheck(driver: WebDriver, token_address: str) -> dict:
+def scrape_rugcheck_with_selenium(driver: WebDriver, token_address: str) -> dict:
     """Проверяет токен по адресу на сайте rugcheck.xyz.
 
     Использует уже созданный экземпляр веб-драйвера Selenium для открытия сайта.
 
     Args:
-        browser: Экземпляр веб-драйвера.
+        driver: Экземпляр веб-драйвера.
         token_address: Адрес токена.
 
     Returns:
@@ -86,6 +86,6 @@ def sync_rugcheck(driver: WebDriver, token_address: str) -> dict:
         "is_mutable_metadata": is_mutable_metadata,
     }
 
-    logger.info(f"Уровень риска токена {token_address}: {risk_level}")
+    logger.debug(f"Уровень риска токена {token_address}: {risk_level}")
 
     return result
