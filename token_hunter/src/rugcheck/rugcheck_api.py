@@ -28,9 +28,9 @@ def rugchek_token_with_api(token_address: str) -> dict:
     for _ in range(10):
         try:
             response = requests.get(url, headers=headers, timeout=2)
-            rugcheck_data = json.loads(response.text)
+            rugcheck_data = response.json()
             break
-        except (ConnectTimeout, ReadTimeout):
+        except Exception:
             continue
 
     rugcheck_result = {
