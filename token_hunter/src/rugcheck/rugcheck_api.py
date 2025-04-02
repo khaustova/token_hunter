@@ -43,7 +43,7 @@ def rugchek_token_with_api(token_address: str) -> dict:
 
     rugcheck_result["is_mutable_metadata"] = rugcheck_data["tokenMeta"].get("mutable")
 
-    if rugcheck_data.get("risks") or rugcheck_data.get("score_normalised") > 1:
+    if rugcheck_data.get("risks"):
         rugcheck_result["risk_level"] = "Bad"
     else:
         rugcheck_result["risk_level"] = "Good"
