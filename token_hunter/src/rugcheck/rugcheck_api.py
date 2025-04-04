@@ -41,7 +41,8 @@ def rugchek_token_with_api(token_address: str) -> dict:
     if not rugcheck_data:
         return rugcheck_result
 
-    rugcheck_result["is_mutable_metadata"] = rugcheck_data["tokenMeta"].get("mutable")
+    if rugcheck_data.get("tokenMeta"):
+        rugcheck_result["is_mutable_metadata"] = rugcheck_data["tokenMeta"].get("mutable")
 
     if rugcheck_data.get("risks"):
         rugcheck_result["risk_level"] = "Bad"
