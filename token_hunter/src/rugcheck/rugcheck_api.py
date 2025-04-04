@@ -42,21 +42,23 @@ def rugchek_token_with_api(token_address: str) -> dict:
     if rugcheck_data.get("tokenMeta"):
         rugcheck_result["is_mutable_metadata"] = rugcheck_data["tokenMeta"].get("mutable")
 
+    risks_name = "-"
     if rugcheck_data.get("risks"):
         token_risks = rugcheck_data.get("risks")
+        risks_name = [risk.get("name") for risk in rugcheck_data.get("risks")]
         for risk in token_risks:
             if risk.get("name") not in settings.RUGCHECK_ACCEPTABLE_RISKS:
                 rugcheck_result["risk_level"] = "Bad"
-                logger.debug(f"Уровень риска токена {token_address}: {rugcheck_result["risk_level"]}, так как риск {risk.get("name")} не является допустимым")
+                logger.debug(f"Уровень риска токена {token_address}: BAD, так как риск {risk.get("name")} не является допустимым")
 
                 return rugcheck_result
 
     if rugcheck_data.get("score_normalised") > settings.RUGCHECK_NORMALISED_SCORE:
         rugcheck_result["risk_level"] = "Bad"
-        logger.debug(f"Уровень риска токена {token_address}: {rugcheck_result["risk_level"]}, так как {rugcheck_data.get("score_normalised")} > {settings.RUGCHECK_NORMALISED_SCORE}")
+        logger.debug(f"Уровень риска токена {token_address}: BAD, так как {rugcheck_data.get("score_normalised")} > {settings.RUGCHECK_NORMALISED_SCORE}")
 
         return rugcheck_result
 
     rugcheck_result["risk_level"] = "Good"
-
+    logger.debug(f"Уровень риска токена {token_address}: GOOD.\nЕго риски: {risks_name}.\nЕго очки: {rugcheck_data.get("score_normalised")}")
     return rugcheck_result
