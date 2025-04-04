@@ -6,8 +6,6 @@ from requests.exceptions import ReadTimeout, ConnectTimeout
 
 logger = logging.getLogger(__name__)
 
-RUGCHECK_JWT_TOKEN = settings.RUGCHECK_JWT_TOKEN
-
 
 def rugchek_token_with_api(token_address: str) -> dict:
     """Получает данные о токене через RugCheck API.
@@ -20,7 +18,7 @@ def rugchek_token_with_api(token_address: str) -> dict:
     """
     url = f"https://api.rugcheck.xyz/v1/tokens/{token_address}/report"
     headers = {
-        "Authorization": f"Bearer {RUGCHECK_JWT_TOKEN}",
+        "Authorization": f"Bearer {settings.RUGCHECK_JWT_TOKEN}",
         "Accept": "application/json"
     }
 
@@ -45,10 +43,20 @@ def rugchek_token_with_api(token_address: str) -> dict:
         rugcheck_result["is_mutable_metadata"] = rugcheck_data["tokenMeta"].get("mutable")
 
     if rugcheck_data.get("risks"):
-        rugcheck_result["risk_level"] = "Bad"
-    else:
-        rugcheck_result["risk_level"] = "Good"
+        token_risks = rugcheck_data.get("risks")
+        for risk in token_risks:
+            if risk.get("name") not in settings.RUGCHECK_ACCEPTABLE_RISKS:
+                rugcheck_result["risk_level"] = "Bad"
+                logger.debug(f"Уровень риска токена {token_address}: {rugcheck_result["risk_level"]}, так как риск {risk.get("name")} не является допустимым")
 
-    logger.debug(f"Уровень риска токена {token_address}: {rugcheck_result["risk_level"]}")
+                return rugcheck_result
+
+    if rugcheck_data.get("score_normalised") > settings.RUGCHECK_NORMALISED_SCORE:
+        rugcheck_result["risk_level"] = "Bad"
+        logger.debug(f"Уровень риска токена {token_address}: {rugcheck_result["risk_level"]}, так как {rugcheck_data.get("score_normalised")} > {settings.RUGCHECK_NORMALISED_SCORE}")
+
+        return rugcheck_result
+
+    rugcheck_result["risk_level"] = "Good"
 
     return rugcheck_result
