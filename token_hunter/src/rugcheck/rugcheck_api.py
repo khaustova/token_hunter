@@ -1,8 +1,6 @@
 import logging
-import json
 import requests
 from django.conf import settings
-from requests.exceptions import ReadTimeout, ConnectTimeout
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +51,7 @@ def rugchek_token_with_api(token_address: str) -> dict:
 
                 return rugcheck_result
 
-    if rugcheck_data.get("score_normalised") > settings.RUGCHECK_NORMALISED_SCORE:
+    if rugcheck_data.get("score_normalised", 100) > settings.RUGCHECK_NORMALISED_SCORE:
         rugcheck_result["risk_level"] = "Bad"
         logger.info(f"Уровень риска токена {token_address}: BAD, так как {rugcheck_data.get("score_normalised")} > {settings.RUGCHECK_NORMALISED_SCORE}")
 
