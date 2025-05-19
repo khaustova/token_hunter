@@ -468,12 +468,11 @@ class DexMonitor():
             if self.source == "dextools"
             else await dex.get_dex_data()
         )
+        
+        if not token_info or not token_info.get("top_traders_data"):
+            return 0
 
         token_info["is_mutable_metadata"] = rugcheck_result.get("is_mutable_metadata")
-        top_traders_data = token_info.get("top_traders_data")
-
-        if not top_traders_data:
-            return 0
 
         socials_info = await get_social_info(
             browser=self.browser,

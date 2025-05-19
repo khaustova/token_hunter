@@ -351,10 +351,14 @@ class DexToolsData:
             return top_traders_data
 
         result = {}
-        result["dextscore"] = self.get_dextscore()
-        result["top_traders_data"] = self.get_top_traders(is_parser)
-        result["holders_data"] = self.get_holders()
-        result["trade_history_data"] = self.get_trade_history()
+        
+        try:
+            result["dextscore"] = self.get_dextscore()
+            result["top_traders_data"] = self.get_top_traders(is_parser)
+            result["holders_data"] = self.get_holders()
+            result["trade_history_data"] = self.get_trade_history()
+        except:
+            result = None
 
         self.driver.quit()
 
