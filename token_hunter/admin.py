@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
@@ -45,8 +46,8 @@ class TransactionAdmin(ImportExportModelAdmin):
 
     # Раскомментировать для добавления действия удаления всех транзакций:
     # actions = [delete_all]
-
-    resource_classes = [TransactionResource]
+    
+    change_list_template = "dashboard/transactions_list.html"
 
     def Operation(self, obj: Transaction) -> SafeText:
         """Генерирует кнопку для закрытия открытой транзакции.

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import admin
 from django.db.models import Count, Sum
@@ -120,7 +121,7 @@ def stop_task(request: HttpRequest, task_id: str) -> HttpResponseRedirect:
     app.control.revoke(task_id, terminate=True)
     logger.info(f"Задача {task_id} остановлена")
     
-    return HttpResponseRedirect("/")
+    return HttpResponseRedirect("/token_hunter/transaction")
 
 
 def group_top_traders(request: HttpRequest) -> HttpResponse:
@@ -151,6 +152,20 @@ def group_top_traders(request: HttpRequest) -> HttpResponse:
     })
 
     return render(request, "dashboard/top_traders_group.html", context)
+
+
+def clear_redis_cache(request: HttpRequest) -> HttpResponseRedirect:
+    """Очищает кэш Redis.
+
+    Args:
+        request: Объект запроса Django, содержащий GET-параметры.
+
+    Returns:
+        Перенаправление на страницу транзакций
+    """
+    cache.delete("black_list")
+
+    return HttpResponseRedirect("/token_hunter/transaction")
 
 
 def sell_token(request: HttpRequest, transaction_id: int) -> HttpResponseRedirect:
