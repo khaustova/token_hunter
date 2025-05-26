@@ -7,29 +7,24 @@ from django_telethon.sessions import DjangoSession
 from django_telethon.models import App, ClientSession
 from nodriver.core.browser import Browser
 from telethon import TelegramClient
-from token_hunter.models import TopTrader, Transaction, Settings, Mode, MonitoringRule
+from token_hunter.models import TopTrader, Transaction, MonitoringRule
 from token_hunter.src.dex.dex_data import DexScreenerData, DexToolsData
-from token_hunter.src.token.buyer import real_buy_token
-from token_hunter.src.token.checker import TokenChecker
-from token_hunter.src.token.social_data import get_social_info
-from token_hunter.src.token.tasks import buy_token_task, save_top_traders_data_task
-from token_hunter.src.rugcheck.rugcheck_api import rugchek_token_with_api
-from token_hunter.src.rugcheck.rugcheck_scraper import (
-    scrape_rugcheck_with_nodriver,
-    scrape_rugcheck_with_selenium
-)
+from token_hunter.src.utils.tokens_handlers import process_token
+from token_hunter.src.token.social_data import get_telegram_data
+from token_hunter.src.token.tasks import save_top_traders_data_task
 from token_hunter.src.utils.tokens_data import (
     get_pairs_data,
     get_latest_tokens,
     get_latest_boosted_tokens,
     get_token_data,
-    get_token_age
+    get_token_age,
 )
+from token_hunter.storage import get_redis_set, add_to_redis_set
 
 try:
-    from token_hunter.settings import check_api_data, check_settings
+    from token_hunter.settings import check_api_data
 except Exception:
-    from token_hunter.settings_example import check_api_data, check_settings
+    from token_hunter.settings_example import check_api_data
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +38,11 @@ class DexMonitor():
         source: Источник данных ("dextools" или "dexscreener").
         telegram_client: Созданный и настроенный Telegram-client.
     """
-    
+
     def __init__(
         self, 
         browser: Browser | None, 
-        check_settings: list[int]=None, 
+        settings_ids: list[int]=None, 
         source: str='dexscreener'
     ):
         """Инициализирует экземпляр DexMonitor.
@@ -58,14 +53,14 @@ class DexMonitor():
             source: Источник данных (`dextools` или `dexscreener`).
         """
         self.browser = browser
-        self.check_settings = check_settings
+        self.settings_ids = settings_ids
         self.source = source
 
-        app, is_created = App.objects.update_or_create(
+        app, _ = App.objects.update_or_create(
         api_id=settings.TELETHON_API_ID,
         api_hash=settings.TELETHON_API_HASH
         )
-        cs, cs_is_created = ClientSession.objects.update_or_create(
+        cs, _ = ClientSession.objects.update_or_create(
             name="default",
         )
         self.telegram_client = TelegramClient(
@@ -92,7 +87,6 @@ class DexMonitor():
         )
         await asyncio.sleep(10)
 
-        black_list_links, black_list_pairs = [], []
         step = 0
 
         while True:
@@ -102,70 +96,45 @@ class DexMonitor():
                 await asyncio.sleep(5)
                 step = 0
                 
+            black_list = get_redis_set("black_list")
+                
             all_links = await dex_page.query_selector_all("a.ds-dex-table-row")
-            links = [item for item in all_links if item not in black_list_links]
             await self.browser.wait(10)
 
-            if links:
-                for link in links:
-                    pair = link.attributes[-1].split("/")[-1]
+            for link in all_links:
+                pair = link.attributes[-1].split("/")[-1]
+                
+                black_list = get_redis_set("black_list")
+                processed_tokens = get_redis_set("processed_tokens")
+                if pair in black_list or pair in processed_tokens:
+                    continue
 
-                    if pair in black_list_pairs:
-                        continue
+                token_data = get_pairs_data(pair)[0]
+                
+                if not token_data.get("liquidity"):
+                    add_to_redis_set("black_list", pair)
+                    continue
 
-                    token_data = get_pairs_data(pair)[0]
+                if not check_api_data(token_data):
+                    continue
+                
+                telegram_data = await get_telegram_data(
+                    telegram_client=self.telegram_client,
+                    social_data=token_data.get("links"),
+                )
 
-                    if not check_api_data(token_data):
-                        continue
-
-                    token_info = await self.get_token_info(
-                        pair=pair,
-                        token_address=token_data["baseToken"]["address"],
-                        token_links=token_data.get("links")
-                    )
-
-                    if token_info == 0:
-                        black_list_pairs.append(pair)
-                        continue
-                    if token_info == -1:
-                        continue
-
-                    mode = Mode.DATA_COLLECTION
-                    token_checker = TokenChecker(pair, self.check_settings)
-                    settings_id = token_checker.check_token(
-                        top_traders_data=token_info.get("top_traders_data")
-                    )
-
-                    if settings_id:
-                        mode = Settings.objects.get(id=settings_id).mode
-
-                    if not check_settings(
-                        pair, 
-                        token_info.get("top_traders_data"), 
-                        token_info.get("holders_data")
-                    ):
-                        continue
-
-                    if settings.IS_REAL_BUY:
-                        await real_buy_token(token_data["baseToken"]["address"], self.telegram_client)
-
-                    buy_token_task.delay(
-                        pair=pair,
-                        mode=mode,
+                add_to_redis_set("processed_tokens", pair)
+                try:
+                    await process_token(
+                        source=self.source,
+                        pair=pair, 
+                        token_address=token_data["baseToken"]["address"], 
+                        telegram_data=telegram_data,
+                        settings_ids=self.settings_ids,
                         monitoring_rule=MonitoringRule.FILTER,
-                        top_traders_data=token_info.get("top_traders_data"),
-                        snipers_data=token_info.get("snipers_data"),
-                        holders_data=token_info.get("holders_data"),
-                        twitter_data=token_info.get("twitter_data"),
-                        telegram_data=token_info.get("telegram_data"),
-                        settings_id=settings_id,
-                        is_mutable_metadata=token_info.get("is_mutable_metadata"),
-                        dextscore=token_info.get("dextscore"),
-                        trade_history_data=token_info.get("trade_history_data"),
                     )
-
-                    black_list_links.append(link)
-                    black_list_pairs.append(pair)
+                except Exception as e:
+                    logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
             await self.browser.wait(10)
 
@@ -179,71 +148,47 @@ class DexMonitor():
         if self.source == "dexscreener":
             await self.browser.get("https://dexscreener.com/solana/raydium")
 
-        black_list = []
-
         while True:
             time.sleep(2)
             boosted_tokens_data = get_latest_tokens()
             for token in boosted_tokens_data:
                 if token["chainId"] != "solana":
                     continue
-
+                
+                black_list = get_redis_set("black_list")
+                processed_tokens = get_redis_set("processed_tokens")
                 token_address = token["url"].split("/")[-1]
-
-                if token_address in black_list:
+                if token_address in black_list or token_address in processed_tokens:
                     continue
 
                 token_data = get_token_data(token_address)[0]
+
                 if not token_data.get("liquidity"):
-                    black_list.append(token_address)
+                    add_to_redis_set("black_list", token_address)
                     continue
 
                 if not check_api_data(token_data):
                     continue
 
                 pair = token_data.get("pairAddress")
-
-                token_info = await self.get_token_info(
-                    pair=pair,
-                    token_address=token["tokenAddress"],
-                    token_links=token.get("links")
+                telegram_data = await get_telegram_data(
+                    telegram_client=self.telegram_client,
+                    social_data=token.get("links"),
                 )
 
-                if token_info == 0:
-                    black_list.append(token_address)
-                    continue
-                if token_info == -1:
-                    continue
+                add_to_redis_set("processed_tokens", token_address)
+                try:
+                    await process_token(
+                        source=self.source,
+                        pair=pair, 
+                        token_address=token["tokenAddress"], 
+                        telegram_data=telegram_data,
+                        settings_ids=self.settings_ids,
+                        monitoring_rule=MonitoringRule.LATEST,
+                    )
+                except Exception as e:
+                    logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
-                mode = Mode.DATA_COLLECTION
-                token_checker = TokenChecker(pair, self.check_settings)
-                settings_id = token_checker.check_token(top_traders_data=token_info.get("top_traders_data"))
-
-                if settings_id:
-                    mode = Settings.objects.get(id=settings_id).mode
-
-                if not check_settings(pair, token_info.get("top_traders_data"), token_info.get("holders_data")):
-                    continue
-
-                if settings.IS_REAL_BUY:
-                    await real_buy_token(token["tokenAddress"], self.telegram_client)
-
-                buy_token_task.delay(
-                    pair=pair,
-                    mode=mode,
-                    monitoring_rule=MonitoringRule.LATEST,
-                    top_traders_data=token_info.get("top_traders_data"),
-                    snipers_data=token_info.get("snipers_data"),
-                    holders_data=token_info.get("holders_data"),
-                    twitter_data=token_info.get("twitter_data"),
-                    telegram_data=token_info.get("telegram_data"),
-                    settings_id=settings_id,
-                    is_mutable_metadata=token_info.get("is_mutable_metadata"),
-                    dextscore=token_info.get("dextscore"),
-                    trade_history_data=token_info.get("trade_history_data"),
-                )
-
-                black_list.append(token_address)
 
     async def monitor_boosted_tokens(self) -> None:
         """Мониторит забустенные токены на DexScreener. 
@@ -255,7 +200,7 @@ class DexMonitor():
         if self.source == "dexscreener":
             await self.browser.get("https://dexscreener.com/solana/raydium")
 
-        black_list, boosted_tokens = [], {}
+        boosted_tokens = {}
 
         while True:
             time.sleep(2)
@@ -263,10 +208,11 @@ class DexMonitor():
             for token in boosted_tokens_data:
                 if token["chainId"] != "solana":
                     continue
-
+                
+                black_list = get_redis_set("black_list")
+                processed_tokens = get_redis_set("processed_tokens")
                 token_address = token["url"].split("/")[-1]
-
-                if token_address in black_list:
+                if token_address in black_list or token_address in processed_tokens:
                     continue
 
                 if token["amount"] < 100:
@@ -276,35 +222,12 @@ class DexMonitor():
                     continue
 
                 token_data = get_token_data(token_address)[0]
+
                 if not token_data.get("liquidity"):
-                    black_list.append(token_address)
+                    add_to_redis_set("black_list", token_address)
                     continue
-
+                
                 if not check_api_data(token_data):
-                    continue
-
-                pair = token_data.get("pairAddress")
-
-                token_info = await self.get_token_info(
-                    pair=pair,
-                    token_address=token["tokenAddress"],
-                    token_links=token.get("links")
-                )
-
-                if token_info == 0:
-                    black_list.append(token_address)
-                    continue
-                if token_info == -1:
-                    continue
-
-                mode = Mode.DATA_COLLECTION
-                token_checker = TokenChecker(pair, self.check_settings)
-                settings_id = token_checker.check_token(top_traders_data=token_info.get("top_traders_data"))
-
-                if settings_id:
-                    mode = Settings.objects.get(id=settings_id).mode
-
-                if not check_settings(pair, token_info.get("top_traders_data"), token_info.get("holders_data")):
                     continue
 
                 boosted_tokens.setdefault(
@@ -314,30 +237,31 @@ class DexMonitor():
                         "boosts_ages": "",
                     })
 
+                pair = token_data.get("pairAddress")
                 upd_token_data =  get_pairs_data(pair)[0]
                 token_age = str(get_token_age(upd_token_data["pairCreatedAt"])) + " "
 
                 boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
                 boosted_tokens[token["tokenAddress"]]["total_amount"] = token["totalAmount"]
 
-                if settings.IS_REAL_BUY:
-                    await real_buy_token(token["tokenAddress"], self.telegram_client)
-
-                buy_token_task.delay(
-                    pair=pair,
-                    mode=mode,
-                    monitoring_rule=MonitoringRule.BOOSTED,
-                    top_traders_data=token_info.get("top_traders_data"),
-                    snipers_data=token_info.get("snipers_data"),
-                    holders_data=token_info.get("holders_data"),
-                    twitter_data=token_info.get("twitter_data"),
-                    telegram_data=token_info.get("telegram_data"),
-                    settings_id=settings_id,
-                    is_mutable_metadata=token_info.get("is_mutable_metadata"),
-                    dextscore=token_info.get("dextscore"),
-                    trade_history_data=token_info.get("trade_history_data"),
-                    boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
+                telegram_data = await get_telegram_data(
+                    telegram_client=self.telegram_client,
+                    social_data=token.get("links"),
                 )
+
+                add_to_redis_set("processed_tokens", token_address)
+                try:
+                    await process_token(
+                        source=self.source,
+                        pair=pair, 
+                        token_address=token["tokenAddress"], 
+                        telegram_data=telegram_data,
+                        settings_ids=self.settings_ids,
+                        monitoring_rule=MonitoringRule.BOOSTED,
+                        boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
+                    )
+                except Exception as e:
+                    logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
     async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
         """Парсит данные о топовых кошельках на DEX Screener или DEXTools.
@@ -406,84 +330,6 @@ class DexMonitor():
                     )
 
                     stop_lst_links.append(links)
-
-    async def rugcheck_token(
-        self,
-        token_address: str,
-        dex: DexScreenerData | DexToolsData | None=None
-    ) -> str | None:
-        """Возвращает словарь с результатами проверки токена на rugcheck.xyz.
-        
-        В зависимости от настроек выбирает способ получения данных на RugCheck.
-        
-        Args:
-            token_address: Адрес токена.
-            dex: Экземпляр класса DexScreenerData или DexToolsData  
-                в зависимости от выбранного источника данных.
-
-        Returns:
-            Словарь с результатами проверки токена.
-        """
-        if settings.IS_RUGCHECK_API:
-            rugcheck_result = rugchek_token_with_api(token_address)
-        else:
-            if self.source == "dexscreener":
-                rugcheck_result = await scrape_rugcheck_with_nodriver(self.browser, token_address)
-            else:
-                rugcheck_result = scrape_rugcheck_with_selenium(dex.driver, token_address)
-
-        return rugcheck_result
-
-    async def get_token_info(self, pair: str, token_address: str, token_links: dict) -> dict | int:
-        """Собирает полную информацию о токене и выполняет проверку.
-        
-        Проверяет уровень риска токена на rugcheck.xyz, получает данные о транзакциях и держателях
-        токена и о социальных сетях.
-
-        Args:
-            pair: Адрес пары токенов.
-            token_address: Адрес токена.
-            token_links: Ссылки на соцсети токена.
-
-        Returns:
-            Словарь с информацией о токене 
-                или 0 если токен не прошел проверку
-                или -1 если не удалось получить данные.
-        """
-        dex = (
-            DexToolsData(pair, token_address)
-            if self.source == "dextools"
-            else DexScreenerData(self.browser, pair)
-        )
-
-        rugcheck_result = await self.rugcheck_token(token_address, dex)
-
-        if rugcheck_result.get("risk_level") is None:
-            return -1
-        if rugcheck_result.get("risk_level") != "Good":
-            return 0
-
-        token_info = (
-            dex.get_dex_data()
-            if self.source == "dextools"
-            else await dex.get_dex_data()
-        )
-        
-        if not token_info or not token_info.get("top_traders_data"):
-            return 0
-
-        token_info["is_mutable_metadata"] = rugcheck_result.get("is_mutable_metadata")
-
-        socials_info = await get_social_info(
-            browser=self.browser,
-            social_data=token_links,
-            telegram_client=self.telegram_client
-        )
-
-        token_info["twitter_data"] = socials_info.get("twitter_data")
-        token_info["telegram_data"] = socials_info.get("telegram_data")
-
-        return token_info
 
     @sync_to_async
     def _check_visited_top_traders_link(self, pair: str) -> list[TopTrader]:

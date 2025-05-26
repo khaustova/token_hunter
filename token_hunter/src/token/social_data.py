@@ -5,10 +5,61 @@ from bs4 import BeautifulSoup
 from nodriver.core.browser import Browser
 from telethon import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
-
 from token_hunter.src.utils.preprocessing_data import clear_number
 
 logger = logging.getLogger(__name__)
+
+
+async def get_telegram_data(
+    telegram_client: TelegramClient, 
+    social_data: dict, 
+) -> dict:
+    """Получает данные о Telegram-канале токена через Telegram API.
+
+    Args:
+        telegram_client: Созданный и настроенный Telegram-client.
+        social_data: Словарь с данными по социальным сетям токена.
+        
+    Note: 
+        Собирает следующие данные:
+            telegram_members (int | None): Количество участников
+            is_telegram_error (bool): Флаг ошибки получения данных
+
+    Returns:
+        Словарь с данными о Telegram-канале токена.
+    """
+    telegram_data = None
+    if social_data:
+        for data in social_data:
+            if data.get("type") == "telegram":
+                raw_channel_name = data.get("url").split("/")[-1]
+                channel_name = ""
+                for letter in raw_channel_name:
+                    if letter.isalnum() or letter == "_":
+                        channel_name += letter
+                    else:
+                        break
+
+                telegram_data = {}
+
+                await telegram_client.connect()
+
+                try:
+                    channel_connect = await telegram_client.get_entity(channel_name)
+                    channel_full_info = await telegram_client(GetFullChannelRequest(channel=channel_connect))
+                    telegram_data["telegram_members"] = int(channel_full_info.full_chat.participants_count)
+                    telegram_data["is_telegram_error"] = False
+                except Exception:
+                    telegram_data["is_telegram_error"] = True
+
+                await telegram_client.disconnect()
+
+                return telegram_data
+
+
+########################################################
+# Функции для получения данных о Твиттере. Отключено. #
+#######################################################      
 
 
 async def get_social_info(
@@ -35,8 +86,7 @@ async def get_social_info(
         for data in social_data:
             if data.get("type") == "twitter":
                 twitter_name = data.get("url").split("/")[-1]
-                # Проблемы с доступок к getmoni с Билайна, поэтому пока Твиттер не :(
-                # twitter_data = await get_twitter_data(browser, twitter_name)
+                twitter_data = await get_twitter_data(browser, twitter_name)
             elif data.get("type") == "telegram":
                 channel_name = data.get("url").split("/")[-1]
                 telegram_data = await get_telegram_data(telegram_client, channel_name)
@@ -65,7 +115,6 @@ async def get_twitter_data(browser: Browser, twitter_name: str) -> dict:
     Returns:
         Словарь с данными о Twitter-аккаунте токена.
     """
-
     getmoni_page = await browser.get(
         "https://discover.getmoni.io/" + twitter_name, 
         new_tab=True
@@ -150,43 +199,3 @@ async def get_twitter_data(browser: Browser, twitter_name: str) -> dict:
     await getmoni_page.close()
 
     return twitter_data
-
-
-async def get_telegram_data(telegram_client: TelegramClient, raw_channel_name: str) -> dict:
-    """Получает данные о Telegram-канале токена через Telegram API.
-
-    Args:
-        telegram_client: Созданный и настроенный Telegram-client.
-        raw_channel_name (str): Необработанное имя Telegram-канала.
-        
-    Note: 
-        Собирает следующие данные:
-            telegram_members (int | None): Количество участников
-            is_telegram_error (bool): Флаг ошибки получения данных
-
-    Returns:
-        Словарь с данными о Telegram-канале токена.
-    """
-
-    channel_name = ""
-    for letter in raw_channel_name:
-        if letter.isalnum() or letter == "_":
-            channel_name += letter
-        else:
-            break
-
-    telegram_data = {}
-
-    await telegram_client.connect()
-
-    try:
-        channel_connect = await telegram_client.get_entity(channel_name)
-        channel_full_info = await telegram_client(GetFullChannelRequest(channel=channel_connect))
-        telegram_data["telegram_members"] = int(channel_full_info.full_chat.participants_count)
-        telegram_data["is_telegram_error"] = False
-    except Exception:
-        telegram_data["is_telegram_error"] = True
-
-    await telegram_client.disconnect()
-
-    return telegram_data

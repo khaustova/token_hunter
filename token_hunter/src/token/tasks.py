@@ -1,5 +1,6 @@
 import logging
 import time
+from django.db import OperationalError
 from django.utils import timezone
 from core.celery import app
 from token_hunter.src.utils.tokens_data import get_pairs_data, get_token_age, get_social_data
@@ -11,8 +12,13 @@ logger = logging.getLogger(__name__)
 TOKENS_DATA = {}
 
 
-@app.task
-def track_tokens_task(take_profit: float, stop_loss: float) -> str:
+@app.task(
+    bind=True, 
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
+def track_tokens_task(self, take_profit: float, stop_loss: float) -> str:
     """Задача отслеживания стоимости купленных токенов и выполнения продажи токена
     при достижении заданных условий.
 
@@ -93,8 +99,15 @@ def track_tokens_task(take_profit: float, stop_loss: float) -> str:
         
         time.sleep(1)
 
-@app.task
+
+@app.task(
+    bind=True, 
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
 def buy_token_task(
+    self,
     pair: str,
     mode: Mode,
     monitoring_rule: MonitoringRule,
@@ -222,7 +235,12 @@ def buy_token_task(
     logger.info(f"Эмуляция покупки токена {token_data["baseToken"]["name"]} за {token_data["priceUsd"]} USD") 
 
 
-@app.task
+@app.task(
+    bind=True, 
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
 def save_top_traders_data_task(
     pair: str,
     token_name: str,
@@ -246,7 +264,7 @@ def save_top_traders_data_task(
         if top_traders_data["bought"][i] == 0 or pnl_lst[i] <= 0:
             continue
 
-        top_trader, created = TopTrader.objects.get_or_create(
+        _ = TopTrader.objects.get_or_create(
             pair=pair.lower(),
             token_name=token_name,
             token_address=token_address,

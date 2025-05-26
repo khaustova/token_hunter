@@ -1,12 +1,13 @@
 import logging
 from datetime import datetime
-from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.contrib import admin
 from django.db.models import Count, Sum
 from django.http import HttpRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
+from redis import Redis
+from redis.exceptions import LockError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from core.celery import app
@@ -23,6 +24,7 @@ from .src.token.tasks import track_tokens_task
 from .src.utils.tokens_data import get_pairs_data
 
 logger = logging.getLogger(__name__)
+redis = Redis(db=1)
 
 
 @require_POST
@@ -96,7 +98,7 @@ def monitor_dexscreener(request: HttpRequest) -> HttpResponseRedirect:
             stop_loss = (
                 form.cleaned_data.get("stop_loss")
                 if form.cleaned_data.get("stop_loss")
-                else - 20
+                else -20
             )
 
             tracking_price = track_tokens_task.delay(take_profit=take_profit, stop_loss=stop_loss)
@@ -121,7 +123,7 @@ def stop_task(request: HttpRequest, task_id: str) -> HttpResponseRedirect:
     app.control.revoke(task_id, terminate=True)
     logger.info(f"Задача {task_id} остановлена")
     
-    return HttpResponseRedirect("/token_hunter/transaction")
+    return HttpResponseRedirect("/")
 
 
 def group_top_traders(request: HttpRequest) -> HttpResponse:
@@ -163,7 +165,16 @@ def clear_redis_cache(request: HttpRequest) -> HttpResponseRedirect:
     Returns:
         Перенаправление на страницу транзакций
     """
-    cache.delete("black_list")
+    for key in ("black_list", "processed_tokens"):
+        try:
+            with redis.lock(f"{key}_lock", timeout=10):
+                if redis.exists(key):
+                    redis.delete(key)
+                    logger.debug(f"Ключ {key} удалён из кэша Redis")
+                else:
+                    logger.debug(f"Ключ {key} не существует в кэше Redis")
+        except LockError:
+            logger.error(f"Ошибка: блокировка для {key} не получена")
 
     return HttpResponseRedirect("/token_hunter/transaction")
 

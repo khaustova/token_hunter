@@ -4,6 +4,7 @@ from nodriver.core.config import Config
 from asgiref.sync import async_to_sync
 from celery.contrib.abortable import AbortableTask
 from core.celery import app
+from django.db import OperationalError
 from token_hunter.src.dex.monitor import DexMonitor
 from token_hunter.src.token.checker import CheckSettings
 
@@ -30,7 +31,13 @@ async def start_monitoring_filtered_tokens(settings_ids: list[int], filter: str,
     await monitor.monitor_filter_tokens(filter)
 
 
-@app.task(bind=True, base=AbortableTask)
+@app.task(
+    bind=True, 
+    base=AbortableTask,
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
 def monitor_filtered_tokens_task(self, settings_ids: list[int], filter: str, source: str) -> str:
     """Задача мониторинга токенов по фильтру.
 
@@ -41,7 +48,7 @@ def monitor_filtered_tokens_task(self, settings_ids: list[int], filter: str, sou
         source: Источник данных (`dextools` или `dexscreener`).
 
     Returns:
-        str: Сообщение о завершении задачи.
+        Сообщение о завершении задачи.
     """
     async_to_sync(start_monitoring_filtered_tokens)(
         settings_ids=settings_ids,
@@ -79,7 +86,13 @@ async def start_monitoring_boosted_token(settings_ids: list[int], source: str) -
     await monitor.monitor_boosted_tokens()
 
 
-@app.task(bind=True, base=AbortableTask)
+@app.task(
+    bind=True, 
+    base=AbortableTask,
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
 def monitor_boosted_tokens_task(self, settings_ids: list, source: str) -> str:
     """Задача мониторинга забустенных токенов.
 
@@ -89,7 +102,7 @@ def monitor_boosted_tokens_task(self, settings_ids: list, source: str) -> str:
         source: Источник данных (`dextools` или `dexscreener`).
 
     Returns:
-        str: Сообщение о завершении задачи.
+        Сообщение о завершении задачи.
     """
     async_to_sync(start_monitoring_boosted_token)(
         settings_ids=settings_ids,
@@ -112,9 +125,9 @@ async def start_monitoring_latest_token(settings_ids: list[int], source: str) ->
         settings_ids: Список ID настроек для выбора токенов.
         source: Источник данных (`dextools` или `dexscreener`).
     """
-    check_settings = {}
-    for settings_id in settings_ids:
-        check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
+    # check_settings = {}
+    # for settings_id in settings_ids:
+    #     check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
 
     if source == "dexscreener":
         config = Config(headless=False)
@@ -122,11 +135,17 @@ async def start_monitoring_latest_token(settings_ids: list[int], source: str) ->
     else:
         browser = None
 
-    monitor = DexMonitor(browser, check_settings, source)
+    monitor = DexMonitor(browser, settings_ids, source)
     await monitor.monitor_latest_tokens()
 
 
-@app.task(bind=True, base=AbortableTask)
+@app.task(
+    bind=True, 
+    base=AbortableTask,
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
 def monitor_latest_tokens_task(self, settings_ids: list, source: str) -> str:
     """Задача мониторинга недавно добавленных токенов.
 
@@ -136,7 +155,7 @@ def monitor_latest_tokens_task(self, settings_ids: list, source: str) -> str:
         source: Источник данных (`dextools` или `dexscreener`).
 
     Returns:
-        str: Сообщение о завершении задачи.
+        Сообщение о завершении задачи.
     """
     async_to_sync(start_monitoring_latest_token)(
         settings_ids=settings_ids,
@@ -163,7 +182,13 @@ async def start_parsing_top_traders(filter: str, source: str) -> None:
     await monitor.parse_top_traders(filter)
 
 
-@app.task(bind=True, base=AbortableTask)
+@app.task(
+    bind=True, 
+    base=AbortableTask,
+    autoretry_for=(OperationalError,), 
+    retry_backoff=60, 
+    max_retries=5
+)
 def parse_top_traders_task(self, filter: str, source: str) -> str:
     """Задача парсинга топовых кошельков на DEX Screener или DEXTools.
 
@@ -173,9 +198,8 @@ def parse_top_traders_task(self, filter: str, source: str) -> str:
         source: Источник данных (`dextools` или `dexscreener`).
 
     Returns:
-        str: Сообщение о завершении задачи.
+        Сообщение о завершении задачи.
     """
     async_to_sync(start_parsing_top_traders)(filter=filter, source=source)
 
     return "Парсинг топовых кошельков закончен"
-

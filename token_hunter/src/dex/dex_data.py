@@ -1,8 +1,10 @@
 import logging
+import nodriver as uc
 import time
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from nodriver.core.browser import Browser
+from nodriver.core.config import Config
 from nodriver.core.tab import Tab
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -42,9 +44,16 @@ class DexScreenerData:
             browser: Экземпляр браузера Chrome.
             pair: Адрес пары токена.
         """
-        self.browser = browser
+        self.browser = None
         self.pair = pair
         self.url = "https://dexscreener.com/solana/" + self.pair
+        
+    async def get_browser(self):
+        """Создаёт и настраивает экземпляр браузера.
+        """
+        config = Config(headless=False)
+        browser = await uc.start(config=config, sandbox=False)
+        self.browser = browser
 
     async def get_dex_data(self, is_parser: bool=False) -> dict:
         """Открывает страницу токена на DEX Screener и сохраняет данные о транзакциях
@@ -57,6 +66,7 @@ class DexScreenerData:
         Returns:
             Словарь с данными о транзакциях и держателях токенов.
         """
+        await self.get_browser()
         page = await self.browser.get(self.url, new_tab=True)
 
         time.sleep(5)
