@@ -40,11 +40,7 @@ def check_api_data(token_data: dict) -> bool:
 
 def check_settings(
     pair: str,
-    top_traders_data: dict | None=None,
-    snipers_data: dict | None=None,
-    holders_data: dict | None=None,
-    trade_history_data: dict | None=None,
-    social_info: dict | None=None,
+    token_info: dict | None=None,
 ) -> bool:
     """Проверяет комплексные данные о токене после получения всей информации.
 
@@ -52,21 +48,56 @@ def check_settings(
     включая информацию о топовых трейдерах, снайперах, держателях и соцсетях.
     
     Notes:
-        Сейчас здесь просто пример.
+        - Это просто пример.
+        - Данные требуют предварительной обработки.
 
     Args:
         pair: Адрес пары токена.
-        top_traders_data: Данные о топовых трейдерах. По умолчанию None.
-        snipers_data: Данные о снайперах. По умолчанию None.
-        holders_data: Данные о держателях. По умолчанию None.
-        trade_history_data: Данные о последних транзакциях. По умолчанию None.
-        social_data: Данные об активности в социальных сетях. По умолчанию None.
+        token_info: Словарь со всеми собранными данными по токену. Включает в себя:
+            - top_traders_data: Данные о топовых трейдерах:
+                - bought (str | None): Покупки топов.
+                  Пример: ""
+                - sold (str | None): Продажи топов.
+                  Пример: ""
+                - unrealized (str | None): Нереализованная сумма топов.
+                  Пример: ""
+                - speed (str | None): Скорость топов.
+                  Пример: ""
+            - snipers_data: Данные о снайперах (только с DEX Screener):
+                - bought (str | None): Покупки снайперов.
+                - sold (str | None): Продажи снайперов.
+                - held_all (int | None): Снайперы, которые держат.
+                - sold_some (int | None): Снайперы, продавшие часть.
+                - sold_all (int | None): Снайперы, продавшие всё.
+                - unrealized (str | None): Нереализованная сумма снайперов.
+            - holders_data: Данные о держателях:
+                - percentages (float | None): Процент токенов у основных держателей.
+                - liquidity (str | None): Процент токенов в ликвидности.
+                - total (int | None): Количество держателей.
+            - trade_history_data: Данные о последних транзакциях.
+                - prices (str | None): Изменение цены.
+                - date (str | None): Даты транзакций.
+                - operations (str | None): Операции.
+                - trades_sum (str | None): Суммы операций.
+                - trades_makers (str | None): Торгующие кошельки.
+                - trades_for_maker (str | None): Количество транзакций для кошелька.
+                - transactions (str | None): Общее количество транзакций.
+            - telegram_data: Данные о Телеграм-канале.
+                - telegram_members (int | None): Количество подписчиков в Телеграме.
+                  Пример: 23.
+                - is_telegram_error (bool | None): Телеграм указан, но не существует.
+                  Пример: False.
 
     Returns:
         True если токен проходит все проверки, иначе False.
     """
-    # Пример проверки на возраст токена
+    # Получение данных о токене через API:
     token_data = get_pairs_data(pair)[0]
+    
+    # Получение данных о топовых кошельках:
+    top_traders_data = token_info.get("top_traders_data")
+    
+    # Пример проверки на возраст токена
     token_age = get_token_age(token_data["pairCreatedAt"])
     if token_age <= 10:
         return False
