@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync
 from celery.contrib.abortable import AbortableTask
 from core.celery import app
 from django.db import OperationalError
-from token_hunter.src.utils.monitor import DexMonitor
+from token_hunter.src.dex.monitor import DexMonitor
 from token_hunter.src.token.checker import CheckSettings
 
 logger = logging.getLogger(__name__)
