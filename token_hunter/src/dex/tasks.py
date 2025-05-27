@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync
 from celery.contrib.abortable import AbortableTask
 from core.celery import app
 from django.db import OperationalError
-from token_hunter.src.dex.monitor import DexMonitor
+from token_hunter.src.utils.monitor import DexMonitor
 from token_hunter.src.token.checker import CheckSettings
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ async def start_monitoring_filtered_tokens(settings_ids: list[int], filter: str,
     config = Config(headless=False)
     browser = await uc.start(config=config, sandbox=False)
 
-    monitor = DexMonitor(browser, check_settings, source)
+    monitor = DexMonitor(browser=browser, check_settings=check_settings, source=source)
     await monitor.monitor_filter_tokens(filter)
 
 
@@ -59,7 +59,11 @@ def monitor_filtered_tokens_task(self, settings_ids: list[int], filter: str, sou
     return "Мониторинг токенов по фильтру завершён"
 
 
-async def start_monitoring_boosted_token(settings_ids: list[int], source: str) -> None:
+async def start_monitoring_boosted_token(
+    settings_ids: list[int], 
+    source: str,
+    boosts_min: int,
+    boosts_max: int) -> None:
     """Запускает мониторинг забустенных на DEX Screener токенов. 
     
     Для получения списка токенов использует DEX Screener API.
@@ -82,8 +86,8 @@ async def start_monitoring_boosted_token(settings_ids: list[int], source: str) -
     else:
         browser = None
 
-    monitor = DexMonitor(browser, check_settings, source)
-    await monitor.monitor_boosted_tokens()
+    monitor = DexMonitor(browser=browser, check_settings=check_settings, source=source)
+    await monitor.monitor_boosted_tokens(boosts_min=boosts_min, boosts_max=boosts_max)
 
 
 @app.task(
@@ -93,7 +97,12 @@ async def start_monitoring_boosted_token(settings_ids: list[int], source: str) -
     retry_backoff=60, 
     max_retries=5
 )
-def monitor_boosted_tokens_task(self, settings_ids: list, source: str) -> str:
+def monitor_boosted_tokens_task(
+    self, 
+    settings_ids: list, 
+    source: str, 
+    boosts_min: int,
+    boosts_max: int) -> str:
     """Задача мониторинга забустенных токенов.
 
     Args:
@@ -106,7 +115,9 @@ def monitor_boosted_tokens_task(self, settings_ids: list, source: str) -> str:
     """
     async_to_sync(start_monitoring_boosted_token)(
         settings_ids=settings_ids,
-        source=source
+        source=source,
+        boosts_min=boosts_min,
+        boosts_max=boosts_max,
     )
 
     return "Мониторинг забустенных токенов закончен"
@@ -125,9 +136,9 @@ async def start_monitoring_latest_token(settings_ids: list[int], source: str) ->
         settings_ids: Список ID настроек для выбора токенов.
         source: Источник данных (`dextools` или `dexscreener`).
     """
-    # check_settings = {}
-    # for settings_id in settings_ids:
-    #     check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
+    check_settings = {}
+    for settings_id in settings_ids:
+        check_settings[settings_id] = CheckSettings(settings_id).get_check_functions()
 
     if source == "dexscreener":
         config = Config(headless=False)
@@ -135,7 +146,7 @@ async def start_monitoring_latest_token(settings_ids: list[int], source: str) ->
     else:
         browser = None
 
-    monitor = DexMonitor(browser, settings_ids, source)
+    monitor = DexMonitor(browser=browser, check_settings=check_settings, source=source)
     await monitor.monitor_latest_tokens()
 
 

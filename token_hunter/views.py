@@ -78,7 +78,21 @@ def monitor_dexscreener(request: HttpRequest) -> HttpResponseRedirect:
             settings_ids= [settings.id for settings in settings_qs]
 
             if monitoring_rule == MonitoringRule.BOOSTED:
-                process = monitor_boosted_tokens_task.delay(settings_ids, source=source)
+                boosts_min = (
+                    form.cleaned_data.get("boosts_min")
+                    if form.cleaned_data.get("boosts_min")
+                    else 100
+                )
+                boosts_max = (
+                    form.cleaned_data.get("boosts_max")
+                    if form.cleaned_data.get("boosts_max")
+                    else 100
+                )
+                process = monitor_boosted_tokens_task.delay(
+                    settings_ids=settings_ids, 
+                    source=source,
+                    boosts_min=boosts_min,
+                    boosts_max=boosts_max)
                 logger.info("Запущена задача мониторинга забустенных токенов (%s)", process.id)
 
             elif monitoring_rule == MonitoringRule.FILTER:

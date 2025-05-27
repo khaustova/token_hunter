@@ -63,6 +63,14 @@ class SettingsForm(forms.Form):
         ("dextools", "DEXTools")
     ]
 
+    boosts_min = forms.IntegerField(
+        initial=100,
+        label="Введите минимальный буст"
+    )
+    boosts_max = forms.IntegerField(
+        initial=500,
+        label="Введите максимальный буст"
+    )
     filter = forms.CharField(
         required=False,
         initial="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",

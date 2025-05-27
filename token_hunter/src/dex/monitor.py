@@ -10,7 +10,6 @@ from telethon import TelegramClient
 from token_hunter.models import TopTrader, Transaction, MonitoringRule
 from token_hunter.src.dex.dex_data import DexScreenerData, DexToolsData
 from token_hunter.src.utils.tokens_handlers import process_token
-from token_hunter.src.token.social_data import get_telegram_data
 from token_hunter.src.token.tasks import save_top_traders_data_task
 from token_hunter.src.utils.tokens_data import (
     get_pairs_data,
@@ -21,13 +20,15 @@ from token_hunter.src.utils.tokens_data import (
 )
 from token_hunter.storage import get_redis_set, add_to_redis_set
 
+logger = logging.getLogger(__name__)
+
 try:
     from token_hunter.settings import check_api_data
 except Exception:
+    logger.info("Не удалось импортировать файл с настройками. Импорт настроек по умолчанию (Не рекомендуется)")
     from token_hunter.settings_example import check_api_data
 
-logger = logging.getLogger(__name__)
-
+TIMEOUT = 500 # Максимальное время проверки токена
 
 class DexMonitor():
     """Класс для мониторинга и анализа токенов на платформах DEX Screener и DEXTools.
@@ -42,7 +43,7 @@ class DexMonitor():
     def __init__(
         self, 
         browser: Browser | None, 
-        settings_ids: list[int]=None, 
+        сheck_settings: list[int]=None, 
         source: str='dexscreener'
     ):
         """Инициализирует экземпляр DexMonitor.
@@ -53,7 +54,7 @@ class DexMonitor():
             source: Источник данных (`dextools` или `dexscreener`).
         """
         self.browser = browser
-        self.settings_ids = settings_ids
+        self.сheck_settings = сheck_settings
         self.source = source
 
         app, _ = App.objects.update_or_create(
@@ -117,21 +118,20 @@ class DexMonitor():
 
                 if not check_api_data(token_data):
                     continue
-                
-                telegram_data = await get_telegram_data(
-                    telegram_client=self.telegram_client,
-                    social_data=token_data.get("links"),
-                )
 
                 add_to_redis_set("processed_tokens", pair)
                 try:
-                    await process_token(
-                        source=self.source,
-                        pair=pair, 
-                        token_address=token_data["baseToken"]["address"], 
-                        telegram_data=telegram_data,
-                        settings_ids=self.settings_ids,
-                        monitoring_rule=MonitoringRule.FILTER,
+                    result = await asyncio.wait_for(
+                        await process_token(
+                            source=self.source,
+                            pair=pair, 
+                            token_address=token_data["baseToken"]["address"], 
+                            telegram_client=self.telegram_client,
+                            social_data=token_data.get("links"),
+                            check_settings_dict=self.сheck_settings,
+                            monitoring_rule=MonitoringRule.FILTER,
+                        ),
+                        timeout=TIMEOUT
                     )
                 except Exception as e:
                     logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
@@ -171,29 +171,33 @@ class DexMonitor():
                     continue
 
                 pair = token_data.get("pairAddress")
-                telegram_data = await get_telegram_data(
-                    telegram_client=self.telegram_client,
-                    social_data=token.get("links"),
-                )
 
                 add_to_redis_set("processed_tokens", token_address)
                 try:
-                    await process_token(
-                        source=self.source,
-                        pair=pair, 
-                        token_address=token["tokenAddress"], 
-                        telegram_data=telegram_data,
-                        settings_ids=self.settings_ids,
-                        monitoring_rule=MonitoringRule.LATEST,
+                    result = await asyncio.wait_for(
+                        process_token(
+                            source=self.source,
+                            pair=pair, 
+                            token_address=token["tokenAddress"], 
+                            telegram_client=self.telegram_client,
+                            social_data=token.get("links"),
+                            check_settings_dict=self.сheck_settings,
+                            monitoring_rule=MonitoringRule.LATEST
+                        ),
+                        timeout=TIMEOUT
                     )
                 except Exception as e:
                     logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
 
-    async def monitor_boosted_tokens(self) -> None:
+    async def monitor_boosted_tokens(self, boosts_min: int=100, boosts_max: int=500) -> None:
         """Мониторит забустенные токены на DexScreener. 
         Инициирует покупку, если они соответствуют критериям в настройках.
         
+        Args:
+            boosts_min: Минимальный буст. По умолчанию 100.
+            boosts_max: Максимальный буст. По умолчанию 500.
+
         Notes:
             Для получения списка забустенных токенов использует DEX Screener API.
         """
@@ -215,7 +219,7 @@ class DexMonitor():
                 if token_address in black_list or token_address in processed_tokens:
                     continue
 
-                if token["amount"] < 100:
+                if token["amount"] < boosts_min or token["amount"] > boosts_max:
                     continue
 
                 if boosted_tokens.get(token["tokenAddress"], {}).get("total_amount") == token["totalAmount"]:
@@ -244,21 +248,20 @@ class DexMonitor():
                 boosted_tokens[token["tokenAddress"]]["boosts_ages"] += token_age
                 boosted_tokens[token["tokenAddress"]]["total_amount"] = token["totalAmount"]
 
-                telegram_data = await get_telegram_data(
-                    telegram_client=self.telegram_client,
-                    social_data=token.get("links"),
-                )
-
                 add_to_redis_set("processed_tokens", token_address)
                 try:
-                    await process_token(
-                        source=self.source,
-                        pair=pair, 
-                        token_address=token["tokenAddress"], 
-                        telegram_data=telegram_data,
-                        settings_ids=self.settings_ids,
-                        monitoring_rule=MonitoringRule.BOOSTED,
-                        boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
+                    result = await asyncio.wait_for(
+                        await process_token(
+                            source=self.source,
+                            pair=pair, 
+                            token_address=token["tokenAddress"], 
+                            telegram_client=self.telegram_client,
+                            social_data=token.get("links"),
+                            check_settings_dict=self.сheck_settings,
+                            monitoring_rule=MonitoringRule.BOOSTED,
+                            boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
+                        ),
+                        timeout=TIMEOUT
                     )
                 except Exception as e:
                     logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")

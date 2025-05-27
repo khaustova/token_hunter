@@ -38,13 +38,29 @@
           <div class="spoiler spoiler-filter">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Настройки фильтра токенов</div>
+            Настройки буста и фильтра</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
-                <div class="form-row field-take_profit">
+                <div class="form-row field-boosts_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_take_profit">Введите выражение с фильтром для токенов:</label>
+                      <label for="id_boosts_min">Введите минимальный буст:</label>
+                      {{ settings_form.boosts_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="form-row field-boosts_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_boosts_max">Введите максимальный буст:</label>
+                      {{ settings_form.boosts_max }}
+                    </div>
+                  </div>
+                </div>
+                <div class="form-row field-filter">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_filter">Введите выражение с фильтром для токенов:</label>
                       {{ settings_form.filter }}
                     </div>
                   </div>
@@ -82,12 +98,11 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Настройки источника данных</div>
+            Выбор DEX биржи</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-take_profit">
                     <div class="flex-container">
-                      <label for="id_take_profit">Выберите источник для получения данных о токенах:</label>
                       {{ settings_form.source }}
                     </div>
                 </div>
@@ -98,19 +113,17 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Настройки бота для покупки</div>
+            Выбор бота</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-take_profit">
                     <div class="flex-container">
-                      <label for="id_take_profit">Выберите бота для совершения транзакций:</label>
                       {{ settings_form.bot }}
                     </div>
                 </div>
               </div>
-            </div>
+           </div>
           </div>
-
           </div>
             
           <div class="parsing-buttons_wrapper">

@@ -333,12 +333,12 @@ def get_settings_form(context: template.Context) -> str:
         context: Контекст шаблона Django.
 
     Returns:
-        Заголовок "DEX Screener".
+        Заголовок "Торговля токенами Solana".
     """
     settings_form = SettingsForm()
     context["settings_form"] = settings_form
     
-    return "DEX Screener"
+    return "Торговля токенами Solana"
 
 
 @register.simple_tag()
