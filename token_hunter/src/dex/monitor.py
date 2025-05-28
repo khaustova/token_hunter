@@ -43,7 +43,7 @@ class DexMonitor():
     def __init__(
         self, 
         browser: Browser | None, 
-        сheck_settings: list[int]=None, 
+        check_settings: dict | None=None, 
         source: str='dexscreener'
     ):
         """Инициализирует экземпляр DexMonitor.
@@ -54,7 +54,7 @@ class DexMonitor():
             source: Источник данных (`dextools` или `dexscreener`).
         """
         self.browser = browser
-        self.сheck_settings = сheck_settings
+        self.check_settings = check_settings
         self.source = source
 
         app, _ = App.objects.update_or_create(
@@ -121,20 +121,18 @@ class DexMonitor():
 
                 add_to_redis_set("processed_tokens", pair)
                 try:
-                    result = await asyncio.wait_for(
-                        await process_token(
+                    async with asyncio.timeout(TIMEOUT):
+                        result = await process_token(
                             source=self.source,
                             pair=pair, 
                             token_address=token_data["baseToken"]["address"], 
                             telegram_client=self.telegram_client,
                             social_data=token_data.get("links"),
-                            check_settings_dict=self.сheck_settings,
+                            check_settings_dict=self.check_settings,
                             monitoring_rule=MonitoringRule.FILTER,
-                        ),
-                        timeout=TIMEOUT
-                    )
+                        )
                 except Exception as e:
-                    logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
+                    logger.exception(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
             await self.browser.wait(10)
 
@@ -174,20 +172,18 @@ class DexMonitor():
 
                 add_to_redis_set("processed_tokens", token_address)
                 try:
-                    result = await asyncio.wait_for(
-                        process_token(
+                    async with asyncio.timeout(TIMEOUT):
+                        result = await process_token(
                             source=self.source,
                             pair=pair, 
                             token_address=token["tokenAddress"], 
                             telegram_client=self.telegram_client,
                             social_data=token.get("links"),
-                            check_settings_dict=self.сheck_settings,
+                            check_settings_dict=self.check_settings,
                             monitoring_rule=MonitoringRule.LATEST
-                        ),
-                        timeout=TIMEOUT
-                    )
+                        )
                 except Exception as e:
-                    logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
+                    logger.exception(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
 
     async def monitor_boosted_tokens(self, boosts_min: int=100, boosts_max: int=500) -> None:
@@ -250,19 +246,17 @@ class DexMonitor():
 
                 add_to_redis_set("processed_tokens", token_address)
                 try:
-                    result = await asyncio.wait_for(
-                        await process_token(
+                    async with asyncio.timeout(TIMEOUT):
+                        result = await process_token(
                             source=self.source,
                             pair=pair, 
                             token_address=token["tokenAddress"], 
                             telegram_client=self.telegram_client,
                             social_data=token.get("links"),
-                            check_settings_dict=self.сheck_settings,
+                            check_settings_dict=self.check_settings,
                             monitoring_rule=MonitoringRule.BOOSTED,
                             boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
-                        ),
-                        timeout=TIMEOUT
-                    )
+                        )
                 except Exception as e:
                     logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
 
