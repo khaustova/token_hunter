@@ -869,15 +869,17 @@ to {
 
 .tabs { 
     width: 100%; 
-    min-height: 250px;
+    min-height: 280px;
     padding: 0px; 
     margin: 0 auto; 
     position: relative; 
+    display: flex;
+    justify-content: center;
   } 
 
 
 input.pnl__input { 
-    display: none; 
+    display: none;
 } 
 
 label.pnl__label { 
@@ -887,6 +889,7 @@ label.pnl__label {
     color: var(--color-accent); 
     background: transparent; 
     cursor: pointer; 
+    text-align: center;
 } 
 
 label.pnl__label[for="pnlRealTab"] { 
@@ -913,10 +916,9 @@ section.pnl__section {
     padding: 5px; 
     background: transparent; 
     position: absolute; 
-    top: 0; 
-    left: 100px; 
+    top: 30px; 
     margin: 0 auto;
-    width: calc(100% - 100px);
+    width: 100%;
     animation: scale 0.7s ease-in-out; 
 } 
 

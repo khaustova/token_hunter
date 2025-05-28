@@ -1,8 +1,9 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.contrib import admin
-from django.db.models import Count, Sum
+from django.db.models import Count, Case, When, IntegerField, CharField, Sum
+from django.db.models.functions import Cast
 from django.http import HttpRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
@@ -252,3 +253,82 @@ class PNLCountAPI(APIView):
             pnl_counts[mode] = [pnl_profit, pnl_loss]
 
         return Response(pnl_counts)
+    
+    
+class PNLCountAPI(APIView):
+    # """API-класс для получения статистики по PNL транзакций по каждому режиму.
+
+    # Attributes:
+    #     serializer_class: Сериализатор для транзакций.
+    # """
+    # serializer_class = TransactionSerializer
+
+    # def get(self, request: HttpRequest) -> Response:
+    #     """Обрабатывает GET-запрос для получения статистики PNL по каждому режиму.
+
+    #     Args:
+    #         request: Объект запроса DRF
+
+    #     Returns:
+    #         JSON-ответ с данными в формате:
+    #             {
+    #                 "mode1": [profit_count, loss_count],
+    #                 "mode2": [profit_count, loss_count],
+    #                 ...
+    #             }
+    #     """
+    #     pnl_counts = {}
+    #     for mode in Mode:
+    #         pnl_profit = Transaction.objects.filter(mode=mode, PNL__gte=60).count()
+    #         pnl_loss = Transaction.objects.filter(mode=mode, PNL__lt=60).count()
+    #         pnl_counts[mode] = [pnl_profit, pnl_loss]
+
+    #     return Response(pnl_counts)
+    """API-класс для получения статистики PNL за последние 7 дней.
+    
+    Возвращает данные в формате для построения диаграммы:
+    {
+        "dates": ["2023-01-01", "2023-01-02", ...],
+        "pnl_profit": [10, 5, ...],
+        "pnl_loss": [3, 7, ...]
+    }
+    """
+    
+    """API для получения статистики PNL за последние 7 дней по каждому режиму."""
+    """API для получения статистики PNL за последние 7 дней по каждому режиму."""
+    serializer_class = TransactionSerializer
+
+    def get(self, request):
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=6)
+        
+        modes = {
+            'real_buy': Mode.REAL_BUY,
+            'emulation': Mode.EMULATION,
+            'data_collection': Mode.DATA_COLLECTION
+        }
+        
+        result = {}
+        
+        for mode_name, mode_value in modes.items():
+            dates = [start_date + timedelta(days=i) for i in range(7)]
+            date_str = [d.strftime('%Y-%m-%d') for d in dates]
+            
+            profit = []
+            loss = []
+            
+            for day in dates:
+                qs = Transaction.objects.filter(
+                    mode=mode_value,
+                    closing_date__date=day  # Используем __date для сравнения
+                )
+                profit.append(qs.filter(PNL__gte=60).count())
+                loss.append(qs.filter(PNL__lt=60).count())
+            
+            result[mode_name] = {
+                'dates': date_str,
+                'profit': profit,
+                'loss': loss
+            }
+        
+        return Response(result)

@@ -16,5 +16,5 @@ class TransactionSerializer(serializers.ModelSerializer):
             depth: Глубина вложенности связанных объектов (1 уровень)
         """
         model = Transaction
-        fields = ("PNL", "mode")
+        fields = ("PNL", "mode", "closing_date")
         depth = 1

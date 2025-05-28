@@ -235,7 +235,7 @@
           </div>
         </div>
       </div>
-      {% endblock %}
+
     </div>
     
     <div class="content-other">
@@ -281,9 +281,7 @@
       </div>
 
       <div class="content-card">
-        <h4 class="content-card__title">Статистика</h4>
-
-        <div class="tabs views"> 
+        <div class="tabs views">
           <input class="pnl__input" id="pnlBuyTab" type="radio" name="pnl" checked> 
           <label class="pnl__label" for="pnlBuyTab">Реальная покупка</label> 
           <input class="pnl__input" id="pnlEmulationTab" type="radio" name="pnl"> 
@@ -305,8 +303,11 @@
               <canvas id="dataCollectionPNL"></canvas>
             </div>
           </section> 
-        </div> 
+        </div>
       </div>
+      
+      {% endblock %}
+
     </div>
   </div>
 
