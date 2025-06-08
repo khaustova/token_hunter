@@ -244,3 +244,7 @@ python manage.py authtelegram
 7. Optionally, configure **Sell-Hi** and **Sell-Lo** parameters for automatic token selling.
 
 ## Screenshots
+![screen 1](https://github.com/user-attachments/assets/db6a02e7-709e-471f-a421-1cc77ab6f9a5)
+![screen 2](https://github.com/user-attachments/assets/37f8ce23-cb62-4a8f-a746-6207b6800c07)
+![screen 3](https://github.com/user-attachments/assets/8a72cfb5-f4ed-4308-b41f-2a7c4a9d86ba)
+![screen 4](https://github.com/user-attachments/assets/83f36e17-c36d-4030-a6b6-4ed0eebccee3)
