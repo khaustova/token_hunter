@@ -14,19 +14,19 @@ async def get_telegram_data(
     telegram_client: TelegramClient, 
     social_data: dict, 
 ) -> dict:
-    """Получает данные о Telegram-канале токена через Telegram API.
+    """Collects Telegram channel data for a token using Telegram API.
 
     Args:
-        telegram_client: Созданный и настроенный Telegram-client.
-        social_data: Словарь с данными по социальным сетям токена.
+        telegram_client: Configured Telegram client instance.
+        social_data: Dictionary containing token's social media data.
         
-    Note: 
-        Собирает следующие данные:
-            telegram_members (int | None): Количество участников
-            is_telegram_error (bool): Флаг ошибки получения данных
-
     Returns:
-        Словарь с данными о Telegram-канале токена.
+        Dictionary with Telegram channel data containing:
+            telegram_members (int | None): Subscriber count.
+            is_telegram_error (bool): Data retrieval error flag.
+
+    Note: 
+        Handles channel name sanitization and connection management.
     """
     telegram_data = None
     if social_data:
@@ -57,29 +57,22 @@ async def get_telegram_data(
                 return telegram_data
 
 
-########################################################
-# Функции для получения данных о Твиттере. Отключено. #
-#######################################################      
-
-
 async def get_social_info(
     browser: Browser | None,
     social_data: dict,
     telegram_client: TelegramClient
 ) -> dict:
-    """Собирает и возвращает данные о социальных сетях токена (Twitter и Telegram).
+    """Aggregates social media data (Twitter and Telegram) for a token.
 
-    Note:
-        Для Twitter данные собираются через getmoni.io
-        Для Telegram используется Telegram API и Telethon.
-        
     Args:
-        browser: Экземпляр браузера Chrome для сбора данных Twitter.
-        social_data: Словарь с данными по социальным сетям токена.
-        telegram_client: Созданный и настроенный Telegram-client.
+        browser: Chrome browser instance for Twitter data collection.
+        social_data: Dictionary containing token's social media links.
+        telegram_client: Configured Telegram client instance.
 
     Returns:
-        dict: Словарь с данными по Twitter и Telegram.
+        Dictionary containing:
+            twitter_data: Twitter metrics (if available).
+            telegram_data: Telegram channel info (if available).
     """
     twitter_data, telegram_data = None, None
     if social_data:
@@ -98,22 +91,19 @@ async def get_social_info(
 
 
 async def get_twitter_data(browser: Browser, twitter_name: str) -> dict:
-    """Получает данные о Twitter-аккаунте токена с getmoni.io.
+    """Collects Twitter account metrics from getmoni.io.
 
     Args:
-        browser: Экземпляр браузера Chrome для взаимодействия с getmoni.io.
-        twitter_name: Имя в Twitter (без @).
-        
-    Note: 
-        Собирает следующие данные:
-            twitter_followers (int): Общее количество подписчиков.
-            twitter_smart_followers (int): Количество инфлюенсеров.
-            twitter_days (int): Возраст аккаунта в днях.
-            twitter_tweets (int): Количество твитов.
-            is_twitter_error (bool): Флаг ошибки получения данных.  
+        browser: Chrome browser instance for getmoni.io interaction.
+        twitter_handle: Twitter username (without @).
 
     Returns:
-        Словарь с данными о Twitter-аккаунте токена.
+        Dictionary containing:
+            twitter_followers (int): Total followers count.
+            twitter_smart_followers (int): Influencer followers count . 
+            twitter_days (int): Account age in days.
+            twitter_tweets (int): Total tweets count.
+            is_twitter_error (bool): Data retrieval error flag.
     """
     getmoni_page = await browser.get(
         "https://discover.getmoni.io/" + twitter_name, 

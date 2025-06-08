@@ -25,19 +25,19 @@ logger = logging.getLogger(__name__)
 try:
     from token_hunter.settings import check_api_data
 except Exception:
-    logger.info("Не удалось импортировать файл с настройками. Импорт настроек по умолчанию (Не рекомендуется)")
+    logger.info("Failed to import settings file. Using default settings (not recommended)")
     from token_hunter.settings_example import check_api_data
 
-TIMEOUT = 500 # Максимальное время проверки токена
+TIMEOUT = 500 # Maximum token verification time in seconds
 
 class DexMonitor():
-    """Класс для мониторинга и анализа токенов на платформах DEX Screener и DEXTools.
+    """Class for monitoring and analyzing tokens on DEX Screener and DEXTools platforms.
     
     Attributes:
-        browser: Экземпляр браузера Chrome или None, если в качестве источника выбран DEXTools.
-        сheck_settings: Настройки для выбора токенов.
-        source: Источник данных ("dextools" или "dexscreener").
-        telegram_client: Созданный и настроенный Telegram-client.
+        browser: Chrome browser instance or None if using DEXTools.
+        check_settings: Token selection criteria settings.
+        source: Data source ('dextools' or 'dexscreener').
+        telegram_client: Configured Telegram client instance.
     """
 
     def __init__(
@@ -46,17 +46,18 @@ class DexMonitor():
         check_settings: dict | None=None, 
         source: str='dexscreener'
     ):
-        """Инициализирует экземпляр DexMonitor.
+        """Initializes the DexMonitor instance.
 
         Args:
-            browser: Экземпляр браузера Chrome или None, если в качестве источника выбран DEXTools.
-            сheck_settings: Настройки для выбора токенов.
-            source: Источник данных (`dextools` или `dexscreener`).
+            browser: Chrome browser instance or None if using DEXTools.
+            check_settings: Token selection criteria settings.
+            source: Data source ('dextools' or 'dexscreener').
         """
         self.browser = browser
         self.check_settings = check_settings
         self.source = source
-
+        
+        # Initialize Telegram client
         app, _ = App.objects.update_or_create(
         api_id=settings.TELETHON_API_ID,
         api_hash=settings.TELETHON_API_HASH
@@ -71,17 +72,13 @@ class DexMonitor():
         )
 
     async def monitor_filter_tokens(self, filter: str) -> None:
-        """Открывает страницу DexScreener по фильтру и мониторит появление токенов, 
-        соответствующих фильтру. Инициирует покупку, если они соответствуют критериям в настройках.
+        """Monitors tokens matching the specified filter on DEX Screener.
         
-        Notes:
-            Для открытия страницы использует библиотеку nodriver и требует ручное 
-            прохождение проверки Cloudflare примерно 1 раз в 1.5 суток, поэтому при 
-            инициализации браузера нельзя использовать headless.
+        Initiates purchase if tokens meet the criteria in settings.
 
         Args:
-            filter: Параметры фильтрации токенов. По умолчанию ищет трендовые токены
-                    с ликвидностью >1000 и возрастом от 5 до 60 минут.
+            filter: Token filtering parameters. Default searches for trending tokens
+                   with liquidity >1000 and age between 5-60 minutes.
         """
         dex_page = await self.browser.get(
             "https://dexscreener.com/solana/raydium" + filter
@@ -92,7 +89,7 @@ class DexMonitor():
 
         while True:
             step += 1
-            if step == 120:
+            if step == 120:  # Reload page every 120 iterations
                 await dex_page.reload()
                 await asyncio.sleep(5)
                 step = 0
@@ -132,16 +129,14 @@ class DexMonitor():
                             monitoring_rule=MonitoringRule.FILTER,
                         )
                 except Exception as e:
-                    logger.exception(f"Что-то пошло не так с покупкой токена {pair}: {e}")
+                    logger.exception(f"Error processing token {pair}: {e}")
 
             await self.browser.wait(10)
 
     async def monitor_latest_tokens(self) -> None:
-        """Мониторит последние добавленные токены на DexScreener. 
-        Инициирует покупку, если они соответствуют критериям в настройках.
+        """Monitors recently listed tokens on DEX Screener.
         
-        Notes:
-            Для получения списка недавних токенов использует DEX Screener API.
+        Initiates purchase if tokens meet the criteria in settings.
         """
         if self.source == "dexscreener":
             await self.browser.get("https://dexscreener.com/solana/raydium")
@@ -183,19 +178,15 @@ class DexMonitor():
                             monitoring_rule=MonitoringRule.LATEST
                         )
                 except Exception as e:
-                    logger.exception(f"Что-то пошло не так с покупкой токена {pair}: {e}")
+                    logger.exception(f"Error processing token {pair}: {e}")
 
 
     async def monitor_boosted_tokens(self, boosts_min: int=100, boosts_max: int=500) -> None:
-        """Мониторит забустенные токены на DexScreener. 
-        Инициирует покупку, если они соответствуют критериям в настройках.
+        """Monitors boosted tokens on DEX Screener.
         
         Args:
-            boosts_min: Минимальный буст. По умолчанию 100.
-            boosts_max: Максимальный буст. По умолчанию 500.
-
-        Notes:
-            Для получения списка забустенных токенов использует DEX Screener API.
+            boosts_min: Minimum boost count threshold. Defaults to 100.
+            boosts_max: Maximum boost count threshold. Defaults to 500.
         """
         if self.source == "dexscreener":
             await self.browser.get("https://dexscreener.com/solana/raydium")
@@ -229,7 +220,8 @@ class DexMonitor():
                 
                 if not check_api_data(token_data):
                     continue
-
+                
+                # Track boost ages for each token
                 boosted_tokens.setdefault(
                     token["tokenAddress"],
                     {
@@ -258,14 +250,14 @@ class DexMonitor():
                             boosts_ages=boosted_tokens[token["tokenAddress"]]["boosts_ages"]
                         )
                 except Exception as e:
-                    logger.error(f"Что-то пошло не так с покупкой токена {pair}: {e}")
+                    logger.exception(f"Error processing boosted token {pair}: {e}")
 
     async def parse_top_traders(self, filter: str="", pages: int=1) -> None:
-        """Парсит данные о топовых кошельках на DEX Screener или DEXTools.
+        """Parses top trader wallet data from DEX Screener or DEXTools.
 
         Args:
-            filter: Фильтр для отбора токенов. По умолчанию пустая строка.
-            pages: Количество страниц для парсинга. По умолчанию 1.
+            filter: Token filter parameters. Defaults to empty string.
+            pages: Number of pages to parse. Defaults to 1.
         """
         stop_lst_links = []
 
@@ -330,24 +322,24 @@ class DexMonitor():
 
     @sync_to_async
     def _check_visited_top_traders_link(self, pair: str) -> list[TopTrader]:
-        """Проверяет, анализировались ли ранее топовые кошельки для указанной пары.
+        """Checks if top traders have been analyzed for a given token pair.
 
         Args:
-            pair: Адрес пары токенов.
+            pair: Token pair address.
 
         Returns:
-            Список объектов TopTrader для данной пары.
+            List of TopTrader objects for this pair.
         """
         return list(TopTrader.objects.all().filter(pair=pair))
 
     @sync_to_async
     def _check_transaction(self, token_address: str) -> list[Transaction]:
-        """Проверяет наличие транзакций для указанного токена.
+        """Checks for existing transactions for a given token.
 
         Args:
-            token_address: Адрес токена.
+            token_address: Token contract address.
 
         Returns:
-            Список транзакций для данного токена.
+            List of transactions for this token.
         """
         return list(Transaction.objects.filter(token_address=token_address))

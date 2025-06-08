@@ -19,9 +19,6 @@
           home
         </span>
       </a>
-      &nbsp;&#47;&nbsp;<a href="{% url 'admin:app_list' app_label=opts.app_label %}">
-      {{ opts.app_config.verbose_name }}
-      </a>
       &nbsp;&#47;&nbsp; 
       {% if has_view_permission %}
         <a href="{% url opts|admin_urlname:'changelist' %}">
@@ -74,11 +71,11 @@
           
           {% block field_sets %}
           <fieldset class="module aligned settings-form">
-            <h2>Настройки мониторинга</h2>
+            <h2>Monitoring Settings</h2>
             <div class="form-row field-name">
               <div>
                 <div class="flex-container">
-                  <label class="required" for="id_name">Название:</label>
+                  <label class="required" for="id_name">Settings Name:</label>
                   {{ adminform.form.name }}
                 </div>
               </div>
@@ -86,7 +83,7 @@
             <div class="form-row field-monitoring_rule">
               <div>
                 <div class="flex-container">
-                  <label class="required" for="id_monitoring_rule">Правило мониторинга токенов:</label>
+                  <label class="required" for="id_monitoring_rule">Token Monitoring Rule:</label>
                   {{ adminform.form.monitoring_rule }}
                 </div>
               </div>
@@ -95,24 +92,24 @@
             <div class="form-row field-mode">
               <div>
                 <div class="flex-container">
-                  <label class="required" for="id_mode">Режим:</label>
+                  <label class="required" for="id_mode">Trading Mode:</label>
                   {{ adminform.form.mode }}
                 </div>
               </div>
             </div>
 
-            <h2>Данные о токене</h2>
+            <h2>Token Data</h2>
             <div class="spoiler">
               <div class="spoiler-title">
               <div class="show-icon spoiler-toggle">&nbsp;</div>
-              Цена токена</div>
+              Token Price</div>
               
               <div class="spoiler-content" style="display:none">
                 <div class="settings-form_max-min">
                   <div class="form-row field-price_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_price_min">Минимальная цена:</label>
+                        <label for="id_price_min">Minimum Price (USD):</label>
                         {{ adminform.form.price_min }}
                       </div>
                     </div>
@@ -123,7 +120,7 @@
                   <div class="form-row field-price_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_price_max">Максимальная цена:</label>
+                        <label for="id_price_max">Maximum Price (USD):</label>
                         {{ adminform.form.price_max }}
                       </div>
                     </div>
@@ -135,14 +132,14 @@
             <div class="spoiler">
               <div class="spoiler-title">
               <div class="show-icon spoiler-toggle">&nbsp;</div>
-              Возраст токена</div>
+              Token Age</div>
               
               <div class="spoiler-content" style="display:none">
                 <div class="settings-form_max-min">
                   <div class="form-row field-token_age_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_token_age_min">Минимальный возраст:</label>
+                        <label for="id_token_age_min">Minimum Age (min):</label>
                         {{ adminform.form.token_age_min }}
                       </div>
                     </div>
@@ -153,7 +150,7 @@
                   <div class="form-row field-token_age_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_token_age_max">Максимальный возраст:</label>
+                        <label for="id_token_age_max">Maximum Age (min):</label>
                         {{ adminform.form.token_age_max }}
                       </div>
                     </div>
@@ -165,14 +162,14 @@
           <div class="spoiler">
               <div class="spoiler-title">
               <div class="show-icon spoiler-toggle">&nbsp;</div>
-              Количество покупок</div>
+              Buy Transactions</div>
               
               <div class="spoiler-content" style="display:none">
                 <div class="settings-form_max-min">
                   <div class="form-row field-buys_m5_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_m5_min">Минимальное количество покупок (5 минут):</label>
+                        <label for="id_buys_m5_min">Minimum Buy Count (5 min):</label>
                         {{ adminform.form.buys_m5_min }}
                       </div>
                     </div>
@@ -183,7 +180,7 @@
                   <div class="form-row field-buys_m5_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_m5_max">Максимальное количество покупок (5 минут):</label>
+                        <label for="id_buys_m5_max">Maximum Buy Count (5 min):</label>
                         {{ adminform.form.buys_m5_max }}
                       </div>
                     </div>
@@ -193,7 +190,7 @@
                   <div class="form-row field-buys_h1_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_h1_min">Минимальное количество покупок (1 час):</label>
+                        <label for="id_buys_h1_min">Minimum Buy Count (1 hour):</label>
                         {{ adminform.form.buys_h1_min }}
                       </div>
                     </div>
@@ -204,7 +201,7 @@
                   <div class="form-row field-buys_h1_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_h1_max">Максимальное количество покупок (1 час):</label>
+                        <label for="id_buys_h1_max">Maximum Buy Count (1 hour):</label>
                         {{ adminform.form.buys_h1_max }}
                       </div>
                     </div>
@@ -215,7 +212,7 @@
                   <div class="form-row field-buys_h6_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_h6_min">Минимальное количество покупок (6 часов):</label>
+                        <label for="id_buys_h6_min">Minimum Buy Count (6 hours):</label>
                         {{ adminform.form.buys_h6_min }}
                       </div>
                     </div>
@@ -226,7 +223,7 @@
                   <div class="form-row field-buys_h6_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_h6_max">Максимальное количество покупок (6 часов):</label>
+                        <label for="id_buys_h6_max">Maximum Buy Count (6 hours):</label>
                         {{ adminform.form.buys_h6_max }}
                       </div>
                     </div>
@@ -237,7 +234,7 @@
                   <div class="form-row field-buys_h24_min">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_h24_min">Минимальное количество покупок (24 часа):</label>
+                        <label for="id_buys_h24_min">Minimum Buy Count (24 hours):</label>
                         {{ adminform.form.buys_h24_min }}
                       </div>
                     </div>
@@ -248,7 +245,7 @@
                   <div class="form-row field-buys_h24_max">
                     <div>
                       <div class="flex-container">
-                        <label for="id_buys_h24_max">Максимальное количество покупок (24 часа):</label>
+                        <label for="id_buys_h24_max">Maximum Buy Count (24 hours):</label>
                         {{ adminform.form.buys_h24_max }}
                       </div>
                     </div>
@@ -261,7 +258,7 @@
             <div class="spoiler">
               <div class="spoiler-title">
               <div class="show-icon spoiler-toggle">&nbsp;</div>
-              Количество продаж</div>
+              Sell Transactions</div>
               
               <div class="spoiler-content" style="display:none">
               
@@ -269,7 +266,7 @@
             <div class="form-row field-sells_m5_min">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_m5_min">Минимальное количество продаж (5 минут):</label>
+                  <label for="id_sells_m5_min">Minimum Sell Count (5 min):</label>
                   {{ adminform.form.sells_m5_min }}
                 </div>
               </div>
@@ -280,7 +277,7 @@
             <div class="form-row field-sells_m5_max">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_m5_max">Максимальное количество продаж (5 минут):</label>
+                  <label for="id_sells_m5_max">Maximum Sell Count (5 min):</label>
                   {{ adminform.form.sells_m5_max }}
                 </div>
               </div>
@@ -291,7 +288,7 @@
             <div class="form-row field-sells_h1_min">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_h1_min">Минимальное количество продаж (1 час):</label>
+                  <label for="id_sells_h1_min">Minimum Sell Count (1 hour):</label>
                   {{ adminform.form.sells_h1_min }}
                 </div>
               </div>
@@ -302,7 +299,7 @@
             <div class="form-row field-sells_h1_max">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_h1_max">Максимальное количество продаж (1 час):</label>
+                  <label for="id_sells_h1_max">Minimum Sell Count (1 hour):</label>
                   {{ adminform.form.sells_h1_max }}
                 </div>
               </div>
@@ -313,7 +310,7 @@
             <div class="form-row field-sells_h6_min">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_h6_min">Минимальное количество продаж (6 часов):</label>
+                  <label for="id_sells_h6_min">Minimum Sell Count (6 hours):</label>
                   {{ adminform.form.sells_h6_min }}
                 </div>
               </div>
@@ -324,7 +321,7 @@
             <div class="form-row field-sells_h6_max">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_h6_max">Максимальное количество продаж (6 часов):</label>
+                  <label for="id_sells_h6_max">Maximum Sell Count (6 hours):</label>
                   {{ adminform.form.sells_h6_max }}
                 </div>
               </div>
@@ -335,7 +332,7 @@
             <div class="form-row field-sells_h24_min">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_h24_min">Минимальное количество продаж (24 часа):</label>
+                  <label for="id_sells_h24_min">Minimum Sell Count (24 hours):</label>
                   {{ adminform.form.sells_h24_min }}
                 </div>
               </div>
@@ -346,7 +343,7 @@
             <div class="form-row field-sells_h24_max">
               <div>
                 <div class="flex-container">
-                  <label for="id_sells_h24_max">Максимальное количество продаж (24 часа):</label>
+                  <label for="id_sells_h24_max">Maximum Sell Count (24 hours):</label>
                   {{ adminform.form.sells_h24_max }}
                 </div>
               </div>
@@ -358,14 +355,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Объём торгов</div>
+            Trading Volume</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-volume_m5_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_m5_min">Минимальный объём торгов (5 минут):</label>
+                      <label for="id_volume_m5_min">Minimum Volume (5 min):</label>
                       {{ adminform.form.volume_m5_min }}
                     </div>
                   </div>
@@ -376,7 +373,7 @@
                 <div class="form-row field-volume_m5_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_m5_max">Максимальный объём торгов (5 минут):</label>
+                      <label for="id_volume_m5_max">Maximum Volume (5 min):</label>
                       {{ adminform.form.volume_m5_max }}
                     </div>
                   </div>
@@ -387,7 +384,7 @@
                 <div class="form-row field-volume_h1_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_h1_min">Минимальный объём торгов (1 час):</label>
+                      <label for="id_volume_h1_min">Minimum Volume (1 hour):</label>
                       {{ adminform.form.volume_h1_min }}
                     </div>
                   </div>
@@ -398,7 +395,7 @@
                 <div class="form-row field-volume_h1_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_h1_max">Максимальный объём торгов (1 час):</label>
+                      <label for="id_volume_h1_max">Maximum Volume (1 hour):</label>
                       {{ adminform.form.volume_h1_max }}
                     </div>
                   </div>
@@ -409,7 +406,7 @@
                 <div class="form-row field-volume_h6_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_h6_min">Минимальный объём торгов (6 часов):</label>
+                      <label for="id_volume_h6_min">Minimum Volume (6 hours):</label>
                       {{ adminform.form.volume_h6_min }}
                     </div>
                   </div>
@@ -420,7 +417,7 @@
                 <div class="form-row field-volume_h6_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_h6_max">Максимальный объём торгов (6 часов):</label>
+                      <label for="id_volume_h6_max">Maximum Volume (6 hours):</label>
                       {{ adminform.form.volume_h6_max }}
                     </div>
                   </div>
@@ -431,7 +428,7 @@
                 <div class="form-row field-volume_h24_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_h24_min">Минимальный объём торгов (24 часа):</label>
+                      <label for="id_volume_h24_min">Minimum Volume (24 hours):</label>
                       {{ adminform.form.volume_h24_min }}
                     </div>
                   </div>
@@ -442,7 +439,7 @@
                 <div class="form-row field-volume_h24_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_volume_h24_max">Максимальный объём торгов (24 часа):</label>
+                      <label for="id_volume_h24_max">Maximum Volume (24 hours):</label>
                       {{ adminform.form.volume_h24_max }}
                     </div>
                   </div>
@@ -451,18 +448,17 @@
             </div>
           </div>
 
-
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Изменение цены</div>
+            Price Change</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">  
                 <div class="form-row field-price_change_m5_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_m5_min">Минимальное изменение цены (5 минут):</label>
+                      <label for="id_price_change_m5_min">Minimum Price Change (5 min):</label>
                       {{ adminform.form.price_change_m5_min }}
                     </div>
                   </div>
@@ -473,7 +469,7 @@
                 <div class="form-row field-price_change_m5_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_m5_max">Максимальное изменение цены (5 минут):</label>
+                      <label for="id_price_change_m5_max">Maximum Price Change (5 min):</label>
                       {{ adminform.form.price_change_m5_max }}
                     </div>
                   </div>
@@ -484,7 +480,7 @@
                 <div class="form-row field-price_change_h1_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_h1_min">Минимальное изменение цены (1 час):</label>
+                      <label for="id_price_change_h1_min">Minimum Price Change (1 hour):</label>
                       {{ adminform.form.price_change_h1_min }}
                     </div>
                   </div>
@@ -495,7 +491,7 @@
                 <div class="form-row field-price_change_h1_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_h1_max">Максимальное изменение цены (1 час):</label>
+                      <label for="id_price_change_h1_max">Maximum Price Change (1 hour):</label>
                       {{ adminform.form.price_change_h1_max }}
                     </div>
                   </div>
@@ -506,7 +502,7 @@
                 <div class="form-row field-price_change_h6_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_h6_min">Минимальное изменение цены (6 часов):</label>
+                      <label for="id_price_change_h6_min">Minimum Price Change (6 hours):</label>
                       {{ adminform.form.price_change_h6_min }}
                     </div>
                   </div>
@@ -517,7 +513,7 @@
                 <div class="form-row field-price_change_h6_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_h6_max">Максимальное изменение цены (6 часов):</label>
+                      <label for="id_price_change_h6_max">Maximum Price Change (6 hours):</label>
                       {{ adminform.form.price_change_h6_max }}
                     </div>
                   </div>
@@ -528,7 +524,7 @@
                 <div class="form-row field-price_change_h24_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_h24_min">Минимальное изменение цены (24 часа):</label>
+                      <label for="id_price_change_h24_min">Minimum Price Change (24 hours):</label>
                       {{ adminform.form.price_change_h24_min }}
                     </div>
                   </div>
@@ -539,7 +535,7 @@
                 <div class="form-row field-price_change_h24_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_price_change_h24_max">Максимальное изменение цены (24 часа):</label>
+                      <label for="id_price_change_h24_max">Maximum Price Change (24 hours):</label>
                       {{ adminform.form.price_change_h24_max }}
                     </div>
                   </div>
@@ -551,14 +547,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Ликвидность</div>
+            Liquidity</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-liquidity_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_liquidity_min">Минимальная ликвидность:</label>
+                      <label for="id_liquidity_min">Minimum Liquidity:</label>
                       {{ adminform.form.liquidity_min }}
                     </div>
                   </div>
@@ -569,7 +565,7 @@
                 <div class="form-row field-liquidity_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_liquidity_max">Максимальная ликвидность:</label>
+                      <label for="id_liquidity_max">Maximum Liquidity:</label>
                       {{ adminform.form.liquidity_max }}
                     </div>
                   </div>
@@ -588,7 +584,7 @@
                 <div class="form-row field-fdv_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_fdv_min">Минимальная FDV:</label>
+                      <label for="id_fdv_min">Minimum FDV (USD):</label>
                       {{ adminform.form.fdv_min }}
                     </div>
                   </div>
@@ -599,7 +595,7 @@
                 <div class="form-row field-fdv_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_fdv_max">Максимальная FDV:</label>
+                      <label for="id_fdv_max">Maximum FDV (USD):</label>
                       {{ adminform.form.fdv_max }}
                     </div>
                   </div>
@@ -612,14 +608,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Рыночная капитализация</div>
+            Market Capitalization</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-market_cap_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_market_cap_min">Минимальная рыночная капитализация:</label>
+                      <label for="id_market_cap_min">Minimum Market Cap (USD):</label>
                       {{ adminform.form.market_cap_min }}
                     </div>
                   </div>
@@ -630,7 +626,7 @@
                 <div class="form-row field-market_cap_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_market_cap_max">Максимальная рыночная капитализация:</label>
+                      <label for="id_market_cap_max">Maximum Market Cap (USD):</label>
                       {{ adminform.form.market_cap_max }}
                     </div>
                   </div>
@@ -649,7 +645,7 @@
                 <div class="form-row field-boost_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_boost_min">Минимальный boost:</label>
+                      <label for="id_boost_min">Minimum Boost:</label>
                       {{ adminform.form.boost_min }}
                     </div>
                   </div>
@@ -660,7 +656,7 @@
                 <div class="form-row field-boost_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_boost_max">Максимальный boost:</label>
+                      <label for="id_boost_max">Maximum Boost:</label>
                       {{ adminform.form.boost_max }}
                     </div>
                   </div>
@@ -672,14 +668,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Сайт и социальные сети</div>
+            Website & Social Media</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="form-row field-is_socio">
                 <div>
                   <div class="flex-container checkbox-row">
                     {{ adminform.form.is_socio }}
-                    <label class="vCheckboxLabel" for="id_is_socio">Наличие хотя бы одной социальной сети или сайта</label>
+                    <label class="vCheckboxLabel" for="id_is_socio">Require at least one social media or website</label>
                   </div>
                 </div>
               </div>
@@ -688,7 +684,7 @@
                 <div>
                   <div class="flex-container checkbox-row">
                     {{ adminform.form.is_telegram }}
-                    <label class="vCheckboxLabel" for="id_is_telegram">Наличие Телеграма</label>
+                    <label class="vCheckboxLabel" for="id_is_telegram">Telegram required</label>
                   </div>
                 </div>
               </div>
@@ -696,7 +692,7 @@
                 <div>
                   <div class="flex-container checkbox-row">
                     {{ adminform.form.is_twitter }}
-                    <label class="vCheckboxLabel" for="id_is_twitter">Наличие Твиттера</label>
+                    <label class="vCheckboxLabel" for="id_is_twitter">X (Twitter) required</label>
                   </div>
                 </div>
               </div>
@@ -704,252 +700,26 @@
                 <div>
                   <div class="flex-container checkbox-row">
                     {{ adminform.form.is_website }}
-                    <label class="vCheckboxLabel" for="id_is_website">Наличие сайта</label>
+                    <label class="vCheckboxLabel" for="id_is_website">Website required</label>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <h2>Данные о снайперах</h2>
+          <h2>Top Wallet Data</h2>
 
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Количество токенов у снайперов</div>
-            
-            <div class="spoiler-content" style="display:none">
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_held_all_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_held_all_min">Минимальное количество снайперов, которые держат:</label>
-                      {{ adminform.form.sns_held_all_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_held_all_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_held_all_max">Максимальное количество снайперов, которые держат:</label>
-                      {{ adminform.form.sns_held_all_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-    
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_sold_some_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_sold_some_min">Минимальное количество снайперов, продавших часть:</label>
-                      {{ adminform.form.sns_sold_some_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_sold_some_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_sold_some_max">Максимальное количество снайперов, продавших часть:</label>
-                      {{ adminform.form.sns_sold_some_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-    
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_sold_all_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_sold_all_min">Минимальное количество снайперов, продавших всё:</label>
-                      {{ adminform.form.sns_sold_all_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_sold_all_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_sold_all_max">Максимальное количество снайперов, продавших всё:</label>
-                      {{ adminform.form.sns_sold_all_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="spoiler">
-            <div class="spoiler-title">
-            <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Сумма покупок снайперов</div>
-            
-            <div class="spoiler-content" style="display:none">
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_bought_sum_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_bought_sum_min">Минимальная сумма покупок снайперов:</label>
-                      {{ adminform.form.sns_bought_sum_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_bought_sum_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_bought_sum_max">Максимальная сумма покупок снайперов:</label>
-                      {{ adminform.form.sns_bought_sum_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="spoiler">
-            <div class="spoiler-title">
-            <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Сумма продаж снайперов</div>
-            
-            <div class="spoiler-content" style="display:none">
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_sold_sum_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_sold_sum_min">Минимальная сумма продаж снайперов:</label>
-                      {{ adminform.form.sns_sold_sum_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_sold_sum_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_sold_sum_max">Максимальная сумма продаж снайперов:</label>
-                      {{ adminform.form.sns_sold_sum_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="spoiler">
-            <div class="spoiler-title">
-            <div class="show-icon spoiler-toggle">&nbsp;</div>
-            PNL снайперов</div>
-            
-            <div class="spoiler-content" style="display:none">
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_pnl_loss_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_pnl_loss_min">Минимальное количество отрицательных PNL у снайперов:</label>
-                      {{ adminform.form.sns_pnl_loss_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_pnl_loss_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_pnl_loss_max">Максимальное количество отрицательных PNL у снайперов:</label>
-                      {{ adminform.form.sns_pnl_loss_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="spoiler">
-            <div class="spoiler-title">
-            <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Снайперы без покупки</div>
-            
-            <div class="spoiler-content" style="display:none">
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_no_bought_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_no_bought_min">Минимальное количество снайперов без покупки:</label>
-                      {{ adminform.form.sns_no_bought_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_no_bought_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_no_bought_max">Максимальное количество снайперов без покупки:</label>
-                      {{ adminform.form.sns_no_bought_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="spoiler">
-            <div class="spoiler-title">
-            <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Снайперы без продажи</div>
-            
-            <div class="spoiler-content" style="display:none">
-              <div class="settings-form_max-min">
-                <div class="form-row field-sns_no_sold_min">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_no_sold_min">Минимальное количество снайперов без продажи:</label>
-                      {{ adminform.form.sns_no_sold_min }}
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-form_dash">
-                  —
-                </div>
-                <div class="form-row field-sns_no_sold_max">
-                  <div>
-                    <div class="flex-container">
-                      <label for="id_sns_no_sold_max">Максимальное количество снайперов без продажи:</label>
-                      {{ adminform.form.sns_no_sold_max }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <h2>Данные о топах</h2>
-
-          <div class="spoiler">
-            <div class="spoiler-title">
-            <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Сумма покупок топов</div>
+            Top Traders Buy Volume</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-tt_bought_sum_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_bought_sum_min">Минимальная сумма покупок топов:</label>
+                      <label for="id_tt_bought_sum_min">Minimum top traders buy volume:</label>
                       {{ adminform.form.tt_bought_sum_min }}
                     </div>
                   </div>
@@ -960,7 +730,7 @@
                 <div class="form-row field-tt_bought_sum_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_bought_sum_max">Максимальная сумма покупок топов:</label>
+                      <label for="id_tt_bought_sum_max">Maximum top traders buy volume:</label>
                       {{ adminform.form.tt_bought_sum_max }}
                     </div>
                   </div>
@@ -972,14 +742,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Сумма продаж топов</div>
+            Top Traders Sell Volume</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-tt_sold_sum_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_sold_sum_min">Максимальная сумма продаж топов:</label>
+                      <label for="id_tt_sold_sum_min">Minimum top traders sell volume:</label>
                       {{ adminform.form.tt_sold_sum_min }}
                     </div>
                   </div>
@@ -990,7 +760,7 @@
                 <div class="form-row field-tt_sold_sum_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_sold_sum_max">Максимальная сумма продаж топов:</label>
+                      <label for="id_tt_sold_sum_max">Maximum top traders sell volume:</label>
                       {{ adminform.form.tt_sold_sum_max }}
                     </div>
                   </div>
@@ -1002,14 +772,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            PNL топов</div>
+            Top Traders PNL</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-tt_pnl_loss_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_pnl_loss_min">Минимальное количество отрицательных PNL у топов:</label>
+                      <label for="id_tt_pnl_loss_min">Minimum negative PNL top traders:</label>
                       {{ adminform.form.tt_pnl_loss_min }}
                     </div>
                   </div>
@@ -1020,7 +790,7 @@
                 <div class="form-row field-tt_pnl_loss_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_pnl_loss_max">Максимальное количество отрицательных PNL у топов:</label>
+                      <label for="id_tt_pnl_loss_max">Maximum negative PNL top traders:</label>
                       {{ adminform.form.tt_pnl_loss_max }}
                     </div>
                   </div>
@@ -1032,14 +802,14 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Топы без покупки</div>
+            Top Traders Without Buys</div>
             
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_max-min">
                 <div class="form-row field-tt_no_bought_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_no_bought_min">Минимальное количество топов без покупки:</label>
+                      <label for="id_tt_no_bought_min">Minimum top traders without buys:</label>
                       {{ adminform.form.tt_no_bought_min }}
                     </div>
                   </div>
@@ -1050,7 +820,7 @@
                 <div class="form-row field-tt_no_bought_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_tt_no_bought_max">Максимальное количество топов без покупки:</label>
+                      <label for="id_tt_no_bought_max">Maximum top traders without buys:</label>
                       {{ adminform.form.tt_no_bought_max }}
                     </div>
                   </div>
@@ -1062,7 +832,7 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Топы без продажи</div>
+            Top Traders Without Sells</div>
             
             <div class="spoiler-content" style="display:none">
             
@@ -1070,7 +840,7 @@
             <div class="form-row field-tt_no_sold_min">
               <div>
                 <div class="flex-container">
-                  <label for="id_tt_no_sold_min">Минимальное количество топов без продажи:</label>
+                  <label for="id_tt_no_sold_min">Minimum top traders without sells:</label>
                   {{ adminform.form.tt_no_sold_min }}
                 </div>
               </div>
@@ -1081,7 +851,7 @@
             <div class="form-row field-tt_no_sold_max">
               <div>
                 <div class="flex-container">
-                  <label for="id_tt_no_sold_max">Максимальное количество топов без продажи:</label>
+                  <label for="id_tt_no_sold_max">Maximum top traders without sells:</label>
                   {{ adminform.form.tt_no_sold_max }}
                 </div>
               </div>

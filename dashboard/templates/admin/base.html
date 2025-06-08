@@ -30,7 +30,7 @@
   {% block extrahead %}{% endblock %}
 </head>
 
-<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %} {% sidebar_status request %}" data-admin-utc-offset="{% now "Z" %}">
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}" data-admin-utc-offset="{% now "Z" %}">
   <script>
     const theme = localStorage.getItem('theme') || 'dark';
     document.documentElement.dataset.theme = theme;
@@ -40,12 +40,6 @@
       {% if not is_popup %}
         <header>
           <nav class="top-navigation">
-            <span class="material-symbols-outlined top-menu navigation-icon" id="open-menu">
-              menu
-            </span>
-            <span class="material-symbols-outlined top-search navigation-icon" id="top-search">
-              search
-            </span>
             {% get_search_model as search_model %}
             {% if search_model %}
               <div class="search-top__form">
@@ -65,16 +59,6 @@
             {% endif %}
           </nav>
           <div class="user_wrapper">
-            <div class="toggle-theme">
-              <button id="theme-toggle" type="button">
-                <span class="icon-dark material-symbols-outlined">
-                  dark_mode
-                </span>
-                <span class="icon-light material-symbols-outlined">
-                  light_mode
-                </span>
-              </button>
-            </div>
             <div class="user">
               <span class="user__welcome">{% trans 'Welcome,' %}</span>
               <a href="javascript:void(0);" class="user__name">
@@ -100,7 +84,7 @@
                       <span class="material-symbols-outlined user__icon">
                         person
                       </span>
-                      Аккаунт
+                      Account
                     </a>
                   </li>
                 {% endif %}
@@ -131,38 +115,44 @@
           {% block sidebar %}
             {% get_sidebar_menu as apps %}
             <aside id="sidebar">
-              <a href="javascript:void(0)" class="sidebar__link">
-                <span class="material-symbols-outlined sidebar__icon toggle-sidebar" id="toggle-sidebar">
-                  menu_open
-                </span>
+              <div class="sidebar__logo">
+              <a href="{% url 'admin:index' %}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5" />
+              </svg>
+              <span>TOKEN HUNTER</span>
               </a>
-              <a href="{% url 'admin:index' %}" class="sidebar__link">
-                <span class="sidebar__name">{{ customization.dashboard_name }}</span>
-              </a>
-              <span class="material-symbols-outlined sidebar__close-icon navigation-icon" id="close-menu">
-                close
-              </span>
-              <hr class="sidebar__line">
+              </div>
               <nav>
-                <ul class="sidebar">
-                  {% for app in apps %}
-                    <li class="sidebar__app-name">{{ app.name|upper }}</li>
-                    {% for model in app.models %}
-                      <li class="sidebar__model-name">
-                        {% if model.admin_url %}
-                          <a href="{{ model.admin_url }}" class="sidebar__link">
-                            <span class="material-symbols-outlined sidebar__icon">
-                              {{ model.icon }}
-                            </span>
-                            <span class="sidebar__link-name">
-                              {{ model.name }}
-                            </span>
-                          </a>
-                        {% endif %}
-                      </li>
-                    {% endfor %}
-                  {% endfor %}
-                </ul>
+                <a href="{% url 'admin:index' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                  </svg>
+                  Dashboard
+                </a>
+                <a href="{% url 'admin:token_hunter_transaction_changelist' %}" class="nav-link {% if request.path == '/token_hunter/transaction/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                  </svg>
+                  Transactions
+                </a>
+                <a href="{% url 'admin:token_hunter_toptrader_changelist' %}" class="nav-link {% if request.path == '/token_hunter/toptrader/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Top Wallets
+                </a>
+                <a href="{% url 'admin:token_hunter_settings_changelist' %}" class="nav-link {% if request.path == '/token_hunter/settings/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.003 1.11-.952l2.176.326a1.125 1.125 0 01.971 1.255l-2.176 8.584a1.125 1.125 0 01-1.255.971l-2.176-.326a1.125 1.125 0 01-.971-1.255L9.594 3.94zM15 12.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Settings
+                </a>
+                <a href="{% url 'admin:django_celery_results_taskresult_changelist' %}" class="nav-link {% if request.path == '/django_celery_results/taskresult/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Task results
+                </a>
               </nav>
             </aside>
           {% endblock %}
@@ -183,7 +173,7 @@
                         </span>
                       </a>
                       {% if title %}
-                        &nbsp;&#47; Панель управления
+                        &nbsp;&#47; Dashboard
                       {% endif %}
                     </div>
                   {% endblock %}

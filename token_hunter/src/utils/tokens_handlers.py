@@ -30,34 +30,34 @@ async def process_token(
     check_settings_dict: dict,
     boosts_ages: str | None=None,
 ) -> bool:
-    """Выполняет комплексную проверку токена включая:
-    - Анализ рисков через Rugcheck
-    - Сбор данных с DexTools/DexScreener
-    - Проверку параметров согласно настройкам
-    - Запуск задач на покупку при успешных проверках
+    """Performs comprehensive token validation including:
+    - Risk analysis via Rugcheck.
+    - Data collection from DexTools/DexScreener.
+    - Parameter validation against settings.
+    - Purchase task initiation for valid tokens.
     
-    Если токен прошёл проверку, то выполняет покупку токена.
+    Executes token purchase if validation passes.
 
     Args:
-        source: Источник данных ("dextools" или "dexscreener").
-        pair: Адрес пары токена.
-        token_address: Адрес токена.
-        telegram_client: Созданный и настроенный Telegram-client.
-        social_data: Словарь с данными по социальным сетям токена.
-        monitoring_rule: Правило мониторинга токена.
-        check_settings: Словарь с ID настроек и их функциями проверки токена.
-        boosts_ages: Временные метки бустов. По умолчанию None.
+        source: Data source ("dextools" or "dexscreener").
+        pair: Token pair address.
+        token_address: Token contract address.
+        telegram_client: Configured Telegram client instance.
+        social_data: Dictionary containing token social media data.
+        monitoring_rule: Token monitoring rule.
+        check_settings_dict: Dictionary with setting IDs and their validation functions.
+        boosts_ages: Boost timestamps. Defaults to None.
 
     Returns:
-        True если токен прошел все проверки и задачи запущены, False в противном случае.
+        True if token passed all validations and tasks were initiated, False otherwise.
 
     Raises:
-        Exception: Может пробрасывать исключения зависимостей (Rugcheck, DexTools и др.).
+        Exception: May propagate exceptions from dependencies (Rugcheck, DexTools etc.).
     
     Notes:
-        - При обнаружении высокого риска токен добавляется в черный список в Redis.
-        - В режиме реальной торговли (IS_REAL_BUY) инициирует реальную покупку.
-        - Для DEXTools используется синхронный парсинг, для DEX Screener - асинхронный.
+        - High-risk tokens are added to Redis blacklist.
+        - In real trading mode (IS_REAL_BUY) initiates actual purchase.
+        - Uses synchronous parsing for DEXTools, asynchronous for DEX Screener.
     """
     dex = (
         DexToolsData(pair, token_address)
@@ -109,7 +109,6 @@ async def process_token(
         mode=mode,
         monitoring_rule=monitoring_rule,
         top_traders_data=token_info.get("top_traders_data"),
-        snipers_data=token_info.get("snipers_data"),
         holders_data=token_info.get("holders_data"),
         twitter_data=None,
         telegram_data=token_info.get("telegram_data"),
@@ -129,17 +128,18 @@ async def rugcheck_token(
     browser: Browser | None=None,
     dex: DexScreenerData | DexToolsData | None=None
 ) -> int | None:
-    """Возвращает словарь с результатами проверки токена на rugcheck.xyz.
+    """Returns token validation results from rugcheck.xyz.
     
-    В зависимости от настроек выбирает способ получения данных на RugCheck.
+    Selects data collection method based on configuration.
     
     Args:
-        token_address: Адрес токена.
-        dex: Экземпляр класса DexScreenerData или DexToolsData  
-            в зависимости от выбранного источника данных.
+        token_address: Token contract address.
+        source: Data source ("dextools" or "dexscreener").
+        browser: Browser instance for nodriver (optional).
+        dex: DexScreenerData or DexToolsData instance based on data source.
 
     Returns:
-        Словарь с результатами проверки токена.
+        Dictionary containing token validation results.
     """
     if settings.IS_RUGCHECK_API:
         rugcheck_result = rugchek_token_with_api(token_address)

@@ -15,52 +15,50 @@ logger = logging.getLogger(__name__)
 
 
 class TokenChecker:
-    """Класс для проверки токена на соответствие одной из настроек выбора токена.
+    """Validates tokens against predefined selection criteria.
     
     Attributes:
-        pair: Адрес пары токенов для проверки.
-        check_settings: Словарь с ID настроек и их функциями проверки токена.
+        pair: Token pair address to validate.
+        check_settings: Dictionary containing setting IDs and their validation functions.
     """
 
     def __init__(self, pair: str, check_settings: dict):
-        """Инициализирует экземпляр TokenChecker.
+        """Initializes the TokenChecker instance.
 
         Args:
-            pair: Адрес пары токенов для проверки.
-            check_settings: Словарь с ID настроек и их функциями проверки токена в формате:
-            {
-                settings_id: {
-                    "token_data": [список функций проверки],
-                    "snipers_data": [список функций проверки],
-                    "top_traders_data": [список функций проверки]
+            pair: Token pair address to validate.
+            check_settings: Dictionary with setting IDs and validation functions in format:
+                {
+                    settings_id: {
+                        "token_data": [list of validation functions],
+                        "top_traders_data": [list of validation functions]
+                    }
                 }
-            }
+                Each validation function dict contains:
+                - "get_data_value": data extraction function.
+                - "check_data": validation function.
         """
         self.pair = pair
         self.check_settings = check_settings
 
     def check_token(
         self,
-        snipers_data: dict | None=None,
-        top_traders_data: dict| None=None,
-        holders_data: dict| None=None
+        top_traders_data: dict | None=None,
+        holders_data: dict | None=None
     ) -> int | None:
-        """Проверяет токен на соответствие одной из настроек выбора токена.
+        """Validates token against selection criteria from settings.
         
         Note:
-            Каждая функция проверки должна возвращать bool:
-            - True: проверка пройдена
-            - False: проверка не пройдена
+            Each validation function must return bool:
+            - True: validation passed
+            - False: validation failed
 
         Args:
-            snipers_data: Данные о снайперах. По умолчанию None.
-            top_traders_data: Данные о топовых кошельках. По умолчанию None.
-            holders_data: Данные о держателях токенов. По умолчанию None.
+            top_traders_data: Data about top wallets. Defaults to None.
+            holders_data: Token holder data. Defaults to None.
 
         Returns:
-            ID настроек, которым соответствует токен, или None если не соответствует 
-            ни одной из настроек.
-
+            ID of the first matching settings profile, or None if no matches found.
         """
         token_data = get_pairs_data(self.pair)[0]
 
@@ -75,8 +73,6 @@ class TokenChecker:
 
                     if data_type == "token_data":
                         check_data = token_data
-                    elif data_type == "snipers_data":
-                        check_data = snipers_data
                     else:
                         check_data = top_traders_data
 
@@ -91,66 +87,63 @@ class TokenChecker:
                     return settings_id
 
                 is_check = True
-        except Exception:
-            logger.exception("При проверке токена что-то пошло не так")
+        except Exception as e:
+            logger.exception(f"Token validation failed unexpectedly: {e}")
 
         return None
 
 
 class CheckSettings:
-    """Класс для работы с настройками выбора токенов."""
+    """Handles token selection criteria validation based on user settings."""
     
     def __init__(self, settings_id):
-        """Инициализирует экземпляр CheckSettings.
+        """Initializes the CheckSettings instance.
         
         Args:
-            settings_id: ID настроек из базы данных.
+            settings_id: Database ID of the settings profile.
         """
         self.settings = Settings.objects.get(id=settings_id)
         
     def get_check_functions(self) -> dict:
-        """Возвращает словарь с функциями проверки для разных типов данных токена.
+        """Returns validation functions for different token data types.
         
         Returns:
-            dict: Словарь с функциями проверки в формате:
+            Dictionary containing validation functions in format:
                 {
-                    "token_data": [список функций проверки],
-                    "snipers_data": [список функций проверки], 
-                    "top_traders_data": [список функций проверки]
+                    "token_data": [list of validation functions],
+                    "top_traders_data": [list of validation functions]
                 }
         """
         check_functions = {
             "token_data": self.get_check_token_data(),
-            "snipers_data": self.get_check_snipers_data(),
             "top_traders_data": self.get_check_top_traders_data()
         }
         
         return check_functions
 
     def get_check_token_data(self) -> list[dict]:
-        """Создаёт список функций проверки токена для данных, полученных через DEX Screener API.
+        """Generates validation functions for DEX Screener API token data.
         
-        Note:
-            Функции проверки проверяют следующие параметры:
-            - Цена
-            - Возраст
-            - Количество покупок/продаж за разные периоды
-            - Объем торгов
-            - Изменение цены
-            - Ликвидность
+        Validates the following parameters:
+            - Price
+            - Token age
+            - Buy/sell counts across timeframes
+            - Trading volume
+            - Price changes
+            - Liquidity
             - FDV
-            - Рыночная капитализация
-            - Boost
-            - Наличие соцсетей
+            - Market capitalization
+            - Boost status
+            - Social media presence
         
         Returns:
-            list: Список словарей с функциями проверки, каждый содержит:
-                - check_data: функция проверки условия
-                - get_data_value: функция получения значения из данных токена
-                - settings_value: значение из настроек для сравнения
+            List of validation dictionaries, each containing:
+                - check_data: Validation condition function
+                - get_data_value: Data extraction function
+                - settings_value: Threshold value from settings
         """
         check_token_data = [
-            # Цена токена: 
+            # Price
             {
                 "check_data": lambda data_value: data_value >= self.settings.price_min,
                 "get_data_value": lambda token_data: float(token_data["priceUsd"]),
@@ -162,7 +155,7 @@ class CheckSettings:
                 "settings_value": self.settings.price_max
             },
             
-            # Возраст токена:
+            # Token age
             {
                 "check_data": lambda data_value: data_value >= self.settings.token_age_min,
                 "get_data_value": lambda token_data: get_token_age(token_data["pairCreatedAt"]),
@@ -174,7 +167,7 @@ class CheckSettings:
                 "settings_value": self.settings.token_age_max
             },
             
-            # Количество покупок и продаж:
+            # Transaction count
             {
                 "check_data": lambda data_value: data_value >= self.settings.buys_m5_min,
                 "get_data_value": lambda token_data: token_data["txns"]["m5"]["buys"],
@@ -256,7 +249,7 @@ class CheckSettings:
                 "settings_value": self.settings.sells_h24_max
             },
             
-            # Объём:
+            # Volume
             {
                 "check_data": lambda data_value: data_value >= self.settings.volume_m5_min,
                 "get_data_value": lambda token_data: token_data["volume"]["m5"],
@@ -298,7 +291,7 @@ class CheckSettings:
                 "settings_value": self.settings.volume_h24_max
             },
             
-            # Изменение цены:
+            # Price change
             {
                 "check_data": lambda data_value: data_value >= self.settings.price_change_m5_min,
                 "get_data_value": lambda token_data: token_data["priceChange"]["m5"],
@@ -340,7 +333,7 @@ class CheckSettings:
                 "settings_value": self.settings.price_change_h24_max
             },
             
-            # Ликвидность:
+            # Liquidity
             {
                 "check_data": lambda data_value: data_value >= self.settings.liquidity_min,               
                 "get_data_value": lambda token_data: token_data["liquidity"]["usd"],
@@ -352,7 +345,7 @@ class CheckSettings:
                 "settings_value": self.settings.liquidity_max
             },
             
-            # FDV:
+            # FDV
             {
                 "check_data": lambda data_value: data_value >= self.settings.fdv_min,                
                 "get_data_value": lambda token_data: token_data["fdv"],
@@ -364,7 +357,7 @@ class CheckSettings:
                 "settings_value": self.settings.fdv_max
             },
             
-            # Рыночная капитализация:
+            # Market capitalization
             {
                 "check_data": lambda data_value: data_value >= self.settings.market_cap_min,                
                 "get_data_value": lambda token_data: token_data["marketCap"],
@@ -376,7 +369,7 @@ class CheckSettings:
                 "settings_value": self.settings.market_cap_max
             },
             
-            # Boost:
+            # Boost
             {
                 "check_data": lambda data_value: data_value >= self.settings.boost_min,                
                 "get_data_value": lambda token_data: token_data["boosts"].get("active"),
@@ -388,7 +381,7 @@ class CheckSettings:
                 "settings_value": self.settings.boost_max
             },
             
-            # Социальные сети:
+            # Social media
             {
                 "check_data": lambda social_data: any(social_data.values()),                
                 "get_data_value": get_social_data,
@@ -414,135 +407,23 @@ class CheckSettings:
 
         return self.get_check_data(check_token_data)
 
-    def get_check_snipers_data(self) -> list[dict]:
-        """Создаёт список функций проверки транзакций снайперов токена.
-        
-        Note:
-            Функции проверки проверяют следующие параметры:
-            - Количество токенов у снайперов
-            - Сумма покупок снайперов
-            - Сумма продаж снайперов
-            - Количество отрицательных PNL у снайперов
-            - Снайперы без продажи или без покупки
-        
-        Returns:
-            list: Список словарей с функциями проверки, каждый содержит:
-                - check_data: функция проверки условия
-                - get_data_value: функция получения значения из данных токена
-                - settings_value: значение из настроек для сравнения
-        """
-        check_snipers_data = [
-            # Количество токенов у снайперов:
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_held_all_min,
-                "get_data_value": lambda snipers_data: snipers_data["held_all"],
-                "settings_value": self.settings.sns_held_all_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_held_all_max,
-                "get_data_value": lambda snipers_data: snipers_data["held_all"],
-                "settings_value": self.settings.sns_held_all_max
-            },
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_sold_some_min,
-                "get_data_value": lambda snipers_data: snipers_data["sold_some"],
-                "settings_value": self.settings.sns_sold_some_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_sold_some_max,
-                "get_data_value": lambda snipers_data: snipers_data["sold_some"],
-                "settings_value": self.settings.sns_sold_some_max
-            },
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_sold_all_min,
-                "get_data_value": lambda snipers_data: snipers_data["sold_all"],
-                "settings_value": self.settings.sns_sold_all_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_sold_all_max,
-                "get_data_value": lambda snipers_data: snipers_data["sold_all"],
-                "settings_value": self.settings.sns_sold_all_max
-            },
-
-            # Сумма покупок снайперов:
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_bought_sum_min,
-                "get_data_value": lambda snipers_data: get_sum_of_operation(snipers_data["bought"]),
-                "settings_value": self.settings.sns_bought_sum_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_bought_sum_max,
-                "get_data_value": lambda snipers_data: get_sum_of_operation(snipers_data["bought"]),
-                "settings_value": self.settings.sns_bought_sum_max
-            },
-
-            # Сумма продаж снайперов:
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_sold_sum_min,
-                "get_data_value": lambda snipers_data: get_sum_of_operation(snipers_data["sold"]),
-                "settings_value": self.settings.sns_sold_sum_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_sold_sum_max,
-                "get_data_value": lambda snipers_data: get_sum_of_operation(snipers_data["sold"]),
-                "settings_value": self.settings.sns_sold_sum_max
-            },
-
-            # Количество отрицательных PNL у снайперов:
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_pnl_loss_min,
-                "get_data_value": lambda snipers_data: count_pnl_loss(snipers_data["bought"], snipers_data["sold"]),
-                "settings_value": self.settings.sns_pnl_loss_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_pnl_loss_max,
-                "get_data_value": lambda snipers_data: count_pnl_loss(snipers_data["bought"], snipers_data["sold"]),
-                "settings_value": self.settings.sns_pnl_loss_max
-            },
-
-            # Снайперы без продажи или без покупки:
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_no_bought_min,
-                "get_data_value": lambda snipers_data: count_no_operation(snipers_data["bought"]),
-                "settings_value": self.settings.sns_no_bought_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_no_bought_max,
-                "get_data_value": lambda snipers_data: count_no_operation(snipers_data["bought"]),
-                "settings_value": self.settings.sns_no_bought_max
-            },
-            {
-                "check_data": lambda data_value: data_value >= self.settings.sns_no_sold_min,
-                "get_data_value": lambda snipers_data: count_no_operation(snipers_data["sold"]),
-                "settings_value": self.settings.sns_no_sold_min
-            },
-            {
-                "check_data": lambda data_value: data_value <= self.settings.sns_no_sold_max,
-                "get_data_value": lambda snipers_data: count_no_operation(snipers_data["sold"]),
-                "settings_value": self.settings.sns_no_sold_max
-            },
-        ]
-
-        return self.get_check_data(check_snipers_data)
-
     def get_check_top_traders_data(self) -> list[dict]:
-        """Создаёт список функций проверки транзакций топовых кошельков токена.
+        """Generates validation functions for top traders' transaction data.
         
-        Note:
-            Функции проверки проверяют следующие параметры:
-            - Сумма покупок топов
-            - Сумма продаж топов
-            - Количество отрицательных PNL у топов
-            - Топы без продажи или без покупки
+        Validates:
+            - Top traders' buy amounts
+            - Top traders' sell amounts
+            - Negative PNL counts
+            - Inactive top traders
         
         Returns:
-            list: Список словарей с функциями проверки, каждый содержит:
-                - check_data: функция проверки условия
-                - get_data_value: функция получения значения из данных токена
-                - settings_value: значение из настроек для сравнения
+            List of validation dictionaries, each containing:
+                - check_data: Validation condition function
+                - get_data_value: Data extraction function
+                - settings_value: Threshold value from settings
         """
         check_top_traders_data = [
-            # Сумма покупок топов:
+            # Top traders buy amounts
             {
                 "check_data": lambda data_value: data_value >= self.settings.tt_bought_sum_min,
                 "get_data_value": lambda top_traders_data: get_sum_of_operation(top_traders_data["bought"]),
@@ -554,7 +435,7 @@ class CheckSettings:
                 "settings_value": self.settings.tt_bought_sum_max
             },
             
-            # Сумма продаж топов:
+            # Top traders sell amounts
             {
                 "check_data": lambda data_value: data_value >= self.settings.tt_sold_sum_min,
                 "get_data_value": lambda top_traders_data: get_sum_of_operation(top_traders_data["sold"]),
@@ -566,7 +447,7 @@ class CheckSettings:
                 "settings_value": self.settings.tt_sold_sum_max
             },
 
-            # Количество отрицательных PNL у топов:
+            # Negative PNL counts
             {
                 "check_data": lambda data_value: data_value >= self.settings.tt_pnl_loss_min,
                 "get_data_value": lambda top_traders_data: count_pnl_loss(top_traders_data["bought"], top_traders_data["sold"]),
@@ -578,7 +459,7 @@ class CheckSettings:
                 "settings_value": self.settings.tt_pnl_loss_max
             },
 
-            # Топы без продажи или без покупки:
+            # Inactive top traders
             {
                 "check_data": lambda data_value: data_value >= self.settings.tt_no_bought_min,
                 "get_data_value": lambda top_traders_data: count_no_operation(top_traders_data["bought"]),
@@ -605,14 +486,13 @@ class CheckSettings:
 
 
     def get_check_data(self, check_settings: list) -> list:
-        """Создаёт список функций проверки, которые соответствуют параметрам, установленным 
-        в настройках.
+        """Filters validation rules to only include active settings.
         
         Args:
-            check_settings: Список из всех доступных функций проверки.
+            check_settings: List of possible validations
             
         Returns:
-            Список из функций проверки, соответствующих текущим настройкам.
+            List of validations with non-None settings values
         """
         check_functions = []
         for check in check_settings:

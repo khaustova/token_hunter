@@ -3,17 +3,17 @@ from token_hunter.models import Transaction
 
 
 class TransactionSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Transaction.
+    """Serializer for the Transaction model.
     
-    Используется для преобразования объектов Transaction в JSON-формат и обратно при работе с API.
+    Handles conversion between Transaction objects and JSON format for API operations.
     """
     class Meta:
-        """Мета-класс для настройки сериализатора.
+        """Meta class for serializer configuration.
         
         Attributes:
-            model: Модель Django, которая сериализуется (Transaction)
-            fields: Поля модели, которые включены в сериализацию (`PNL` и `mode`)
-            depth: Глубина вложенности связанных объектов (1 уровень)
+            model: Django model being serialized (Transaction).
+            fields: Model fields included in serialization (PNL, mode, closing_date).
+            depth: Nesting depth for related objects (1 level).
         """
         model = Transaction
         fields = ("PNL", "mode", "closing_date")

@@ -1,15 +1,15 @@
 import logging
 import time
+from core.celery import app
 from django.db import OperationalError
 from django.utils import timezone
-from core.celery import app
 from token_hunter.src.utils.tokens_data import get_pairs_data, get_token_age, get_social_data
 from token_hunter.src.utils.preprocessing_data import get_pnl
 from token_hunter.models import Transaction, Status, Settings, Mode, MonitoringRule, TopTrader
 
 logger = logging.getLogger(__name__)
 
-TOKENS_DATA = {}
+TOKENS_DATA = {}  # Global dictionary to track token performance milestones
 
 
 @app.task(
@@ -19,25 +19,30 @@ TOKENS_DATA = {}
     max_retries=5
 )
 def track_tokens_task(self, take_profit: float, stop_loss: float) -> str:
-    """Задача отслеживания стоимости купленных токенов и выполнения продажи токена
-    при достижении заданных условий.
-
-    Когда разница между текущей стоимостью и стоимостью покупки превышает значение `take_profit`
-    или опускается ниже значения `stop_loss`, происходит продажа токена.
+    """Celery task for monitoring purchased tokens and executing sales when thresholds are met.
+    
+    Continuously checks token prices against buy prices and triggers sales when:
+    - Profit exceeds take_profit percentage.
+    - Loss exceeds stop_loss percentage.
 
     Args:
-        take_profit: Порог прибыли для продажи токена (в процентах).
-        stop_loss: Порог убытка для продажи токена (в процентах).
+        take_profit: Profit threshold percentage for selling.
+        stop_loss: Loss threshold percentage for selling.
 
     Returns:
-        Сообщение о завершении задачи.
+        Completion status message
+
+    Notes:
+        - Tracks PNL milestones (10%, 20%, etc.).
+        - Updates transaction records with sale details.
+        - Handles database connection issues with retries.
     """
     while True:
         try:
             open_transactions = Transaction.objects.filter(status=Status.OPEN)
-        except Exception:
+        except Exception as e:
             time.sleep(1)
-            logger.error("Ошибка обращения к базе данных")
+            logger.error("Database connection error: {e}")
             continue
 
         if open_transactions:
@@ -95,7 +100,7 @@ def track_tokens_task(self, take_profit: float, stop_loss: float) -> str:
 
                     del TOKENS_DATA[pair]
                     
-                    logger.info(f"Продажа токена {token_address} за {current_price} USD") 
+                    logger.info(f"Sold token {token_address} at {current_price} USD") 
         
         time.sleep(1)
 
@@ -111,7 +116,6 @@ def buy_token_task(
     pair: str,
     mode: Mode,
     monitoring_rule: MonitoringRule,
-    snipers_data: dict | None=None,
     top_traders_data: dict | None=None,
     holders_data: dict | None=None,
     twitter_data: dict | None=None,
@@ -122,33 +126,39 @@ def buy_token_task(
     trade_history_data: dict | None=None,
     boosts_ages: str | None=None
 ) -> None:
-    """Задача эмулирования покупки токена и сохранения информации о нём в базу данных.
-
+    """Celery task for emulating token purchases and saving transaction records.
+    
     Args:
-        pair: Адрес пары токенов.
-        mode: Режим покупки.
-        snipers_data: Данные о транзакциях снайперов. По умолчанию None.
-        top_traders_data: Данные о транзакциях топовых кошельков. По умолчанию None.
-        holders_data: Данные о держателях токенов. По умолчанию None.
-        twitter_data: Данные об активности в Twitter (X). По умолчанию None.
-        telegram_data: Данные об активности в Telegram. По умолчанию None.
-        settings_id: ID объекта настроек, в соответствии с которым покупается токен. По умолчанию None.
-        dextscore: Оценка токена на Dextools. По умолчанию None.
-        is_mutable_metadata: Флаг, указывающий, изменяемы ли метаданные токена. По умолчанию False.
-        trade_history_data: Данные о последних транзакциях. По умолчанию None.
-        boosts_ages: Все возраста токена на момент буста. По умолчанию None.
+        pair: Token pair address.
+        mode: Trading mode (real/simulation/data collection).
+        monitoring_rule: Rule that triggered this purchase.
+        top_traders_data: Top wallet transaction data.
+        holders_data: Token holder distribution data.
+        twitter_data: Twitter/X activity metrics.
+        telegram_data: Telegram channel metrics.
+        settings_id: ID of settings profile used.
+        dextscore: Dextools rating score.
+        is_mutable_metadata: Token metadata mutability flag.
+        trade_history_data: Recent transaction history.
+        boosts_ages: Token age timestamps during boosts.
+
+    Notes:
+        - Creates comprehensive transaction record.
+        - Handles all associated token metrics.
+        - Supports both real and simulated trading.
     """
-    logger.debug("Запущена задача эмуляции покупки монеты")
+    logger.debug("Starting token purchase simulation")
 
     token_data = get_pairs_data(pair)[0]
     token_age = get_token_age(token_data["pairCreatedAt"])
     social_data = get_social_data(token_data)
 
+    # Validate required price data exists
     if not token_data.get("priceChange", {}).get("m5"):
-        logger.debug("Нет данных об изменении цены за 5 минут")
+        logger.debug(f"Token data not found for pair: {pair}")
         return
 
-    transaction, created = Transaction.objects.get_or_create(
+    transaction, _ = Transaction.objects.get_or_create(
         pair=token_data["pairAddress"],
         token_name=token_data["baseToken"]["name"],
         token_address=token_data["baseToken"]["address"],
@@ -182,14 +192,6 @@ def buy_token_task(
         mode=mode,
         monitoring_rule=monitoring_rule
     )
-
-    if snipers_data:
-        transaction.sns_held_all = snipers_data.get("held_all")
-        transaction.sns_sold_some = snipers_data.get("sold_some")
-        transaction.sns_sold_all = snipers_data.get("sold_all")
-        transaction.sns_bought = snipers_data.get("bought")
-        transaction.sns_sold = snipers_data.get("sold")
-        transaction.sns_unrealized = snipers_data.get("unrealized")
 
     if top_traders_data:
         transaction.tt_bought = top_traders_data.get("bought")
@@ -232,7 +234,7 @@ def buy_token_task(
 
     transaction.save()
 
-    logger.info(f"Эмуляция покупки токена {token_data["baseToken"]["name"]} за {token_data["priceUsd"]} USD") 
+    logger.info(f"Simulated purchase: {token_data["baseToken"]["name"]} at {token_data["priceUsd"]} USD") 
 
 
 @app.task(
@@ -247,13 +249,16 @@ def save_top_traders_data_task(
     token_address: str,
     top_traders_data: dict,
 ) -> None:
-    """Задача сохранения информации о топовых кошельках токена в базу данных.
-
+    """Celery task for saving top trader wallet data to database.
+    
     Args:
-        pair: Адрес пары токенов.
-        token_name: Название токена.
-        token_address: Адрес токена.
-        top_traders_data: Данные о транзакциях топовых кошельков.
+        pair: Token pair address.
+        token_name: Token name.
+        token_address: Token contract address.
+        top_traders_data: Dictionary containing:
+            - bought: Space-separated buy amounts.
+            - sold: Space-separated sell amounts.
+            - makers: Space-separated wallet addresses.
     """
     pnl_lst = get_pnl(top_traders_data["bought"], top_traders_data["sold"])
     top_traders_data["bought"] = [float(x) for x in top_traders_data["bought"].split(" ")]

@@ -3,36 +3,36 @@ from redis import Redis
 redis = Redis(db=1)
 
 
-def get_redis_set(name: str) -> set:
-    """Возвращает все элементы множества из Redis, декодирует их из байтов в строки
-    и возвращает как множество Python.
+def get_redis_set(name: str) -> set[str]:
+    """Retrieves all elements from a Redis set, decodes them from bytes to strings,
+    and returns as a Python set.
 
     Args:
-        name: Ключ Redis, по которому хранится множество.
+        name: Redis key where the set is stored.
 
     Returns:
-        Множество строк. Если ключ не существует, возвращает пустое множество.
+        Set of strings. Returns empty set if the key doesn't exist.
     """
     return {item.decode() for item in redis.smembers(name)}
 
 
 def add_to_redis_set(name: str, item: str) -> None:
-    """Добавляет элемент в множество Redis по указанному ключу.
+    """Adds an element to a Redis set under the specified key.
 
     Args:
-        name: Ключ Redis, по которому хранится множество.
-        item: Элемент для добавления в множество. 
-            Будет автоматически преобразован в строку перед сохранением.
+        name: Redis key where the set is stored.
+        item: Element to add to the set. 
+              Will be automatically converted to string before storing.
     """
     redis.sadd(name, str(item))
 
 
 def remove_from_redis_set(name: str, item: str) -> None:
-    """Удаляет элемент из множества Redis по указанному ключу.
+    """Removes an element from a Redis set under the specified key.
 
     Args:
-        name: Ключ Redis, по которому хранится множество.
-        item: Элемент для удаления из множества. 
-            Будет автоматически преобразован в строку перед удалением.
+        name: Redis key where the set is stored.
+        item: Element to remove from the set.
+              Will be automatically converted to string before removal.
     """
     redis.srem(name, str(item))

@@ -8,17 +8,17 @@ from solders.keypair import Keypair
 
 
 def sign_message(wallet: Keypair, message: str) -> dict:
-    """Подписывает сообщение с использованием кошелька Solana.
+    """Signs a message using a Solana wallet.
 
     Args:
-        wallet: Объект кошелька Solana для подписи сообщения.
-        message: Сообщение для подписи в виде строки.
+        wallet: Solana Keypair instance for message signing.
+        message: Message string to be signed.
 
     Returns:
-        dict: Словарь с подписью в формате:
+        dict: Signature dictionary in the format:
             {
-                "data": list[int],  # подпись в виде массива байт
-                "type": "ed25519"   # тип подписи
+                "data": list[int],  # signature as byte array
+                "type": "ed25519"   # signature algorithm type
             }
     """
     message_bytes = message.encode("utf-8")
@@ -33,13 +33,13 @@ def sign_message(wallet: Keypair, message: str) -> dict:
 
 
 def login_to_rugcheck(wallet: Keypair) -> None:
-    """Выполняет авторизацию в RugCheck API с использованием кошелька Solana.
+    """Authenticates with RugCheck API using Solana wallet.
 
     Args:
-        wallet: Объект кошелька Solana для авторизации.
+        wallet: Solana Keypair instance for authentication.
 
     Raises:
-        Exception: Если произошла ошибка при выполнении запроса к RugCheck API.
+        Exception: If there's an error making the request to RugCheck API.
     """
     message_data = {
         "message": "Sign-in to Rugcheck.xyz",
@@ -73,9 +73,9 @@ def login_to_rugcheck(wallet: Keypair) -> None:
 
 
 class Command(BaseCommand):
-    """Django management command для авторизации в RugCheck API"""
+    """Django management command for RugCheck API authentication."""
 
-    help = "Выполняет авторизацию в RugCheck API"
+    help = "Authenticates with RugCheck API using Solana wallet"
 
     def handle(self, *args, **kwargs) -> None:
         wallet = Keypair.from_base58_string(settings.SOLANA_PRIVATE_KEY)

@@ -6,17 +6,16 @@ from .models import TopTrader
 
 @receiver(pre_save, sender=TopTrader)
 def update_all_transaction_counts(sender, instance, **kwargs):
-    """Сигнальный обработчик для обновления счетчика количества транзакций всех топовых кошельков 
-    с одинаковым wallet_address.
+    """Signal handler for updating transaction count for all top wallets with matching wallet_address.
     
     Note:
-        - Временно отключает сигнал во время обновления, чтобы избежать бесконечной рекурсии
-        - Обновляет все записи с данным wallet_address, а не только текущую
+        - Temporarily disconnects the signal during update to prevent infinite recursion.
+        - Updates all records with the given wallet_address, not just the current instance.
 
     Args:
-        instance: Экземпляр модели TopTrader, который сохраняется
-        sender: Модель, отправившая сигнал (TopTrader)
-        **kwargs: Дополнительные аргументы сигнала
+        instance: TopTrader model instance being saved.
+        sender: Model sending the signal (TopTrader).
+        **kwargs: Additional signal arguments.
     """
     wallet_address = instance.wallet_address
 

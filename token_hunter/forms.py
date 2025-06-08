@@ -5,27 +5,27 @@ from token_hunter.models import Settings, MonitoringRule
 
 class SettingsSelect2TagWidget(ModelSelect2TagWidget):
     """
-    Кастомный виджет Select2 для множественного выбора настроек.
+    Custom Select2 widget for multiple settings selection.
 
-    Наследуется от ModelSelect2TagWidget и добавляет функциональность:
-    - Автоматическое создание новых настроек при вводе несуществующих значений
-    - Фильтрацию существующих настроек
+    Inherits from ModelSelect2TagWidget and adds functionality for:
+    - Automatic creation of new settings when non-existing values are entered.
+    - Filtering of existing settings.
 
     Attributes:
-        queryset: Набор всех объектов Settings для выбора
+        queryset: QuerySet of all Settings objects available for selection.
     """
     queryset = Settings.objects.all()
 
     def value_from_datadict(self, data: dict, files: dict, name: str) -> list:
-        """Обрабатывает данные из формы.
+        """Processes form data.
 
         Args:
-            data: Данные из POST-запроса
-            files: Файлы из запроса (не используются)
-            name: Имя поля формы
+            data: POST request data.
+            files: Uploaded files (unused).
+            name: Form field name.
 
         Returns:
-            Список ID выбранных настроек
+            List of IDs of selected settings.
         """
         values = set(super().value_from_datadict(data, files, name))
         pks = self.queryset.filter(**{"pk__in": list(values)}).values_list("pk", flat=True)
@@ -39,22 +39,21 @@ class SettingsSelect2TagWidget(ModelSelect2TagWidget):
 
 
 class SettingsForm(forms.Form):
-    """Форма для настройки параметров мониторинга и парсинга DEX Screener.
+    """Form for configuring DEX Screener monitoring and parsing parameters.
 
     Fields:
-        filter (CharField): Поле для ввода фильтра токенов.
-        monitoring_rule (ChoiceField): Выбор режима мониторинга.
-        settings (ModelMultipleChoiceField): Множественный выбор настроек.
-        take_profit (FloatField): Значение тейк-профита.
-        stop_loss (FloatField): Значение стоп-лосса.
-        source (ChoiceField): Выбор источника данных.
-        bot (ChoiceField): Выбор бота для покупи.
+        filter (CharField): Token filter input field.
+        monitoring_rule (ChoiceField): Monitoring mode selection.
+        settings (ModelMultipleChoiceField): Multiple settings selection.
+        take_profit (FloatField): Take profit value.
+        stop_loss (FloatField): Stop loss value.
+        source (ChoiceField): Data source selection.
+        bot (ChoiceField): Trading bot selection.
 
     Constants:
-        CHOICES_BOTS: Варианты выбора ботов
-        CHOICES_SOURCE: Варианты источников данных
+        CHOICES_BOTS: Available bot choices
+        CHOICES_SOURCE: Available data source choices
     """
-
     CHOICES_BOTS = [
         ("maestro", "Maestro Sniper Bot"),
     ]
@@ -65,25 +64,25 @@ class SettingsForm(forms.Form):
 
     boosts_min = forms.IntegerField(
         initial=100,
-        label="Введите минимальный буст"
+        label="Enter minimum boost value"
     )
     boosts_max = forms.IntegerField(
         initial=500,
-        label="Введите максимальный буст"
+        label="Enter maximum boost value"
     )
     filter = forms.CharField(
         required=False,
         initial="?rankBy=trendingScoreH6&order=desc&minLiq=1000&maxAge=1",
         widget=forms.TextInput(
             attrs={
-                "default": "Введите фильтр", 
+                "default": "Enter filter expression", 
             }
         ),
-        label="Введите выражение с фильтром для токенов:",
+        label="Token filter expression",
     )
     monitoring_rule = forms.ChoiceField(
         choices=MonitoringRule,
-        label="Выберите режим"
+        label="Monitoring mode"
     )
     settings = forms.ModelMultipleChoiceField(
         widget=SettingsSelect2TagWidget(
@@ -95,15 +94,15 @@ class SettingsForm(forms.Form):
         ),
         queryset=Settings.objects.all(),
         required=False, 
-        label="Выберите настройки для покупки токенов",
+        label="Token purchase settings",
         initial=1)
     take_profit = forms.FloatField(
         initial=60,
-        label="Введите значение тейк-профита"
+        label="Take profit value (%)"
     )
     stop_loss = forms.FloatField(
         initial=-20,
-        label="Введите значение стоп-лосса"
+        label="Stop loss value (%)"
     )
     source = forms.ChoiceField(
         widget=forms.RadioSelect,

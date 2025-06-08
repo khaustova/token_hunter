@@ -4,8 +4,13 @@
 
 {% block breadcrumbs %}
 <div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">Главная</a>
-&nbsp;&#47;&nbsp;Сводная таблица топовых кошельков
+<a href="{% url 'admin:index' %}">
+  <span class="material-symbols-outlined breadcrumbs-icon">
+    home
+  </span>
+</a>
+&nbsp;&#47;&nbsp;<a href="{% url 'admin:token_hunter_toptrader_changelist' %}">Top Wallets</a>
+&nbsp;&#47;&nbsp;Pivot Table of Top Wallets
 </div>
 {% endblock %}
 
@@ -13,19 +18,22 @@
   <div id="content-main">
     <div class="content-card">
       <div class="results">
+        <h4 class="content-card__title">Pivot Table of Top Wallets</h4>
         <table id="result_list" class="table">
           <thead>
             <tr>
-              <th>Адрес кошелька</th>
-              <th>Успешные сделки</th>
-              <th>Общий PNL, %</th>
-              <th>Ссылки</th>
+              <th>Wallet Address</th>
+              <th>Last Updated Date</th>
+              <th>Transaction Count</th>
+              <th>Total PNL, %</th>
+              <th>Links</th>
             </tr>
           </thead>
           <tbody>
             {% for wallet in page_obj %}
               <tr class="{% cycle 'row1' 'row2' %}">
                 <td>{{ wallet.wallet_address }}</td>
+                <td>{{ wallet.latest_date }}</td>
                 <td>{{ wallet.total }}</td>
                 <td>{{ wallet.total_pnl }}</td>
                 {% get_wallet_links wallet.wallet_address as wallet_link %}
@@ -41,15 +49,15 @@
       <div class="pagination">
         <span class="step-links">
           {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; первая</a>
-            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">prev</a>
           {% endif %}
           <span class="current">
-            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
           </span>
           {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
           {% endif %}
         </span>
       </div>

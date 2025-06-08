@@ -8,15 +8,18 @@ from telethon.errors import SessionPasswordNeededError
 
      
 async def telegram_authorize():
-    """
-    Авторизация в Телеграме через ввод кода для входа.
-    """
+    """Authorizes Telegram client by entering login code.
     
-    app, is_created = App.objects.update_or_create(
+    Handles the complete authorization flow including:
+    - Creating/updating app credentials in database.
+    - Managing client sessions.
+    - Processing login code or password when required.
+    """
+    app, _ = App.objects.update_or_create(
     api_id=settings.TELETHON_API_ID,
     api_hash=settings.TELETHON_API_HASH
     )
-    cs, cs_is_created = ClientSession.objects.update_or_create(
+    cs, _ = ClientSession.objects.update_or_create(
         name="default",
     )
     telegram_client = TelegramClient(DjangoSession(client_session=cs), app.api_id, app.api_hash)
@@ -25,16 +28,18 @@ async def telegram_authorize():
     if not await telegram_client.is_user_authorized():
         phone = settings.TELEGRAM_PHONE_NUMBER
         await telegram_client.send_code_request(phone)
-        code = input("Введите код для входа: ")
+        code = input("Enter verification code: ")
         try:
             await telegram_client.sign_in(phone, code)
         except SessionPasswordNeededError:
-            password = input("Введите пароль: ")
+            password = input("Enter password: ")
             await telegram_client.sign_in(password=password)
   
           
 class Command(BaseCommand):
+    """Django management command for Telegram authentication."""
+    
     def handle(self, *args, **kwargs):
-        help = "Авторизация в Телеграме для отправления адресов контрактов боту Maestro."
+        help = "Telegram authorization for sending contract addresses to Maestro bot."
         
         asyncio.run(telegram_authorize())

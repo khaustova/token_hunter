@@ -187,12 +187,12 @@
         padding: 0 5px 0 5px;
     }
 
-    aside {
+    /* aside {
         left: -250px;
         height: 100%;
         width: 250px;
         position: fixed;
-    }
+    } */
 
     main {
         width: 100%;

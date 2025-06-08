@@ -9,8 +9,7 @@
 <script src="{% static 'django_select2/django_select2.js' %}"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
 <script src="{% static "dashboard/js/transaction_chart.js" %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script> 
-
+<script src="{% static "vendor/chart.js/js/chart.js" %}"></script> 
 <link rel="stylesheet" href="{% static "dashboard/css/spoiler.css" %}">
 <script src="{% static "dashboard/js/spoiler.js" %}"></script>
 {% endblock %}
@@ -29,22 +28,22 @@
         <form class="parsing__form" action="{% url 'token_hunter:monitor_dexscreener' %}" method="POST">
           {% csrf_token %}
           <div class="settings_wrapper">
-            <label for="id_monitoring_rule">Выберите режим:</label>
+            <label for="id_monitoring_rule">Select monitoring rule:</label>
             {{ settings_form.monitoring_rule }}
 
-            <label for="id_settings">Выберите настройки для покупки токенов:</label>
+            <label for="id_settings">Configure token purchase settings:</label>
             {{ settings_form.settings }}
 
           <div class="spoiler spoiler-filter">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Настройки буста и фильтра</div>
+            Boost & Filter Settings</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-boosts_min">
                   <div>
                     <div class="flex-container">
-                      <label for="id_boosts_min">Введите минимальный буст:</label>
+                      <label for="id_boosts_min">Enter minimum boost:</label>
                       {{ settings_form.boosts_min }}
                     </div>
                   </div>
@@ -52,7 +51,7 @@
                 <div class="form-row field-boosts_max">
                   <div>
                     <div class="flex-container">
-                      <label for="id_boosts_max">Введите максимальный буст:</label>
+                      <label for="id_boosts_max">Enter maximum boost:</label>
                       {{ settings_form.boosts_max }}
                     </div>
                   </div>
@@ -60,7 +59,7 @@
                 <div class="form-row field-filter">
                   <div>
                     <div class="flex-container">
-                      <label for="id_filter">Введите выражение с фильтром для токенов:</label>
+                      <label for="id_filter">Enter token filter expression:</label>
                       {{ settings_form.filter }}
                     </div>
                   </div>
@@ -72,13 +71,13 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Настройки стоп-лосса и тейк-профита</div>
+            Stop-Loss & Take-Profit Settings</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-take_profit">
                   <div>
                     <div class="flex-container">
-                      <label for="id_take_profit">Введите значение тейк-профита:</label>
+                      <label for="id_take_profit">Enter take-profit value:</label>
                       {{ settings_form.take_profit }}
                     </div>
                   </div>
@@ -86,7 +85,7 @@
                 <div class="form-row field-stop_loss">
                   <div>
                     <div class="flex-container">
-                      <label for="id_stop_loss">Введите значение стоп-лосса:</label>
+                      <label for="id_stop_loss">Enter stop-loss value:</label>
                       {{ settings_form.stop_loss }}
                     </div>
                   </div>
@@ -98,7 +97,7 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Выбор DEX биржи</div>
+            DEX Data Source</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-take_profit">
@@ -113,7 +112,7 @@
           <div class="spoiler">
             <div class="spoiler-title">
             <div class="show-icon spoiler-toggle">&nbsp;</div>
-            Выбор бота</div>
+            Bot Selection</div>
             <div class="spoiler-content" style="display:none">
               <div class="settings-form_parameters">
                 <div class="form-row field-take_profit">
@@ -127,42 +126,43 @@
           </div>
             
           <div class="parsing-buttons_wrapper">
-              <button class="watcher__button" type="submit" name="_monitoring">Мониторинг 👀</button>
-              <button class="watcher__button" type="submit" name="_parsing">Обновить топ кошельков 📈</button>
-
+            <div class="parsing-buttons">
+              <button class="watcher__button" type="submit" name="_monitoring">Monitoring Tokens 📈</button>
+              <button class="watcher__button" type="submit" name="_parsing">Parsing Top Traders 👛</button>
+            </div>
             {% get_celery_tasks_id as celery_tasks_id %}
             <p>
-              <b>Отслеживание стоимости токенов:</b>
+              <b>Token price tracking:</b>
               {% if celery_tasks_id.track_tokens_task_id %} 
-              ✅ (<a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=celery_tasks_id.track_tokens_task_id.0 %}">Остановить</a>)
-              {% else %} ❌ (<button class="track_tokens__button" type="submit" name="_track_tokens">Запустить</button>)
+              ✅ / <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=celery_tasks_id.track_tokens_task_id.0 %}">Stop</a>
+              {% else %} ❌ / <button class="track_tokens__button" type="submit" name="_track_tokens">Start</button>
               
               {% endif %}
             </p>
 
             {% if celery_tasks_id.boosted_task_id %}
-              <p class="loading"><b>Выполняется мониторинг забустенных токенов на DEX Screener</b></p>
+              <p class="loading"><b>Monitoring boosted tokens on DEX Screener</b></p>
               {% for boosted_id in celery_tasks_id.boosted_task_id %}
                 <p class="stop_task">
-                  <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=boosted_id %}">⛔ Остановить экземпляр {{ boosted_id|truncatechars:5 }}</a>
+                  <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=boosted_id %}">⛔ Stop instance {{ boosted_id|truncatechars:10 }}</a>
                 </p>
               {% endfor %}
             {% endif %}
 
             {% if celery_tasks_id.latest_task_id %}
-            <p class="loading"><b>Выполняется мониторинг недавно добавленных токенов на DEX Screener</b></p>
+            <p class="loading"><b>Monitoring recently added tokens on DEX Screener</b></p>
             {% for latest_task_id in celery_tasks_id.latest_task_id %}
               <p class="stop_task">
-                <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=latest_task_id %}">⛔ Остановить экземпляр {{ latest_task_id|truncatechars:5 }}</a>
+                <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=latest_task_id %}">⛔ Stop instance {{ latest_task_id|truncatechars:10 }}</a>
               </p>
             {% endfor %}
           {% endif %}
 
             {% if celery_tasks_id.filter_task_id %}
-            <p class="loading"><b>Выполняется мониторинг токенов по фильтру на DEX Screener </b></p>
+            <p class="loading"><b> Monitoring filtered tokens on DEX Screener</b></p>
             {% for filter_task_id in celery_tasks_id.filter_task_id %}
               <p class="stop_task">
-                <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=filter_task_id %}">⛔ Остановить экземпляр {{ filter_task_id|truncatechars:5 }}</a>
+                <a class="stop_task_link" href="{% url 'token_hunter:stop_task' task_id=filter_task_id %}">⛔ Stop instance {{ filter_task_id|truncatechars:10 }}</a>
               </p>
             {% endfor %}
           {% endif %}
@@ -183,18 +183,18 @@
       <div class="content-card">
         <table class="table">
           <caption>
-            <h4 class="table__title">{% get_top_traders %}</h4>
+            <h4 class="content-card__title">{% get_top_traders %}</h4>
           </caption>
           <tbody>
-            <th>Кошелёк</th>
-            <th>Успешные сделки</th>
+            <th>Wallet</th>
+            <th style="text-align: center;">Number of Trades</th>
             {% for trader in top_traders %}
               <tr>
                 <td>
                   {% get_wallet_links trader.wallet_address as wallet_link %}
                   <a href="{{ wallet_link.birdeye }}">{{ trader.wallet_address }}</a>
                 </td>
-                <td>
+                <td style="text-align: center;">
                   {{ trader.token_count }}
                 </td>
               </tr>
@@ -204,7 +204,7 @@
         <div class="paginator">
           <div class="table__pagination-pages">
             {% if top_traders.has_previous %}
-              <a href="?page={{ top_traders.previous_page_number }}">Назад</a>
+              <a href="?page={{ top_traders.previous_page_number }}">Prev</a>
               {% if top_traders.number > 3 %}
                 <a href="?page=1">1</a>
                 {% if top_traders.number > 4 %}
@@ -221,7 +221,7 @@
             {% endfor %}
             {% if top_traders.has_next %}
               {% if top_traders.number < top_traders.paginator.num_pages|add:'-3' %}
-                <a >...</a>
+                ...
                 <a href="?page={{ top_traders.paginator.num_pages }}">
                   {{ top_traders.paginator.num_pages }}
                 </a>
@@ -230,7 +230,7 @@
                   {{ top_traders.paginator.num_pages }}
                 </a>
               {% endif %}
-              <a href="?page={{ top_traders.next_page_number }}">Далее</a>
+              <a href="?page={{ top_traders.next_page_number }}">Next</a>
             {% endif %}
           </div>
         </div>
@@ -241,17 +241,17 @@
     <div class="content-other">
 
       <div class="content-card">
-        <h4 class="content-card__title">Открытые позиции</h4>
+        <h4 class="content-card__title">Open Positions</h4>
           <div>
             {% get_open_transactions as open_transactions %}
             {% if open_transactions %}
             <table class="table">
               <tbody>
-                <th>Токен</th>
-                <th>Дата покупки</th>
-                <th>Тип</th>
-                <th>Режим</th>
-                <th>Текущий PNL</th>
+                <th>Token Name</th>
+                <th>Created Date</th>
+                <th>Type</th>
+                <th>Mode</th>
+                <th>Current PNL</th>
                 {% for pair, data in open_transactions.items %}
                   <tr>
                     <td>
@@ -261,13 +261,21 @@
                       {{ data.opening_date }}
                     </td>
                     <td>
-                      {{ data.monitoring_rule }}
+                      <span class="{% if data.monitoring_rule == "Boosted" %}mr_boosted
+                      {% elif data.monitoring_rule == "Latest" %}mr_latest
+                      {% else %}mr_filter{% endif %}">
+                      {{ data.monitoring_rule }}</span>
                     </td>
                     <td>
-                      {{ data.mode }}
+                      <span class="{% if data.mode == "Real Buy" %}mode_real-buy
+                      {% elif data.mode == "Simulation" %}mode_simulation
+                      {% else %}mode_data-collection{% endif %}">
+                      {{ data.mode }}</span>
                     </td>
                     <td>
-                      {{ data.current_pnl }} %
+                      <span class="{% if data.current_pnl >= 0 %}pnl-positive
+                      {% else %}pnl-negative{% endif %}">
+                      {% if data.current_pnl >= 0 %}+{% endif %}{{ data.current_pnl }} %</span>
                     </td>
                   </tr>
                 {% endfor %}
@@ -275,7 +283,7 @@
             </table>
 
             {% else %}
-             Открытых транзакций нет
+             No transactions.
             {% endif %}
           </div>
       </div>
@@ -283,23 +291,23 @@
       <div class="content-card">
         <div class="tabs views">
           <input class="pnl__input" id="pnlBuyTab" type="radio" name="pnl" checked> 
-          <label class="pnl__label" for="pnlBuyTab">Реальная покупка</label> 
-          <input class="pnl__input" id="pnlEmulationTab" type="radio" name="pnl"> 
-          <label class="pnl__label" for="pnlEmulationTab">Эмуляция</label> 
+          <label class="pnl__label" for="pnlBuyTab">Real Buy</label> 
+          <input class="pnl__input" id="pnlSimulationTab" type="radio" name="pnl"> 
+          <label class="pnl__label" for="pnlSimulationTab">Simulation</label> 
           <input class="pnl__input" id="pnlCollectionTab" type="radio" name="pnl"> 
-          <label class="pnl__label" for="pnlCollectionTab">Сбор данных</label>
+          <label class="pnl__label" for="pnlCollectionTab">Data Collection</label>
           <section class="pnl__section" id="pnlBuyContent"> 
-            <div class="pnl__pie">
+            <div class="pnl__chart">
               <canvas id="realBuyPNL"></canvas>
             </div>
           </section>   
-          <section class="pnl__section" id="pnlEmulationContent"> 
-            <div class="pnl__pie">
-              <canvas id="emulationPNL"></canvas>
+          <section class="pnl__section" id="pnlSimulationContent"> 
+            <div class="pnl__chart">
+              <canvas id="simulationPNL"></canvas>
             </div>
           </section>
           <section class="pnl__section" id="pnlCollectionContent"> 
-            <div class="pnl__pie">
+            <div class="pnl__chart">
               <canvas id="dataCollectionPNL"></canvas>
             </div>
           </section> 

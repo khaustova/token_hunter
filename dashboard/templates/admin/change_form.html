@@ -18,9 +18,6 @@
           home
         </span>
       </a>
-      &nbsp;&#47;&nbsp;<a href="{% url 'admin:app_list' app_label=opts.app_label %}">
-      {{ opts.app_config.verbose_name }}
-      </a>
       &nbsp;&#47;&nbsp; 
       {% if has_view_permission %}
         <a href="{% url opts|admin_urlname:'changelist' %}">

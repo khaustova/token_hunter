@@ -8,17 +8,17 @@ logger = logging.getLogger(__name__)
 
 
 async def scrape_rugcheck_with_nodriver(browser: Browser, token_address: str) -> dict:
-    """Проверяет токен по адресу на сайте rugcheck.xyz.
+    """Checks a token by its address on rugcheck.xyz website.
     
     Notes:
-        Использует уже открытый браузер для открытия сайта.
+        Uses an already opened browser instance to access the website.
 
     Args:
-        browser: Экземпляр браузера Chrome.
-        token_address: Адрес токена.
+        browser: Chrome browser instance.
+        token_address: Token contract address.
 
     Returns:
-        Словарь с результатами проверки токена.
+        Dictionary containing token verification results.
     """
     url = "https://rugcheck.xyz/tokens/" + token_address
     rugcheck_page = await browser.get(url, new_tab=True)
@@ -43,7 +43,7 @@ async def scrape_rugcheck_with_nodriver(browser: Browser, token_address: str) ->
         "is_mutable_metadata": is_mutable_metadata,
     }
 
-    logger.debug(f"Уровень риска токена {token_address}: {risk_level}")
+    logger.debug(f"Token {token_address} risk level: {risk_level}")
 
     await rugcheck_page.close()
 
@@ -51,16 +51,16 @@ async def scrape_rugcheck_with_nodriver(browser: Browser, token_address: str) ->
 
 
 def scrape_rugcheck_with_selenium(driver: WebDriver, token_address: str) -> dict:
-    """Проверяет токен по адресу на сайте rugcheck.xyz.
+    """Checks a token by its address on rugcheck.xyz website.
 
-    Использует уже созданный экземпляр веб-драйвера Selenium для открытия сайта.
+    Uses an existing Selenium WebDriver instance to access the website.
 
     Args:
-        driver: Экземпляр веб-драйвера.
-        token_address: Адрес токена.
+        driver: WebDriver instance.
+        token_address: Token contract address.
 
     Returns:
-        Словарь с результатами проверки токена.
+        Dictionary containing token verification results.
     """
     url = "https://rugcheck.xyz/tokens/" + token_address
     driver.get(url)
@@ -86,6 +86,6 @@ def scrape_rugcheck_with_selenium(driver: WebDriver, token_address: str) -> dict
         "is_mutable_metadata": is_mutable_metadata,
     }
 
-    logger.debug(f"Уровень риска токена {token_address}: {risk_level}")
+    logger.debug(f"Token {token_address} risk level: {risk_level}")
 
     return result

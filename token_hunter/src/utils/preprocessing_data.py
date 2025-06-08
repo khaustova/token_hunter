@@ -4,13 +4,13 @@ logger = logging.getLogger(__name__)
 
 
 def clear_number(number_str: str) -> float | int:
-    """Преобразует переданную строку в число, удаляя лишние символы и обрабатывая значения с "K" и "M".
+    """Converts a string to a number by removing extra characters and handling 'K'/'M' suffixes.
 
     Args:
-        number_str: Строка, содержащая число.
+        number_str: String containing a number value.
 
     Returns:
-        Преобразованное число. В случае ошибки возвращает -1.
+        Converted number. Returns -1 on error.
     """
     if not number_str:
         return -1
@@ -44,14 +44,14 @@ def clear_number(number_str: str) -> float | int:
 
 
 def get_pnl(bought_str: str, sold_str: str) -> list | None:
-    """Вычисляет список значений PNL на основе данных о покупках и продажах.
+    """Calculates PNL values based on buy and sell amounts.
 
     Args:
-        bought_str: Строка, содержащая суммы покупок, разделённые пробелами.
-        sold_str: Строка, содержащая суммы продаж, разделённые пробелами.
+        bought_str: String containing space-separated buy amounts.
+        sold_str: String containing space-separated sell amounts.
 
     Returns:
-        Список значений PNL. В случае ошибки возвращает None.
+        List of PNL values. Returns None on error.
     """
     try:
         bought_lst = [float(x) for x in bought_str.split(" ")]
@@ -63,14 +63,14 @@ def get_pnl(bought_str: str, sold_str: str) -> list | None:
 
 
 def count_pnl_loss(bought_str: str, sold_str: str) -> int | None:
-    """Подсчитывает количество отрицательных значений PNL (убытков).
+    """Counts the number of negative PNL values (losses).
 
     Args:
-        bought_str: Строка, содержащая суммы покупок, разделённые пробелами.
-        sold_str: Строка, содержащая суммы продаж, разделённые пробелами.
+        bought_str: String containing space-separated buy amounts.
+        sold_str: String containing space-separated sell amounts.
 
     Returns:
-        Количество отрицательных значений PNL. В случае ошибки возвращает None.
+        Count of negative PNL values. Returns None on error.
     """
     try:
         pnl_lst = get_pnl(bought_str, sold_str)
@@ -81,13 +81,13 @@ def count_pnl_loss(bought_str: str, sold_str: str) -> int | None:
         
 
 def get_sum_of_operation(num_str: str) -> float | None:
-    """Вычисляет общую сумму операций (покупок или продаж) на основе переданной строки.
+    """Calculates the total sum of operations (buys or sells) from a string.
 
     Args:
-        num_str: Строка, содержащая суммы операций, разделённые пробелами.
+        num_str: String containing space-separated operation amounts.
 
     Returns:
-        Общая сумма операций. В случае ошибки возвращает None.
+        Total sum of operations. Returns None on error.
     """
     try:
         num_lst = [float(x) for x in num_str.split(" ")]
@@ -98,13 +98,13 @@ def get_sum_of_operation(num_str: str) -> float | None:
 
 
 def count_no_operation(num_str: str) -> int | None:
-    """Подсчитывает количество операций без покупки или продажи (нулевые значения).
+    """Counts the number of zero-value operations (no buys/sells).
 
     Args:
-        num_str: Строка, содержащая суммы операций, разделённые пробелами.
+        num_str: String containing space-separated operation amounts.
 
     Returns:
-        Количество нулевых операций. В случае ошибки возвращает None.
+        Count of zero-value operations. Returns None on error.
     """
     try:
         num_lst = [float(x) for x in num_str.split(" ")]
@@ -115,19 +115,19 @@ def count_no_operation(num_str: str) -> int | None:
 
 
 def get_text_list_element_by_index(lst: list, ind: int) -> str:
-    """Возвращает текст элемента списка по указанному индексу.
+    """Returns the text of a list element at the specified index.
 
     Args:
-        lst: Список, из которого извлекается элемент.
-        ind: Индекс элемента.
+        lst: List to get element from.
+        ind: Element index.
 
     Returns:
-        Текст элемента списка или "0", если элемент не существует.
+        Element text or "0" if element doesn't exist.
     """
     try:
         result = lst[ind].text
     except Exception:
         result = "0"
-        logger.debug("Не удалось получить текст элемента по индексу %d", ind)
+        logger.debug("Failed to get text for element at index %d", ind)
 
     return result

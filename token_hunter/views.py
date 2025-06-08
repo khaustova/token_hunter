@@ -1,9 +1,9 @@
 import logging
+from core.celery import app
 from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.contrib import admin
-from django.db.models import Count, Case, When, IntegerField, CharField, Sum
-from django.db.models.functions import Cast
+from django.db.models import Count, Sum, Max
 from django.http import HttpRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
@@ -11,7 +11,7 @@ from redis import Redis
 from redis.exceptions import LockError
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from core.celery import app
+from rest_framework.request import Request
 from .forms import SettingsForm
 from .models import Transaction, TopTrader, Status, Settings, MonitoringRule, Mode
 from .serializers import TransactionSerializer
@@ -30,22 +30,22 @@ redis = Redis(db=1)
 
 @require_POST
 def monitor_dexscreener(request: HttpRequest) -> HttpResponseRedirect:
-    """Обрабатывает POST-запрос для запуска задач мониторинга/парсинга DEX Screener.
+    """Handles POST requests to launch DEX Screener monitoring/parsing tasks.
     
     Note:
-        В зависимости от нажатой кнопки:
-        - "_parsing" - запускает парсинг топовых кошельков
-        - "_monitoring" - запускает мониторинг токенов (3 режима):
-            - BOOSTED: мониторинг забустенных токенов
-            - FILTER: мониторинг токенов по фильтру
-            - LATEST: мониторинг недавно добавленных токенов
-        - "_track_tokens" - запускает отслеживание стоимости купленных токенов
+        Depending on the button pressed:
+        - "_parsing": Launches parsing of top wallets.
+        - "_monitoring": Launches token monitoring (3 modes):
+            - BOOSTED: Monitors boosted tokens.
+            - FILTER: Monitors tokens based on a filter.
+            - LATEST: Monitors recently added tokens.
+        - "_track_tokens": Starts tracking purchased tokens' prices.
 
     Args:
-        request: Объект запроса Django, содержащий данные формы с настройками и информацию о нажатой кнопке.
+        request: Django HttpRequest object containing form data with settings and the pressed button.
 
     Returns:
-        Перенаправление на главную страницу.
+        Redirects to the homepage.
     """
     form = SettingsForm(request.POST)
     if form.is_valid():
@@ -123,17 +123,17 @@ def monitor_dexscreener(request: HttpRequest) -> HttpResponseRedirect:
 
 
 def stop_task(request: HttpRequest, task_id: str) -> HttpResponseRedirect:
-    """Останавливает выполнение задачи Celery по её ID.
+    """Terminates a Celery task by its ID.
     
     Note:
-        Использует принудительное завершение (terminate=True)
+        Uses forceful termination (`terminate=True`).
 
     Args:
-        request: Объект запроса Django.
-        task_id: ID задачи для остановки.
+        request: Django HttpRequest object.
+        task_id: ID of the task to terminate.
 
     Returns:
-        Перенаправление на главную страницу.
+        Redirects to the homepage.
     """
     app.control.revoke(task_id, terminate=True)
     logger.info(f"Задача {task_id} остановлена")
@@ -142,21 +142,27 @@ def stop_task(request: HttpRequest, task_id: str) -> HttpResponseRedirect:
 
 
 def group_top_traders(request: HttpRequest) -> HttpResponse:
-    """Группирует топовые кошельки по количеству транзакций и суммарному PNL.
+    """Groups top wallets by transaction count and total PNL.
 
-    Получает список кошельков, группирует их по адресу, вычисляет общее количество транзакций 
-    и суммарный PNL для каждого кошелька. Результаты отображаются по 50 записей на странице.
+    Fetches a list of wallets, groups them by address, calculates total transactions 
+    and cumulative PNL per wallet. Results are paginated (50 entries per page).
 
     Args:
-        request: Объект запроса Django, содержащий GET-параметры (включая номер страницы).
+        request: Django HttpRequest object containing GET parameters (e.g., page number).
 
     Returns:
-        Ответ с отрендеренным шаблоном top_traders_group.html.
+        HttpResponse: Rendered template `top_traders_group.html`.
     """
     wallets = TopTrader.objects.values("wallet_address").annotate(
         total=Count("wallet_address"),
         total_pnl=Sum("PNL")
-    ).order_by("-total") 
+    ).order_by("-total")
+    
+    wallets = TopTrader.objects.values("wallet_address").annotate(
+        total=Count("wallet_address"),
+        total_pnl=Sum("PNL"),
+        latest_date=Max("created_date")
+    ).order_by("-total")
 
     paginator = Paginator(wallets, 50) 
     page_number = request.GET.get("page")
@@ -172,13 +178,13 @@ def group_top_traders(request: HttpRequest) -> HttpResponse:
 
 
 def clear_redis_cache(request: HttpRequest) -> HttpResponseRedirect:
-    """Очищает кэш Redis.
+    """Clears Redis cache.
 
     Args:
-        request: Объект запроса Django, содержащий GET-параметры.
+        request: Django HttpRequest object containing GET parameters.
 
     Returns:
-        Перенаправление на страницу транзакций
+       Redirects to the transactions page.
     """
     for key in ("black_list", "processed_tokens"):
         try:
@@ -195,14 +201,14 @@ def clear_redis_cache(request: HttpRequest) -> HttpResponseRedirect:
 
 
 def sell_token(request: HttpRequest, transaction_id: int) -> HttpResponseRedirect:
-    """Обрабатывает ручную продажу токена через панель администратора.
+    """Handles manual token sale via admin panel.
 
     Args:
-        request: Объект запроса Django
-        transaction_id: ID транзакции в базе данных
+        request: Django HttpRequest object.
+        transaction_id: Transaction ID in database.
 
     Returns:
-        Перенаправление на страницу транзакций
+        Redirects to the transactions page.
     """
     transaction = Transaction.objects.get(pk=transaction_id)
     token_data = get_pairs_data(transaction.pair)[0]
@@ -225,110 +231,61 @@ def sell_token(request: HttpRequest, transaction_id: int) -> HttpResponseRedirec
 
 
 class PNLCountAPI(APIView):
-    """API-класс для получения статистики по PNL транзакций по каждому режиму.
-
-    Attributes:
-        serializer_class: Сериализатор для транзакций.
-    """
-    serializer_class = TransactionSerializer
-
-    def get(self, request: HttpRequest) -> Response:
-        """Обрабатывает GET-запрос для получения статистики PNL по каждому режиму.
-
-        Args:
-            request: Объект запроса DRF
-
-        Returns:
-            JSON-ответ с данными в формате:
-                {
-                    "mode1": [profit_count, loss_count],
-                    "mode2": [profit_count, loss_count],
-                    ...
-                }
-        """
-        pnl_counts = {}
-        for mode in Mode:
-            pnl_profit = Transaction.objects.filter(mode=mode, PNL__gte=60).count()
-            pnl_loss = Transaction.objects.filter(mode=mode, PNL__lt=60).count()
-            pnl_counts[mode] = [pnl_profit, pnl_loss]
-
-        return Response(pnl_counts)
+    """API class for getting PNL statistics for the last 7 days.
     
-    
-class PNLCountAPI(APIView):
-    # """API-класс для получения статистики по PNL транзакций по каждому режиму.
-
-    # Attributes:
-    #     serializer_class: Сериализатор для транзакций.
-    # """
-    # serializer_class = TransactionSerializer
-
-    # def get(self, request: HttpRequest) -> Response:
-    #     """Обрабатывает GET-запрос для получения статистики PNL по каждому режиму.
-
-    #     Args:
-    #         request: Объект запроса DRF
-
-    #     Returns:
-    #         JSON-ответ с данными в формате:
-    #             {
-    #                 "mode1": [profit_count, loss_count],
-    #                 "mode2": [profit_count, loss_count],
-    #                 ...
-    #             }
-    #     """
-    #     pnl_counts = {}
-    #     for mode in Mode:
-    #         pnl_profit = Transaction.objects.filter(mode=mode, PNL__gte=60).count()
-    #         pnl_loss = Transaction.objects.filter(mode=mode, PNL__lt=60).count()
-    #         pnl_counts[mode] = [pnl_profit, pnl_loss]
-
-    #     return Response(pnl_counts)
-    """API-класс для получения статистики PNL за последние 7 дней.
-    
-    Возвращает данные в формате для построения диаграммы:
+    Returns data in chart-ready format:
     {
         "dates": ["2023-01-01", "2023-01-02", ...],
         "pnl_profit": [10, 5, ...],
         "pnl_loss": [3, 7, ...]
     }
     """
-    
-    """API для получения статистики PNL за последние 7 дней по каждому режиму."""
-    """API для получения статистики PNL за последние 7 дней по каждому режиму."""
     serializer_class = TransactionSerializer
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
+        """Handles GET request to get PNL statistics per mode.
+
+        Args:
+            request: DRF Request object.
+
+        Returns:
+            JSON response with data in format:
+                {
+                    "dates": ["2023-01-01", "2023-01-02", ...],
+                    "pnl_profit": [10, 5, ...],
+                    "pnl_loss": [3, 7, ...]
+                }
+        """
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=6)
-        
+
         modes = {
-            'real_buy': Mode.REAL_BUY,
-            'emulation': Mode.EMULATION,
-            'data_collection': Mode.DATA_COLLECTION
+            "real_buy": Mode.REAL_BUY,
+            "simulation": Mode.SIMULATION,
+            "data_collection": Mode.DATA_COLLECTION
         }
-        
+
         result = {}
-        
+
         for mode_name, mode_value in modes.items():
             dates = [start_date + timedelta(days=i) for i in range(7)]
-            date_str = [d.strftime('%Y-%m-%d') for d in dates]
+            date_str = [d.strftime("%Y-%m-%d") for d in dates]
             
             profit = []
             loss = []
-            
+
             for day in dates:
                 qs = Transaction.objects.filter(
                     mode=mode_value,
-                    closing_date__date=day  # Используем __date для сравнения
+                    closing_date__date=day
                 )
-                profit.append(qs.filter(PNL__gte=60).count())
-                loss.append(qs.filter(PNL__lt=60).count())
+                profit.append(qs.filter(PNL__gte=0).count())
+                loss.append(qs.filter(PNL__lt=0).count())
             
             result[mode_name] = {
-                'dates': date_str,
-                'profit': profit,
-                'loss': loss
+                "dates": date_str,
+                "profit": profit,
+                "loss": loss
             }
-        
+
         return Response(result)

@@ -24,333 +24,41 @@ from token_hunter.src.utils.preprocessing_data import (
 logger = logging.getLogger(__name__)
 
 
-class DexScreenerData:
-    """Класс для получения данных о транзакциях и держателях токенов на DEX Screener.
-
-    Note:
-        Использует библиотеку nodriver и требует ручное прохождение проверки Cloudflare 
-        примерно 1 раз в 1.5 суток, поэтому при инициализации браузера нельзя использовать headless.
-
-    Attributes:
-        browser: Экземпляр браузера Chrome.
-        pair: Адрес пары токена.
-        url: Ссылка на страницу токена на DEX Screener.
-    """
-
-    def __init__(self, browser: Browser, pair: str):
-        """Инициализирует экземпляр DexScreenerData.
-        
-        Args:
-            browser: Экземпляр браузера Chrome.
-            pair: Адрес пары токена.
-        """
-        self.browser = None
-        self.pair = pair
-        self.url = "https://dexscreener.com/solana/" + self.pair
-        
-    async def get_browser(self):
-        """Создаёт и настраивает экземпляр браузера.
-        """
-        config = Config(headless=False)
-        browser = await uc.start(config=config, sandbox=False)
-        self.browser = browser
-
-    async def get_dex_data(self, is_parser: bool=False) -> dict:
-        """Открывает страницу токена на DEX Screener и сохраняет данные о транзакциях
-        снайперов, топовых кошельков и о держателях токенов.
-
-        Args:
-            is_parser: Флаг, указывающий, нужно ли собирать подробные данные о топовых кошельках. 
-                Используется для парсинга топовых кошельков. По умолчанию False.
-
-        Returns:
-            Словарь с данными о транзакциях и держателях токенов.
-        """
-        await self.get_browser()
-        page = await self.browser.get(self.url, new_tab=True)
-
-        time.sleep(5)
-        await page.wait(10)
-
-        if is_parser:
-            try:
-                top_traders_button = await page.find("Top Traders")
-                await top_traders_button.click()
-                time.sleep(3)
-                top_traders_data = await self.get_top_traders(page, is_parser)
-            except Exception:
-                top_traders_data = None
-
-            return top_traders_data
-
-        try:
-            snipers_button = await page.find("Snipers")
-            await snipers_button.click()
-            time.sleep(3)
-            snipers_data = await self.get_snipers(page)
-        except Exception:
-            snipers_data = None
-
-        time.sleep(5)
-        try:
-            top_traders_button = await page.find("Top Traders")
-            await top_traders_button.click()
-            time.sleep(3)
-            top_traders_data = await self.get_top_traders(page, is_parser)
-        except Exception:
-            top_traders_data = None
-
-        time.sleep(5)
-        try:
-            holders_button = await page.find("Holders")
-            await holders_button.click()
-            time.sleep(3)
-            holders_data = await self.get_holders(page)
-
-            total_holders = holders_button.text
-            holders_data["total"] = clear_number(total_holders.split(" ")[1][1:-1])
-        except Exception:
-            holders_data = None
-
-        await page.close()
-
-        return {
-            "snipers_data": snipers_data,
-            "top_traders_data": top_traders_data,
-            "holders_data": holders_data
-        }
-
-    async def get_snipers(self, page: Tab) -> dict:
-        """Получает данные о транзакциях снайперов из таблицы Snipers на странице токена.
-
-        Args:
-            page: Страница токена, на которой открыта таблица со снайперами.
-
-        Returns:
-            Словарь с данными о транзакциях снайперов.
-        """
-        snipers_table = await page.query_selector(
-            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
-        )
-        await snipers_table
-        snipers_table_html = await snipers_table.get_html()    
-
-        soup = BeautifulSoup(snipers_table_html, "html.parser")
-        snipers_data = {
-            "held_all": 0,
-            "sold_all": 0,
-            "sold_some": 0,
-        }
-
-        main_div = soup.find("div", recursive=False)
-        snipers_divs = main_div.find_all("div", recursive=False)
-        bought_lst, sold_lst, unrealized_lst = [], [], []
-
-        for divs in snipers_divs[1:]:
-            snipers_spans = divs.find_all("span")
-
-            bought = get_text_list_element_by_index(snipers_spans, 5)
-            sold = "-"
-            unrealized = get_text_list_element_by_index(divs.find_all("div"), 7)
-
-            operation = get_text_list_element_by_index(snipers_spans, 2)
-            if operation == "Held all":
-                snipers_data["held_all"] += 1
-                if bought != "-":
-                    bought = clear_number(bought)
-
-            elif operation in ("Sold all", "Sold some"):
-                if operation == "Sold all":
-                    snipers_data["sold_all"] += 1
-                elif operation == "Sold some":
-                    snipers_data["sold_some"] += 1
-
-                if bought != "-":
-                    bought = clear_number(bought)
-                    sold = get_text_list_element_by_index(snipers_spans, 10)
-
-                    if sold != "-":
-                        sold = clear_number(sold)
-                else:
-                    sold = get_text_list_element_by_index(snipers_spans, 6)
-                    if sold != "-":
-                        sold = clear_number(sold)
-
-            if bought != "-":
-                bought_lst.append(bought)
-            else:
-                bought_lst.append(0)
-
-            if sold != "-":
-                sold_lst.append(sold)
-            else:
-                sold_lst.append(0)
-
-            if unrealized != '-':
-                try:
-                    unrealized = clear_number(unrealized)
-                except Exception:
-                    unrealized = 0
-
-                unrealized_lst.append(unrealized)
-            else:
-                unrealized_lst.append(0)
-
-        snipers_data["bought"] = " ".join(map(str, bought_lst))
-        snipers_data["sold"] = " ".join(map(str, sold_lst))
-        snipers_data["unrealized"] = " ".join(map(str, unrealized_lst))
-
-        return snipers_data
-
-    async def get_top_traders(self, page: Tab, is_parser: bool) -> dict:
-        """Получает данные о транзакциях топовых кошельков из таблицы Top Traders на странице токена.
-
-        Args:
-            page: Страница токена, на которой открыта таблица с топовыми кошельками.
-            is_parser: Флаг, указывающий, нужно ли собирать адреса кошельков. 
-                Используется для парсинга топовых кошельков.
-
-        Returns:
-            Словарь с данными о транзакциях топовых кошельков.
-        """
-        await page.wait(2)
-        top_traders_table = await page.query_selector(
-            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
-        )
-        await top_traders_table
-        top_traders_table_html = await top_traders_table.get_html()
-
-        soup = BeautifulSoup(top_traders_table_html, "html.parser")
-        top_traders_data = {}
-
-        main_div = soup.find("div", recursive=False)
-        top_traders_divs = main_div.find_all("div", recursive=False)
-        bought_lst, sold_lst, unrealized_lst = [], [], []
-        makers = []
-
-        for divs in top_traders_divs[1:]:
-            top_trader_spans = divs.find_all("span")
-
-            if is_parser:
-                top_trader_link = divs.find("a")["href"]
-                maker = top_trader_link.split("/")[-1]
-                makers.append(maker)
-
-            bought = get_text_list_element_by_index(top_trader_spans, 2)
-
-            if bought == "-":
-                sold = get_text_list_element_by_index(top_trader_spans, 3)
-                if sold != "-":
-                    sold = clear_number(sold)
-            else:
-                bought = clear_number(bought)
-                sold = get_text_list_element_by_index(top_trader_spans, 7)
-                if sold != "-":
-                    sold = clear_number(sold)
-
-            if bought != "-":
-                bought_lst.append(bought)
-            else:
-                bought_lst.append(0)
-
-            if sold != "-":
-                sold_lst.append(sold)
-            else:
-                sold_lst.append(0)
-
-            unrealized = get_text_list_element_by_index(divs.find_all("div"), 6)
-            if unrealized != '-':
-                try:
-                    unrealized = clear_number(unrealized)
-                except Exception:
-                    unrealized = 0
-
-                unrealized_lst.append(unrealized)
-            else:
-                unrealized_lst.append(0)
-
-        top_traders_data["bought"] = " ".join(map(str, bought_lst))
-        top_traders_data["sold"] = " ".join(map(str, sold_lst))
-        top_traders_data["unrealized"] = " ".join(map(str, unrealized_lst))
-
-        if is_parser:
-            top_traders_data["makers"] = " ".join(map(str, makers))
-
-        return top_traders_data
-
-    async def get_holders(self, page: Tab) -> dict:
-        """Получает данные о держателях токенов из таблицы Holders на странице токена.
-
-        Args:
-            page: Страница токена, на которой открыта таблица с держателями токенов.
-
-        Returns:
-            Словарь с данными о держателях токенов.
-        """
-        await page.wait(2)
-        holders_table = await page.query_selector(
-            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
-        )
-        await holders_table
-        holders_table_html = await holders_table.get_html()
-
-        soup = BeautifulSoup(holders_table_html, "html.parser")
-        holders_data = {}
-
-        main_div = soup.find("div", recursive=False)
-        holders_divs = main_div.find_all("div", recursive=False)
-
-        percentages_lst, liquidity_lst = [], []
-        for divs in holders_divs[1:-1]:
-            percentages_div = divs.find_all("div", recursive=False)[2]
-
-            if len(divs.find_all("div")[2].find_all("span")) == 2:
-                liquidity_lst.append(clear_number(percentages_div.text))
-            else:
-                percentages_lst.append(clear_number(percentages_div.text))
-
-        holders_data["percentages"] = " ".join(map(str, percentages_lst))
-        holders_data["liquidity"] = " ".join(map(str, liquidity_lst))
-
-        return holders_data
-
-
 class DexToolsData:
-    """Класс для получения данных о транзакциях и держателях токенов на DEXTools.
+    """Class for retrieving token transaction and holder data from DEXTools.
 
     Note:
-        Использует библиотеку selenium и не требует ручное прохождение проверки Cloudflare, 
-        поэтому разрешается использование headless.
+        Uses the Selenium library and doesn't require manual Cloudflare verification,
+        allowing headless mode operation.
 
     Attributes:
-        pair: Адрес пары токена.
-        token_address: Адрес токена.
-        url: Ссылка на страницу токена на DEXTools.
-        driver: Созданный и настроенный экзепмляр веб-драйвера Selenium.
+        pair: Token pair address.
+        token_address: Token contract address.
+        url: DEXTools token page URL.
+        driver: Configured Selenium WebDriver instance.
     """
 
     def __init__(self, pair: str, token_address: str | None=None):
-        """Инициализирует экземпляр DexToolsData.
+        """Initializes the DexToolsData instance.
         
         Args:
-            pair: Адрес пары токена.
-            token_address: Адрес токена.
+            pair: Token pair address.
+            token_address: Token contract address (optional).
         """
         self.pair = pair
         self.token_address = token_address
         self.url = "https://www.dextools.io/app/en/solana/pair-explorer/" + self.pair
         self.driver = self._create_driver()
 
-    def get_dex_data(self, is_parser: bool=False):
-        """Открывает страницу токена на DEXTools и сохраняет данные о транзакциях
-        снайперов, топовых кошельков и о держателях токенов.
+    def get_dex_data(self, is_parser: bool=False) -> dict | None:
+        """Retrieves token transaction, top wallet, and holder data from DEXTools.
 
         Args:
-            is_parser: Флаг, указывающий, нужно ли собирать подробные данные о топовых кошельках. 
-                Используется для парсинга топовых кошельков. По умолчанию False.
+            is_parser: Flag indicating whether to collect detailed top wallet data.
+                Used for top wallet parsing. Defaults to False.
 
         Returns:
-            Словарь с данными о транзакциях и держателях токенов.
+            Dictionary containing token data or None if retrieval fails.
         """
         self.driver.get(self.url)
         time.sleep(5)
@@ -367,18 +75,22 @@ class DexToolsData:
             result["top_traders_data"] = self.get_top_traders(is_parser)
             result["holders_data"] = self.get_holders()
             result["trade_history_data"] = self.get_trade_history()
-        except:
+        except Exception as e:
+            logger.error(f"Failed to get DEX data: {e}")
             result = None
-
-        self.driver.quit()
+        finally:
+            self.driver.quit()
 
         return result
 
     def get_holders(self) -> dict:
-        """Получает данные о держателях токенов из таблицы Holders на странице токена.
+        """Extracts token holder distribution data from the Holders table.
 
         Returns:
-            Словарь с данными о держателях токенов.
+            Dictionary containing:
+                - percentages: Space-separated holder percentages.
+                - liquidity: Liquidity pool percentage.
+                - total: Total holder count.
         """
         html = self.driver.find_element(By.TAG_NAME, "html")
         html.send_keys(Keys.PAGE_UP)
@@ -431,10 +143,10 @@ class DexToolsData:
         return holders_data
 
     def get_dextscore(self) -> str:
-        """Получает значение DextScore для токена.
+        """Retrieves the DextScore value for the token.
 
         Returns:
-            Значение DextScore.
+            DextScore value as string.
         """
         dextscore_element = self._get_element(
             by=By.XPATH,
@@ -446,15 +158,18 @@ class DexToolsData:
         return dextscore
 
     def get_top_traders(self, is_parser: bool) -> dict:
-        """Получает данные о транзакциях топовых кошельков из таблицы Top Traders на странице токена.
+        """Extracts top wallet transaction data from the Top Traders table.
 
         Args:
-            page: Страница токена, на которой открыта таблица с топовыми кошельками.
-            is_parser: Флаг, указывающий, нужно ли собирать адреса кошельков. 
-                Используется для парсинга топовых кошельков.
+            is_parser: Flag indicating whether to collect wallet addresses.
 
         Returns:
-            Словарь с данными о транзакциях топовых кошельков.
+            Dictionary containing:
+                - bought: Space-separated buy amounts.
+                - sold: Space-separated sell amounts.
+                - unrealized: Space-separated unrealized amounts.
+                - speed: Space-separated speed indicators.
+                - makers: Wallet addresses (if is_parser=True).
         """
         top_traders_button = self._get_element(
             by=By.XPATH,
@@ -566,10 +281,17 @@ class DexToolsData:
         return top_traders_data
 
     def get_trade_history(self):
-        """Получает историю последних транзакций из таблицы Trade History на странице токена.
+        """Extracts recent transaction data from the Trade History table.
 
         Returns:
-            Словарь с данными о последних транзакциях.
+            Dictionary containing:
+                - prices: Space-separated prices.
+                - date: Comma-separated timestamps.
+                - operations: Space-separated operation types.
+                - trades_sum: Space-separated trade amounts.
+                - trades_makers: Space-separated wallet addresses.
+                - trades_for_maker: Space-separated trade counts.
+                - transactions: Total transaction count.
         """
         html = self.driver.find_element(By.TAG_NAME, "html")
         html.send_keys(Keys.PAGE_UP)
@@ -663,10 +385,10 @@ class DexToolsData:
         return trade_history_data
 
     def _create_driver(self) -> WebDriver:
-        """Создает и настраивает экземпляр веб-драйвера Selenium.
+        """Creates and configures a Selenium WebDriver instance.
 
         Returns:
-            Настроенный экземпляр веб-драйвера.
+            Configured WebDriver instance with anti-detection measures.
         """
         options = Options()
         options.add_argument("start-maximized")
@@ -707,15 +429,15 @@ class DexToolsData:
         timeout: int=15,
         by: str=By.CLASS_NAME
     ) -> list[WebElement] | None:
-        """Ищет все элементы на странице по указанному локатору.
+        """Finds all elements matching the given locator.
 
         Args:
-            value: Значение локатора.
-            timeout: Время ожидания. По умолчанию 15.
-            by: Тип локатора. По умолчанию By.CLASS_NAME.
+            value: Locator value.
+            timeout: Maximum wait time in seconds. Defaults to 15.
+            by: Locator strategy. Defaults to By.CLASS_NAME.
 
         Returns:
-            Список найденных элементов или None, если элементы не найдены.
+            List of matching WebElements or None if not found.
         """
         try:
             elements = WebDriverWait(self.driver, timeout).until(
@@ -733,15 +455,15 @@ class DexToolsData:
         timeout: int=15,
         by: str=By.CLASS_NAME
     ) -> WebElement | None:
-        """Ищет элемент на странице по указанному локатору.
+        """Finds a single element matching the given locator.
 
         Args:
-            value: Значение локатора.
-            timeout: Время ожидания. По умолчанию 15.
-            by: Тип локатора. По умолчанию By.CLASS_NAME.
+            value: Locator value.
+            timeout: Maximum wait time in seconds. Defaults to 15.
+            by: Locator strategy. Defaults to By.CLASS_NAME.
 
         Returns:
-            Найденный элемент или None, если элемент не найден.
+            Matching WebElement or None if not found.
         """
         try:
             element = WebDriverWait(self.driver, timeout).until(
@@ -754,15 +476,13 @@ class DexToolsData:
         return element
 
     def _get_text(self, element: WebElement, element_name: str="элемента") -> str:
-        """Возвращает текст элемента.
-        
+        """Helper method to parse text values from table cells.
+
         Args:
-            element: Найденный элемент.
-            element_name: Имя элемента. Используется для логирования исключения.
-                По умолчание "элемента".
-                
-        Return:
-            Текст элемента или "0", если не удалось получить текст. 
+            cell: WebElement containing numeric value.
+
+        Returns:
+            Parsed text value or 0 if parsing fails.
         """
         try:
             text = element.text
@@ -771,3 +491,207 @@ class DexToolsData:
             logger.debug("Не удалось получить текст %s", element_name)
 
         return text
+
+
+class DexScreenerData:
+    """Class for retrieving token transaction and holder data from DEX Screener.
+
+    Note:
+        Uses the nodriver library and requires manual Cloudflare verification 
+        approximately once every 36 hours. Headless mode cannot be used during 
+        browser initialization due to this limitation.
+
+    Attributes:
+        browser: Chrome browser instance.
+        pair: Token pair address.
+        url: DEX Screener token page URL.
+    """
+
+    def __init__(self, browser: Browser, pair: str):
+        """Initializes the DexScreenerData instance.
+        
+        Args:
+            browser: Chrome browser instance.
+            pair: Token pair address.
+        """
+        self.browser = None
+        self.pair = pair
+        self.url = "https://dexscreener.com/solana/" + self.pair
+        
+    async def get_browser(self):
+        """Creates and configures a browser instance."""
+        config = Config(headless=False)
+        browser = await uc.start(config=config, sandbox=False)
+        self.browser = browser
+
+    async def get_dex_data(self, is_parser: bool=False) -> dict:
+        """Retrieves token transaction data, top wallets, and holder information from DEX Screener.
+
+        Args:
+            is_parser: Flag indicating whether to collect detailed top wallet data.
+                Used for top wallet parsing. Defaults to False.
+
+        Returns:
+            Dictionary containing token transaction and holder data.
+        """
+        await self.get_browser()
+        page = await self.browser.get(self.url, new_tab=True)
+
+        time.sleep(5)
+        await page.wait(10)
+
+        if is_parser:
+            try:
+                top_traders_button = await page.find("Top Traders")
+                await top_traders_button.click()
+                time.sleep(3)
+                top_traders_data = await self.get_top_traders(page, is_parser)
+            except Exception:
+                top_traders_data = None
+
+            return top_traders_data
+
+        time.sleep(5)
+        try:
+            top_traders_button = await page.find("Top Traders")
+            await top_traders_button.click()
+            time.sleep(3)
+            top_traders_data = await self.get_top_traders(page, is_parser)
+        except Exception:
+            top_traders_data = None
+
+        time.sleep(5)
+        try:
+            holders_button = await page.find("Holders")
+            await holders_button.click()
+            time.sleep(3)
+            holders_data = await self.get_holders(page)
+
+            total_holders = holders_button.text
+            holders_data["total"] = clear_number(total_holders.split(" ")[1][1:-1])
+        except Exception:
+            holders_data = None
+
+        await page.close()
+
+        return {
+            "top_traders_data": top_traders_data,
+            "holders_data": holders_data
+        }
+
+    async def get_top_traders(self, page: Tab, is_parser: bool) -> dict:
+        """Extracts top wallet transaction data from the Top Traders table.
+
+        Args:
+            page: Token page with opened Top Traders table.
+            is_parser: Flag indicating whether to collect wallet addresses.
+
+        Returns:
+            Dictionary containing:
+                - bought: Space-separated buy amounts.
+                - sold: Space-separated sell amounts.
+                - unrealized: Space-separated unrealized amounts.
+                - makers: Wallet addresses (if is_parser=True).
+        """
+        await page.wait(2)
+        top_traders_table = await page.query_selector(
+            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
+        )
+        await top_traders_table
+        top_traders_table_html = await top_traders_table.get_html()
+
+        soup = BeautifulSoup(top_traders_table_html, "html.parser")
+        top_traders_data = {}
+
+        main_div = soup.find("div", recursive=False)
+        top_traders_divs = main_div.find_all("div", recursive=False)
+        bought_lst, sold_lst, unrealized_lst = [], [], []
+        makers = []
+
+        for divs in top_traders_divs[1:]:
+            top_trader_spans = divs.find_all("span")
+
+            if is_parser:
+                top_trader_link = divs.find("a")["href"]
+                maker = top_trader_link.split("/")[-1]
+                makers.append(maker)
+
+            bought = get_text_list_element_by_index(top_trader_spans, 2)
+
+            if bought == "-":
+                sold = get_text_list_element_by_index(top_trader_spans, 3)
+                if sold != "-":
+                    sold = clear_number(sold)
+            else:
+                bought = clear_number(bought)
+                sold = get_text_list_element_by_index(top_trader_spans, 7)
+                if sold != "-":
+                    sold = clear_number(sold)
+
+            if bought != "-":
+                bought_lst.append(bought)
+            else:
+                bought_lst.append(0)
+
+            if sold != "-":
+                sold_lst.append(sold)
+            else:
+                sold_lst.append(0)
+
+            unrealized = get_text_list_element_by_index(divs.find_all("div"), 6)
+            if unrealized != '-':
+                try:
+                    unrealized = clear_number(unrealized)
+                except Exception:
+                    unrealized = 0
+
+                unrealized_lst.append(unrealized)
+            else:
+                unrealized_lst.append(0)
+
+        top_traders_data["bought"] = " ".join(map(str, bought_lst))
+        top_traders_data["sold"] = " ".join(map(str, sold_lst))
+        top_traders_data["unrealized"] = " ".join(map(str, unrealized_lst))
+
+        if is_parser:
+            top_traders_data["makers"] = " ".join(map(str, makers))
+
+        return top_traders_data
+
+    async def get_holders(self, page: Tab) -> dict:
+        """Extracts token holder distribution data from the Holders table.
+
+        Args:
+            page: Token page with opened Holders table.
+
+        Returns:
+            Dictionary containing:
+                - percentages: Space-separated holder percentages.
+                - liquidity: Space-separated liquidity percentages.
+        """
+        await page.wait(2)
+        holders_table = await page.query_selector(
+            "main > div > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)"
+        )
+        await holders_table
+        holders_table_html = await holders_table.get_html()
+
+        soup = BeautifulSoup(holders_table_html, "html.parser")
+        holders_data = {}
+
+        main_div = soup.find("div", recursive=False)
+        holders_divs = main_div.find_all("div", recursive=False)
+
+        percentages_lst, liquidity_lst = [], []
+        for divs in holders_divs[1:-1]:
+            percentages_div = divs.find_all("div", recursive=False)[2]
+
+            if len(divs.find_all("div")[2].find_all("span")) == 2:
+                liquidity_lst.append(clear_number(percentages_div.text))
+            else:
+                percentages_lst.append(clear_number(percentages_div.text))
+
+        holders_data["percentages"] = " ".join(map(str, percentages_lst))
+        holders_data["liquidity"] = " ".join(map(str, liquidity_lst))
+
+        return holders_data

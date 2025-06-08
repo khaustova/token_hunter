@@ -5,14 +5,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_active_tasks() -> list:
-    """Возвращает список всех активных задач Celery в системе.
+    """Returns a list of all active Celery tasks in the system.
     
     Note:
-        Возвращает задачи только от первого доступного воркера.
-        Если активных задач нет, может вернуть пустой список.
+        Only returns tasks from the first available worker.
+        May return an empty list if no active tasks exist.
 
     Returns:
-        Список словарей с данными об активных задачах
+        List of dictionaries containing active task data.
     """
     insp = app.control.inspect()
     active_tasks = insp.active()
@@ -22,16 +22,17 @@ def get_active_tasks() -> list:
 
 
 def get_dexscreener_worker_tasks_ids() -> dict | None:
-    """Получает ID всех активных задач.
+    """Retrieves IDs of all active tasks categorized by type.
     
-    Классифицирует задачи по типам:
-    - parsing_task_id: задачи парсинга топовых трейдеров
-    - track_tokens_task_id: задачи отслеживания стоимости купленных токенов
-    - filter_task_id: задачи мониторинга токенов по фильтру
-    - boosted_task_id: задачи мониторинга забустенных токенов
+    Task categories:
+    - parsing_task_id: Top traders parsing tasks.
+    - track_tokens_task_id: Purchased token tracking tasks.
+    - filter_task_id: Token filter monitoring tasks.
+    - boosted_task_id: Boosted tokens monitoring tasks.
+    - latest_task_id: Recently added tokens monitoring tasks.
 
     Returns:
-        Словарь с ID задач по типам в формате:
+        Dictionary with task IDs categorized by type:
             {
                 "parsing_task_id": list[str],
                 "track_tokens_task_id": list[str],
@@ -39,7 +40,7 @@ def get_dexscreener_worker_tasks_ids() -> dict | None:
                 "boosted_task_id": list[str],
                 "latest_task_id": list[str]
             }
-            или None в случае ошибки.
+        Returns None if an error occurs.
     """
     try:
         active_tasks = get_active_tasks()

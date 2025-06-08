@@ -102,7 +102,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "ru-ru"
+LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "Europe/Moscow"
 
@@ -283,7 +283,7 @@ CACHES = {
 
 SELECT2_CACHE_BACKEND = "select2"
 
-# Разрешение реальной покупки токенов
+# Permission for a real purchase
 
 IS_REAL_BUY = env("IS_REAL_BUY").lower() == "true"
 

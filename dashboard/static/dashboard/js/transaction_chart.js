@@ -8,27 +8,26 @@ async function getJSONData() {
 
 getJSONData().then(data => {
   createBarChart(data['data_collection'], 'dataCollectionPNL');
-  createBarChart(data['emulation'], 'emulationPNL');
+  createBarChart(data['simulation'], 'simulationPNL');
   createBarChart(data['real_buy'], 'realBuyPNL');
 });
 
 function createBarChart(data, chartId) {
   const ctx = document.getElementById(chartId).getContext('2d');
-  
   new Chart(ctx, {
     type: 'bar',
     data: {
       labels: data.dates,
       datasets: [
         {
-          label: 'Profit (PNL ≥ 60)',
+          label: 'Profit (PNL ≥ 0)',
           data: data.profit,
           backgroundColor: '#00a732',
           borderColor: '#00a732',
           borderWidth: 1
         },
         {
-          label: 'Loss (PNL < 60)',
+          label: 'Loss (PNL < 0)',
           data: data.loss,
           backgroundColor: '#b30000',
           borderColor: '#b30000',
@@ -41,38 +40,43 @@ function createBarChart(data, chartId) {
       maintainAspectRatio: false,
       scales: {
         x: {
-          stacked: true,
+          // Убрали stacked для оси X
           grid: {
             display: false
-          }
+          },
+          // Эти настройки помогут расположить столбцы рядом
+          stacked: false
         },
         y: {
-          stacked: true,
+          stacked: false, // Или true, если хотите stacked по вертикали
           beginAtZero: true,
           ticks: {
-            precision: 0, // Убираем десятичные дроби
-            stepSize: 1,  // Шаг только целые числа
-            callback: function(value) {
-              if (value % 1 === 0) { // Показываем только целые числа
-                return value;
-              }
-            }
+            precision: 0,
+            stepSize: 1, 
           }
         }
       },
-
-      legend: {
-        position: 'right',
-        labels: {
-          boxWidth: 12,
-          padding: 20,
-          font: {
-            size: 14
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            boxWidth: 12,
+            padding: 20,
+            font: {
+              size: 14
+            }
           }
         },
         tooltip: {
           mode: 'index',
           intersect: false
+        }
+      },
+      // Добавляем настройки для группировки столбцов
+      datasets: {
+        bar: {
+          categoryPercentage: 0.8,
+          barPercentage: 0.9
         }
       }
     }

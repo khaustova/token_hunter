@@ -6,8 +6,8 @@ logger = getLogger(__name__)
 
 
 DASHBOARD_CUSTOMIZATION = {
-    "dashboard_name": "Админпанель",
-    "dashboard_title": "Панель администратора",
+    "dashboard_name": "Admin Panel",
+    "dashboard_title": "Administration Dashboard",
     "search_model": "",
     "sidebar_icons": {
         "auth.user": "person",
@@ -22,8 +22,17 @@ DASHBOARD_CUSTOMIZATION = {
 
 def get_settings() -> dict:
     """
-    Возвращает словарь с настройками кастомизации, обновленный в соответствии
-    с настройками, указанными в файле настроек проекта.
+    Returns a dictionary of customization settings, updated with
+    project-specific settings from the Django settings file.
+
+    The function:
+    1. Starts with default DASHBOARD_CUSTOMIZATION values.
+    2. Overrides them with any values specified in settings.DASHBOARD_CUSTOMIZATION.
+    3. Filters out None values from project settings.
+    4. Returns the merged configuration.
+
+    Returns:
+        Merged dictionary containing all dashboard customization settings
     """
     customization_settings = deepcopy(DASHBOARD_CUSTOMIZATION)
     project_settings = {key: value for key, value in getattr(

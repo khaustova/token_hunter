@@ -12,13 +12,12 @@ logger = logging.getLogger(__name__)
 
 
 async def start_monitoring_filtered_tokens(settings_ids: list[int], filter: str, source: str) -> None:
-    """Создаёт и настраивает браузер для использования библиотеки nodriver и запускает мониторинг 
-    токенов на DEX Screener по заданному фильтру.
-
+    """Configures browser and initiates filtered token monitoring on DEX Screener.
+    
     Args:
-        settings_ids: Список ID настроек для выбора токенов.
-        filter: Параметры фильтрации токенов.
-        source: Источник данных (`dextools` или `dexscreener`).
+        settings_ids: List of settings IDs for token selection criteria.
+        filter: Token filtering parameters.
+        source: Data source ('dextools' or 'dexscreener').
     """
     check_settings = {}
     for settings_id in settings_ids:
@@ -39,16 +38,16 @@ async def start_monitoring_filtered_tokens(settings_ids: list[int], filter: str,
     max_retries=5
 )
 def monitor_filtered_tokens_task(self, settings_ids: list[int], filter: str, source: str) -> str:
-    """Задача мониторинга токенов по фильтру.
-
+    """Celery task for filtered token monitoring.
+    
     Args:
-        self: Экземпляр задачи Celery.
-        settings_ids: Список ID настроек для выбора токенов.
-        filter: Параметры фильтрации токенов.
-        source: Источник данных (`dextools` или `dexscreener`).
+        self: Celery task instance.
+        settings_ids: List of settings IDs for token selection.
+        filter: Token filtering parameters.
+        source: Data source ('dextools' or 'dexscreener').
 
     Returns:
-        Сообщение о завершении задачи.
+        Task completion message.
     """
     async_to_sync(start_monitoring_filtered_tokens)(
         settings_ids=settings_ids,
@@ -56,7 +55,7 @@ def monitor_filtered_tokens_task(self, settings_ids: list[int], filter: str, sou
         source=source
     )
 
-    return "Мониторинг токенов по фильтру завершён"
+    return "Filtered token monitoring completed"
 
 
 async def start_monitoring_boosted_token(
@@ -64,17 +63,13 @@ async def start_monitoring_boosted_token(
     source: str,
     boosts_min: int,
     boosts_max: int) -> None:
-    """Запускает мониторинг забустенных на DEX Screener токенов. 
+    """Initiates monitoring of boosted tokens using DEX Screener API.
     
-    Для получения списка токенов использует DEX Screener API.
-    
-    Notes:
-        Если в качестве источника данных для анализа выбранного токена выбран DEX Screener, 
-        то создаёт и настраивает браузер для использования библиотеки nodriver.
-
     Args:
-        settings_ids: Список ID настроек для выбора токенов.
-        source: Источник данных (`dextools` или `dexscreener`).
+        settings_ids: List of settings IDs for token selection.
+        source: Data source ('dextools' or 'dexscreener').
+        boosts_min: Minimum boost count threshold.
+        boosts_max: Maximum boost count threshold.
     """
     check_settings = {}
     for settings_id in settings_ids:
@@ -103,15 +98,17 @@ def monitor_boosted_tokens_task(
     source: str, 
     boosts_min: int,
     boosts_max: int) -> str:
-    """Задача мониторинга забустенных токенов.
-
+    """Celery task for boosted token monitoring.
+    
     Args:
-        self: Экземпляр задачи Celery.
-        settings_ids: Список ID настроек для выбора токенов.
-        source: Источник данных (`dextools` или `dexscreener`).
+        self: Celery task instance.
+        settings_ids: List of settings IDs for token selection.
+        source: Data source ('dextools' or 'dexscreener').
+        boosts_min: Minimum boost count threshold.
+        boosts_max: Maximum boost count threshold.
 
     Returns:
-        Сообщение о завершении задачи.
+        Task completion message.
     """
     async_to_sync(start_monitoring_boosted_token)(
         settings_ids=settings_ids,
@@ -120,21 +117,15 @@ def monitor_boosted_tokens_task(
         boosts_max=boosts_max,
     )
 
-    return "Мониторинг забустенных токенов закончен"
+    return "Boosted token monitoring completed"
 
 
 async def start_monitoring_latest_token(settings_ids: list[int], source: str) -> None:  
-    """Запускает мониторинг недавно добавленных на DEX Screener токенов. 
+    """Initiates monitoring of recently listed tokens using DEX Screener API.
     
-    Для получения списка токенов использует DEX Screener API.
-    
-    Notes:
-        Если в качестве источника данных для анализа выбранного токена выбран DEX Screener, 
-        то создаёт и настраивает браузер для использования библиотеки nodriver.
-
     Args:
-        settings_ids: Список ID настроек для выбора токенов.
-        source: Источник данных (`dextools` или `dexscreener`).
+        settings_ids: List of settings IDs for token selection.
+        source: Data source ('dextools' or 'dexscreener').
     """
     check_settings = {}
     for settings_id in settings_ids:
@@ -158,34 +149,30 @@ async def start_monitoring_latest_token(settings_ids: list[int], source: str) ->
     max_retries=5
 )
 def monitor_latest_tokens_task(self, settings_ids: list, source: str) -> str:
-    """Задача мониторинга недавно добавленных токенов.
-
+    """Celery task for recently listed token monitoring.
+    
     Args:
-        self: Экземпляр задачи Celery.
-        settings_ids: Список ID настроек для выбора токенов.
-        source: Источник данных (`dextools` или `dexscreener`).
+        self: Celery task instance.
+        settings_ids: List of settings IDs for token selection.
+        source: Data source ('dextools' or 'dexscreener').
 
     Returns:
-        Сообщение о завершении задачи.
+        Task completion message.
     """
     async_to_sync(start_monitoring_latest_token)(
         settings_ids=settings_ids,
         source=source
     )
 
-    return "Мониторинг недавних токенов закончен"
+    return "Recently listed token monitoring completed"
 
 
 async def start_parsing_top_traders(filter: str, source: str) -> None:
-    """Запускает парсинг топовых кошельков на DEX Screener или DEXTools.
-
+    """Initiates parsing of top trader wallets from DEX Screener or DEXTools.
+    
     Args:
-        filter: Параметры фильтрации токенов, по которым парсятся топовые кошельки.
-        source: Источник данных (`dextools` или `dexscreener`).
-        
-    Notes:
-        Если в качестве источника данных для анализа выбран DEX Screener, то создаёт и настраивает 
-        браузер для использования библиотеки nodriver.
+        filter: Token filtering parameters for wallet selection.
+        source: Data source ('dextools' or 'dexscreener').
     """
     config = Config(headless=False)
     browser = await uc.start(config=config, sandbox=False)   
@@ -201,16 +188,16 @@ async def start_parsing_top_traders(filter: str, source: str) -> None:
     max_retries=5
 )
 def parse_top_traders_task(self, filter: str, source: str) -> str:
-    """Задача парсинга топовых кошельков на DEX Screener или DEXTools.
-
+    """Celery task for top trader wallet parsing.
+    
     Args:
-        self: Экземпляр задачи Celery.
-        filter: Параметры фильтрации токенов, по которым парсятся топовые кошельки.
-        source: Источник данных (`dextools` или `dexscreener`).
+        self: Celery task instance.
+        filter: Token filtering parameters for wallet selection.
+        source: Data source ('dextools' or 'dexscreener').
 
     Returns:
-        Сообщение о завершении задачи.
+        Task completion message.
     """
     async_to_sync(start_parsing_top_traders)(filter=filter, source=source)
 
-    return "Парсинг топовых кошельков закончен"
+    return "Top trader wallet parsing completed"

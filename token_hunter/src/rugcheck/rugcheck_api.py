@@ -6,13 +6,13 @@ logger = logging.getLogger(__name__)
 
 
 def rugchek_token_with_api(token_address: str) -> dict:
-    """Получает данные о токене через RugCheck API.
+    """Retrieves token data using the RugCheck API.
 
     Args:
-        token_address: Адрес токена.
+        token_address: Token contract address.
 
     Returns:
-        Словарь с результатами проверки токена.
+        Dictionary containing token verification results.
     """
     url = f"https://api.rugcheck.xyz/v1/tokens/{token_address}/report"
     headers = {
@@ -49,8 +49,8 @@ def rugchek_token_with_api(token_address: str) -> dict:
                 rugcheck_result["risk_level"] = "Bad"
                 logger.info(
                     (
-                        f"Уровень риска токена {token_address}: BAD, "
-                        f"так как риск {risk.get("name")} не является допустимым"
+                        f"Token {token_address} risk level: BAD, "
+                        f"because risk {risk.get('name')} is not acceptable"
                     )
                 )
 
@@ -60,8 +60,8 @@ def rugchek_token_with_api(token_address: str) -> dict:
         rugcheck_result["risk_level"] = "Bad"
         logger.info(
             (
-                f"Уровень риска токена {token_address}: BAD, так как "
-                f"{rugcheck_data.get("score_normalised")} > {settings.RUGCHECK_NORMALISED_SCORE})"
+                f"Token {token_address} risk level: BAD, because "
+                f"{rugcheck_data.get('score_normalised')} > {settings.RUGCHECK_NORMALISED_SCORE})"
             )
         )
 
@@ -70,8 +70,8 @@ def rugchek_token_with_api(token_address: str) -> dict:
     rugcheck_result["risk_level"] = "Good"
     logger.info(
         (
-            f"Уровень риска токена {token_address}: GOOD.\nЕго риски: {risks_name}."
-            f"\nЕго очки: {rugcheck_data.get("score_normalised")}"
+            f"Token {token_address} risk level: GOOD.\nIdentified risks: {risks_name}."
+            f"\nToken score: {rugcheck_data.get('score_normalised')}"
         )
     )
     return rugcheck_result
