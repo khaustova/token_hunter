@@ -124,7 +124,7 @@ git clone https://github.com/khaustova/muiv_timetable.git
     ```
     docker-compose up --build
     ```
-    *Note*: In the `.env` file, don’t forget to change `REDIS_HOST` and `POSTGRES_HOST` to `postgres` and `redis` respectively.
+    Note: In the `.env` file, don’t forget to change `REDIS_HOST` and `POSTGRES_HOST` to `redis` and `postgres` respectively.
 
     <details>
       <summary>Or use virtual environment</summary>
