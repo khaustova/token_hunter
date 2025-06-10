@@ -16,7 +16,7 @@ Additionally, the file `token_hunter/src/utils/preprocessing_data.py` contains p
   
 I personally use this application to trade new Solana tokens, executing a few trades per week with a success rate of around 65–70%. However, I do not publicly share my trading algorithms or provide guidance on them, as I do not wish to assume such responsibility.
 
-Yes, the application works and can generate modest profits, but wrong settings + meme coin risks = you could lose everything.
+Yes, the application works and can generate modest profits, but wrong settings + meme coins risks = you could lose everything.
 
 ## Integrated Services
 
