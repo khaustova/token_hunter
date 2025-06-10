@@ -3,6 +3,19 @@
 
 **Token Hunter** – Django web application for custom token trading on Solana and top wallet parsing.
 
+## :exclamation: Warning
+This application is not a magical money-making machine. The graphical interface for configuring trading settings is quite limited, so it is highly recommended to manually adjust the settings in the `token_hunter/settings.py` file within the `check_api_data()` and `check_settings()` functions.  
+  
+The key difference between these functions is that `check_api_data()` performs an initial validation of data fetched via the DEX Screener API, before parsing details like recent transactions, token holders, and top wallets. The `token_hunter/settings.py` file also includes formats and examples of the data collected by the application.  
+  
+Additionally, the file `token_hunter/src/utils/preprocessing_data.py` contains predefined functions for data preprocessing, such as calculating total trade volumes or counting buy/sell-less transactions.  
+  
+In other words, this tool requires not only an understanding of which tokens you want to trade but also at least a basic proficiency in Python to customize it effectively.  
+  
+I personally use this application to trade new Solana tokens, executing a few trades per week with a success rate of around 65–70%. However, I do not publicly share my trading algorithms or provide guidance on them, as I do not wish to assume such responsibility.
+
+Yes, the app works and can generate modest profits, but misconfiguration may lead to a complete loss of your deposit. Trade at your own risk.  
+
 ## Integrated Services
 
 :gem:  [DEX Screener](https://dexscreener.com/) – token and wallet data aggregation  
