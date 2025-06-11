@@ -6,7 +6,7 @@
 ## :exclamation: Warning
 This application is not a magical money-making machine. It's just a tool.  
 
-Using this application requires not only an understanding of which tokens you want to trade but also at least a basic proficiency in Python to customize it effectively.  
+Using it requires not only an understanding of which tokens you want to trade but also at least a basic proficiency in Python to customize it effectively.  
 
 The graphical interface for configuring trading settings is quite limited, so it is highly recommended to manually adjust the settings in the `token_hunter/settings.py` file within the `check_api_data()` and `check_settings()` functions.  
   
@@ -16,7 +16,7 @@ Additionally, the file `token_hunter/src/utils/preprocessing_data.py` contains p
   
 I personally use this application to trade new Solana tokens, executing a few trades per week with a success rate of around 65–70%. However, I do not publicly share my trading algorithms or provide guidance on them, as I do not wish to assume such responsibility.
 
-Yes, the application works and can generate modest profits, but wrong settings + meme coins risks = you could lose everything.
+Yes, it works and can generate modest profits, but wrong settings + meme coins risks = you could lose everything.
 
 ## Integrated Services
 
