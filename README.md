@@ -42,7 +42,7 @@ Yes, it works and can generate modest profits, but wrong settings + meme coins r
 1. Clone the repository:
 
 ```
-git clone https://github.com/khaustova/muiv_timetable.git
+git clone https://github.com/khaustova/token_hunter.git
 ```
 
 2. Rename `.env.example` to `.env` and populate with your credentials.
