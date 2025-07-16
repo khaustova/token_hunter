@@ -13,10 +13,6 @@ The graphical interface for configuring trading settings is quite limited, so it
 The key difference between these functions is that `check_api_data()` performs an initial validation of data fetched via the DEX Screener API, before parsing details like recent transactions, token holders, and top wallets. The `token_hunter/settings.py` file also includes formats and examples of the data collected by the application.  
   
 Additionally, the file `token_hunter/src/utils/preprocessing_data.py` contains predefined functions for data preprocessing, such as calculating total trade volumes or counting buy/sell-less transactions.  
-  
-I personally use this application to trade new Solana tokens, executing a few trades per week with a success rate of around 65–70%. However, I do not publicly share my trading algorithms or provide guidance on them, as I do not wish to assume such responsibility.
-
-Yes, it works and can generate modest profits, but wrong settings + meme coins risks = you could lose everything.
 
 ## Integrated Services
 
